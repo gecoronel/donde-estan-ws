@@ -1,0 +1,17 @@
+#!/bin/sh
+
+# exit when any command fails
+set -e
+
+# Test
+echo "Run Tests..."
+go test -v ./... -count=1 -tags=test -race -timeout=90m
+
+# Format Go Code
+echo "Applying code formatting to Go files"
+LIST_OF_FILES=$(gofumpt -l -w ./)
+# print a list of affected files if any
+echo "$LIST_OF_FILES"
+if [ -n "$LIST_OF_FILES" ]; then
+  exit 1
+fi

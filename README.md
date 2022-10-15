@@ -1,2 +1,2 @@
 # donde-estan-ws
-Web Services Donde Estan APp
+DondeEstan App Web Service

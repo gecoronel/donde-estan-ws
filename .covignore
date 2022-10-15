@@ -1,0 +1,4 @@
+cmd/api/main.go
+internal/infrastructure/service/config
+internal/infrastructure/delivery/api/app.go
+internal/infrastructure/repository/*
