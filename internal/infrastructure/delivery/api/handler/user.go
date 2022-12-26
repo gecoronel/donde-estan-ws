@@ -5,7 +5,7 @@ import (
 	"github.com/gcoron/donde-estan-ws/internal/bussiness/model/web"
 	"github.com/gcoron/donde-estan-ws/internal/infrastructure/delivery/api/context"
 	"github.com/gcoron/donde-estan-ws/internal/infrastructure/delivery/api/utils"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/gcoron/donde-estan-ws/internal/bussiness/model"
@@ -21,7 +21,7 @@ func Login(w http.ResponseWriter, r *http.Request) { //c *gin.Context) {
 	var login model.Login
 
 	if r.Body != nil {
-		bodyBytes, _ = ioutil.ReadAll(r.Body)
+		bodyBytes, _ = io.ReadAll(r.Body)
 	}
 
 	if len(bodyBytes) <= 0 {

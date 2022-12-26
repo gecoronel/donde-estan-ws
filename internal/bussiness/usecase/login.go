@@ -7,11 +7,15 @@ import (
 	"strings"
 )
 
-const LoginUseCaseType = "LoginUseCase"
+const (
+	LoginUseCaseType = "LoginUseCase"
+	observed         = "observed"
+	observer         = "observer"
+)
 
 type (
 	LoginUseCase interface {
-		Login(model.Login, gateway.ServiceLocator) (*model.User, error)
+		Login(model.Login, gateway.ServiceLocator) (*model.IUser, error)
 	}
 
 	loginUseCase struct{}
@@ -21,7 +25,7 @@ func NewLoginUseCase() LoginUseCase {
 	return &loginUseCase{}
 }
 
-func (u loginUseCase) Login(login model.Login, locator gateway.ServiceLocator) (*model.User, error) {
+func (l loginUseCase) Login(login model.Login, locator gateway.ServiceLocator) (*model.IUser, error) {
 	repository := locator.GetInstance(gateway.UserRepositoryType).(gateway.UserRepository)
 	user, err := repository.FindByUsername(login.Username)
 	if err != nil {
@@ -36,5 +40,25 @@ func (u loginUseCase) Login(login model.Login, locator gateway.ServiceLocator) (
 		return nil, web.ErrIncorrectPassword
 	}
 
-	return user, nil
+	var (
+		u   *model.IUser
+		odu model.ObservedUser
+		oru model.ObserverUser
+	)
+
+	odu.User = *user
+	oru.User = *user
+
+	switch user.Type {
+	case observed:
+		u, err = repository.GetObservedUser(&odu)
+	case observer:
+		u, err = repository.GetObserverUser(&oru)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return u, nil
 }

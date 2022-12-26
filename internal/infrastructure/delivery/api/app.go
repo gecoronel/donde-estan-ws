@@ -37,8 +37,8 @@ func startServer() {
 	router := route.NewRouter(dbConnection)
 
 	log.Info("server start")
-	log.Println("Listening on :8001")
-	log.Fatal(http.ListenAndServe(":8001", router))
+	log.Println("Listening on :8080")
+	log.Fatal(http.ListenAndServe(":8080", router))
 
 	/*if err := router.Run(":8080"); err != nil {
 		log.Fatal("error running server", err)

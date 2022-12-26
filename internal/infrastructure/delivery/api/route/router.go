@@ -38,7 +38,6 @@ func NewRouter(db *gorm.DB) *chi.Mux { //*gin.Engine {
 func configureRoutes(router *chi.Mux) {
 	router.Get("/ping", handler.Pong)
 	router.Route("/where/are/they/ws", func(r chi.Router) {
-		router.Post("/users", handler.Login)
+		r.Post("/login", handler.Login)
 	})
-	router.Post("/users", handler.Login)
 }

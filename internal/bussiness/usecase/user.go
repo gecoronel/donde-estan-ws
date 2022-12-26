@@ -10,7 +10,7 @@ const UserUseCaseType = "UserUseCase"
 
 type (
 	UserUseCase interface {
-		Get(int, gateway.ServiceLocator) (*model.User, error)
+		Get(uint, gateway.ServiceLocator) (*model.User, error)
 	}
 
 	userUseCase struct{}
@@ -20,7 +20,7 @@ func NewUserUseCase() UserUseCase {
 	return &userUseCase{}
 }
 
-func (u userUseCase) Get(userID int, locator gateway.ServiceLocator) (*model.User, error) {
+func (u userUseCase) Get(userID uint, locator gateway.ServiceLocator) (*model.User, error) {
 	repository := locator.GetInstance(gateway.UserRepositoryType).(gateway.UserRepository)
 	user, err := repository.Get(userID)
 	if err != nil {
