@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"github.com/go-chi/chi/v5"
 	"net/http"
 	"strconv"
 
@@ -11,6 +10,7 @@ import (
 	"github.com/gecoronel/donde-estan-ws/internal/bussiness/usecase"
 	"github.com/gecoronel/donde-estan-ws/internal/infrastructure/delivery/api/context"
 	"github.com/gecoronel/donde-estan-ws/internal/infrastructure/delivery/api/utils"
+	"github.com/go-chi/chi/v5"
 	log "github.com/sirupsen/logrus"
 )
 

@@ -1,9 +1,9 @@
 package middleware
 
 import (
-	"github.com/gecoronel/donde-estan-ws/internal/bussiness/gateway"
 	"net/http"
 
+	"github.com/gecoronel/donde-estan-ws/internal/bussiness/gateway"
 	mock_gateway "github.com/gecoronel/donde-estan-ws/internal/bussiness/gateway/mocks"
 	"github.com/gecoronel/donde-estan-ws/internal/bussiness/usecase"
 	mock_usecase "github.com/gecoronel/donde-estan-ws/internal/bussiness/usecase/mocks"

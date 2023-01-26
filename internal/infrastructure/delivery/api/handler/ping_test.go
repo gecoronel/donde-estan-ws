@@ -1,14 +1,13 @@
 package handler
 
 import (
-	"github.com/gecoronel/donde-estan-ws/internal/bussiness/model/web"
-	mock_middleware "github.com/gecoronel/donde-estan-ws/internal/infrastructure/delivery/api/middleware/mocks"
-	"github.com/go-chi/chi/v5"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	//"github.com/go-chi/chi/v5"
+	"github.com/gecoronel/donde-estan-ws/internal/bussiness/model/web"
+	mock_middleware "github.com/gecoronel/donde-estan-ws/internal/infrastructure/delivery/api/middleware/mocks"
+	"github.com/go-chi/chi/v5"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 )
