@@ -6,7 +6,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/gcoron/donde-estan-ws/internal/bussiness/model"
+	"github.com/gecoronel/donde-estan-ws/internal/bussiness/model"
+
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"

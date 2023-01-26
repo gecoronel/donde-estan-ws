@@ -1,17 +1,22 @@
 package middleware
 
 import (
-	"gorm.io/gorm"
 	"net/http"
 
 	"github.com/gecoronel/donde-estan-ws/internal/bussiness/gateway"
+	mock_gateway "github.com/gecoronel/donde-estan-ws/internal/bussiness/gateway/mocks"
 	"github.com/gecoronel/donde-estan-ws/internal/bussiness/usecase"
+	mock_usecase "github.com/gecoronel/donde-estan-ws/internal/bussiness/usecase/mocks"
 	ctx "github.com/gecoronel/donde-estan-ws/internal/infrastructure/delivery/api/context"
 	"github.com/gecoronel/donde-estan-ws/internal/infrastructure/delivery/api/middleware/ioc"
-	"github.com/gecoronel/donde-estan-ws/internal/infrastructure/repository"
 )
 
-func Ioc(db *gorm.DB) func(next http.Handler) http.Handler {
+type Dependencies struct {
+	UseCase    *mock_usecase.MockUserUseCase
+	Repository *mock_gateway.MockUserRepository
+}
+
+func MockIoc(d Dependencies) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
@@ -24,11 +29,11 @@ func Ioc(db *gorm.DB) func(next http.Handler) http.Handler {
 			// Instantiates and resolve all dependencies
 			//metricCollector := repository.NewMetricCollector(nrgin.Transaction(r.Context()))
 			//configurationRepository := repository.NewConfigurationRepository()
-			iocContext.Bind(gateway.UserRepositoryType).ToInstance(repository.NewUserRepository(db, r.Context()))
+			iocContext.Bind(gateway.UserRepositoryType).ToInstance(d.Repository)
 
 			// Register UseCase
 			//iocContext.Bind(usecase.GetConfigurationsUseCaseType).ToInstance(usecase.NewGetConfigurationsUseCase())
-			iocContext.Bind(usecase.UserUseCaseType).ToInstance(usecase.NewUserUseCase())
+			iocContext.Bind(usecase.UserUseCaseType).ToInstance(d.UseCase)
 
 			// Register Repositories
 			//iocContext.Bind(gateway.MetricCollectorType).ToInstance(metricCollector)

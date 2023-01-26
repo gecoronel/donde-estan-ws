@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/gcoron/donde-estan-ws/internal/bussiness/model"
-	"github.com/gcoron/donde-estan-ws/internal/infrastructure/delivery/api/conn"
-	"github.com/gcoron/donde-estan-ws/internal/infrastructure/delivery/api/route"
+	"github.com/gecoronel/donde-estan-ws/internal/bussiness/model"
+	"github.com/gecoronel/donde-estan-ws/internal/infrastructure/delivery/api/conn"
+	"github.com/gecoronel/donde-estan-ws/internal/infrastructure/delivery/api/route"
 	log "github.com/sirupsen/logrus"
 
 	"gorm.io/gorm/logger"
@@ -39,10 +39,6 @@ func startServer() {
 	log.Info("server start")
 	log.Println("Listening on :8080")
 	log.Fatal(http.ListenAndServe(":8080", router))
-
-	/*if err := router.Run(":8080"); err != nil {
-		log.Fatal("error running server", err)
-	}*/
 
 	log.Info("server exit", err)
 	os.Exit(ExitCodeOK)

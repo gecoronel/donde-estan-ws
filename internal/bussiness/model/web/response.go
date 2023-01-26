@@ -3,7 +3,6 @@ package web
 import (
 	"encoding/json"
 	"io"
-	"io/ioutil"
 	"net/http"
 )
 
@@ -37,7 +36,7 @@ func EncodeJSON(w http.ResponseWriter, v interface{}, code int) error {
 	case []byte:
 		jsonData = v
 	case io.Reader:
-		jsonData, err = ioutil.ReadAll(v)
+		jsonData, err = io.ReadAll(v)
 	default:
 		jsonData, err = json.Marshal(v)
 	}

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/gcoron/donde-estan-ws/internal/bussiness/model/web"
+	"github.com/gecoronel/donde-estan-ws/internal/bussiness/model/web"
 )
 
 func GetHTTPCodeByError(err error) int {

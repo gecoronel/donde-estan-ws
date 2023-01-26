@@ -9,7 +9,7 @@ type IUser interface {
 	SetPassword(password string)
 	SetEnabled(enabled bool)
 
-	GetUserID() uint
+	GetUserID() uint64
 	GetName() string
 	GetLastName() string
 	GetIDNumber() string
@@ -21,7 +21,7 @@ type IUser interface {
 }
 
 type User struct {
-	ID        uint   `db:"id" json:"id" gorm:"primaryKey,autoIncrement"`
+	ID        uint64 `db:"id" json:"id" gorm:"primaryKey,autoIncrement"`
 	Name      string `db:"name" json:"name"`
 	LastName  string `db:"last_name" json:"last_name"`
 	IDNumber  string `db:"id_number" json:"id_number"`

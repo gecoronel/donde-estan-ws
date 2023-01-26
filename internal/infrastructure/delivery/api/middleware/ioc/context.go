@@ -9,9 +9,9 @@ func NewContext() Context {
 
 // Context Represents an Application Context to store some values.
 type Context interface {
-	// Binds some type. Registers a type.
+	// Bind binds some type. Registers a type.
 	Bind(typeName string) Binder
-	// Gets the provider to some type.
+	// GetProvider gets the provider to some type.
 	GetProvider(typeName string) Provider
 }
 
@@ -21,7 +21,7 @@ type contextImpl struct {
 
 // Bind some type.
 // Parameters:
-// 		- typeName: the name of the type you wish bind.
+//   - typeName: the name of the type you wish bind.
 func (context *contextImpl) Bind(typeName string) Binder {
 	return &binderImpl{
 		context:  context,
@@ -31,7 +31,7 @@ func (context *contextImpl) Bind(typeName string) Binder {
 
 // GetProvider Gets the provider to some type.
 // Parameters:
-// 		- typeName: the name of the type you wish obtain a provider.
+//   - typeName: the name of the type you wish obtain a provider.
 func (context *contextImpl) GetProvider(typeName string) Provider {
 	if provider, ok := context.providers[typeName]; ok {
 		return provider

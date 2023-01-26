@@ -8,9 +8,9 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/gcoron/donde-estan-ws/internal/bussiness/gateway"
-	"github.com/gcoron/donde-estan-ws/internal/bussiness/model"
-	"github.com/gcoron/donde-estan-ws/internal/bussiness/model/web"
+	"github.com/gecoronel/donde-estan-ws/internal/bussiness/gateway"
+	"github.com/gecoronel/donde-estan-ws/internal/bussiness/model"
+	"github.com/gecoronel/donde-estan-ws/internal/bussiness/model/web"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -28,7 +28,7 @@ type UserRepository struct {
 }
 
 // Get obtains a user using UserRepository by ID.
-func (r UserRepository) Get(id uint) (*model.User, error) {
+func (r UserRepository) Get(id uint64) (*model.User, error) {
 	var user model.User
 	result := r.DB.First(&user, id)
 
@@ -97,7 +97,7 @@ func (r UserRepository) GetUsers(limit string, offset string) (*[]model.User, er
 }
 
 // GetObservedUser obtains a observedUser using UserRepository by user_id.
-func (r UserRepository) GetObservedUser(user *model.ObservedUser) (*model.IUser, error) {
+func (r UserRepository) GetObservedUser(user *model.ObservedUser) (model.IUser, error) {
 	err := r.DB.
 		Raw(
 			"SELECT ou.user_id, ou.school_bus_id, ou.privacy_key, ou.company_name, sb.license_plate, sb.model, sb.brand, sb.school_bus_license, sb.created_at, sb.updated_at FROM ObservedUsers AS ou INNER JOIN SchoolBuses AS sb WHERE user_id = @user_id",
@@ -122,16 +122,15 @@ func (r UserRepository) GetObservedUser(user *model.ObservedUser) (*model.IUser,
 		return nil, err
 	}
 
-	U := model.NewObservedUser(*user)
-	return &U, nil
+	u := model.NewObservedUser(*user)
+	return u, nil
 }
 
 // GetObserverUser obtains a observerUser using UserRepository by user_id.
-func (r UserRepository) GetObserverUser(user *model.ObserverUser) (*model.IUser, error) {
+func (r UserRepository) GetObserverUser(user *model.ObserverUser) (model.IUser, error) {
 	var (
 		errChildren           error
 		errObservedUser       error
-		err                   error
 		statementChildren     = "SELECT c.id, c.name, c.last_name, c.school_name, c.school_start_time, c.school_end_time, c.observer_user_id, c.created_at, c.updated_at FROM ObserverUsers AS oru INNER JOIN Children AS c ON  oru.user_id = c.observer_user_id;"
 		statementObservedUser = "SELECT u.id, u.name, u.last_name, u.id_number, odu.company_name, odu.privacy_key, sb.id AS school_bus_id, sb.license_plate, sb.model, sb.brand, sb.school_bus_license, sb.created_at, sb.updated_at FROM ObserverUsers AS oru INNER JOIN ObservedUsers AS odu INNER JOIN ObservedUsersObserverUsers AS oduoru INNER JOIN Users AS u INNER JOIN SchoolBuses AS sb ON odu.user_id = oduoru.observed_user_id AND oru.user_id = oduoru.observer_user_id AND u.id = odu.user_id AND odu.school_bus_id = sb.id;"
 		children              []model.Children
@@ -140,47 +139,38 @@ func (r UserRepository) GetObserverUser(user *model.ObserverUser) (*model.IUser,
 		observedUser          odUser
 		u                     model.IUser
 		wg                    = &sync.WaitGroup{}
-		usersCompleted        = make(chan struct{}, 3)
-		chanErr               = make(chan error, 1)
 	)
 
 	wg.Add(1)
 	go func(wg *sync.WaitGroup) {
 		defer handleGoRoutinePanic(wg)
 		children, errChildren = scanRows(r, statementChildren, children, child)
-		if errChildren != nil {
-			chanErr <- errChildren
-			return
-		}
 	}(wg)
 
 	wg.Add(1)
 	go func(wg *sync.WaitGroup) {
 		defer handleGoRoutinePanic(wg)
 		observedUsers, errObservedUser = scanRows(r, statementObservedUser, observedUsers, observedUser)
-		if errObservedUser != nil {
-			chanErr <- errObservedUser
-			return
-		}
 	}(wg)
 
-	go func() {
-		wg.Wait()
+	wg.Wait()
 
-		user.Children = children
-		user.ObservedUsers = mapToObservedUser(observedUsers)
-
-		u = model.NewObserverUser(*user)
-
-		usersCompleted <- struct{}{}
-	}()
-
-	select {
-	case <-usersCompleted:
-		return &u, nil
-	case err = <-chanErr:
-		return nil, err
+	if errChildren != nil {
+		log.Errorf("error children rows: %s", errChildren.Error())
+		return nil, errChildren
 	}
+
+	if errObservedUser != nil {
+		log.Errorf("error observed user rows: %s", errObservedUser.Error())
+		return nil, errObservedUser
+	}
+
+	user.Children = children
+	user.ObservedUsers = mapToObservedUser(observedUsers)
+
+	u = model.NewObserverUser(*user)
+
+	return u, nil
 }
 
 func scanRows[T allowScan](r UserRepository, statement string, list []T, object T) ([]T, error) {
@@ -189,7 +179,7 @@ func scanRows[T allowScan](r UserRepository, statement string, list []T, object 
 		Rows()
 
 	if err != nil {
-		log.Error("error in scan rows ")
+		log.Errorf("error scaning rows: %s", err.Error())
 		return nil, err
 	}
 
@@ -243,7 +233,7 @@ type (
 		model.User | model.ObserverUser | model.ObservedUser | model.Children | model.SchoolBus | odUser
 	}
 	odUser struct {
-		ID               uint   `json:"id"`
+		ID               uint64 `json:"id"`
 		Name             string `json:"name"`
 		LastName         string `json:"last_name"`
 		IDNumber         string `json:"id_number"`
