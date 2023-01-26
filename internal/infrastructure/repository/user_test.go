@@ -3,16 +3,17 @@ package repository
 import (
 	"context"
 	"database/sql"
-	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/gcoron/donde-estan-ws/internal/bussiness/model"
-	"github.com/gcoron/donde-estan-ws/internal/bussiness/model/web"
-	log "github.com/sirupsen/logrus"
-	"github.com/stretchr/testify/assert"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"regexp"
 	"testing"
 	"time"
+
+	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/gecoronel/donde-estan-ws/internal/bussiness/model"
+	"github.com/gecoronel/donde-estan-ws/internal/bussiness/model/web"
+	log "github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
 )
 
 var u = model.User{
@@ -265,7 +266,7 @@ func TestGetObserverUser(t *testing.T) {
 			},
 		}
 		expectedObserverUser  = model.NewObserverUser(expected)
-		observerUser          *model.IUser
+		observerUser          model.IUser
 		statementChildren     = "SELECT c.id, c.name, c.last_name, c.school_name, c.school_start_time, c.school_end_time, c.observer_user_id, c.created_at, c.updated_at FROM ObserverUsers AS oru INNER JOIN Children AS c ON  oru.user_id = c.observer_user_id;"
 		statementObservedUser = "SELECT u.id, u.name, u.last_name, u.id_number, odu.company_name, odu.privacy_key, sb.id AS school_bus_id, sb.license_plate, sb.model, sb.brand, sb.school_bus_license, sb.created_at, sb.updated_at FROM ObserverUsers AS oru INNER JOIN ObservedUsers AS odu INNER JOIN ObservedUsersObserverUsers AS oduoru INNER JOIN Users AS u INNER JOIN SchoolBuses AS sb ON odu.user_id = oduoru.observed_user_id AND oru.user_id = oduoru.observer_user_id AND u.id = odu.user_id AND odu.school_bus_id = sb.id;"
 		user                  = model.ObserverUser{User: expected.User}
@@ -281,32 +282,32 @@ func TestGetObserverUser(t *testing.T) {
 
 	ur := NewUserRepository(gdb, context.Background())
 
-	t.Run("GetObserverUser children scan error", func(t *testing.T) {
-		rows := sqlmock.NewRows([]string{"id", "name", "last_name", "school_name", "school_start_time", "school_end_time", "observer_user_id", "created_at", "updated_at"}).
-			AddRow(expected.Children[0].ID, expected.Children[0].Name, expected.Children[0].LastName, expected.Children[0].SchoolName, expected.Children[0].SchoolStartTime, expected.Children[0].SchoolEndTime, expected.Children[0].ObserverUserID, expected.Children[0].CreatedAt, expected.Children[0].UpdatedAt)
-		mock.ExpectQuery(statementChildren).WillReturnError(web.ErrInternalServerError)
+	t.Run("get observer user, observer user scan error", func(t *testing.T) {
+		mock.ExpectQuery(statementObservedUser).WillReturnError(web.ErrInternalServerError)
 
-		rows = sqlmock.NewRows([]string{"id", "name", "last_name", "id_number", "company_name", "privacy_key", "school_bus_id", "license_plate", "model", "brand", "school_bus_license", "created_at", "updated_at"}).
-			AddRow(expected.ObservedUsers[0].GetUserID(), expected.ObservedUsers[0].GetName(), expected.ObservedUsers[0].GetLastName(), expected.ObservedUsers[0].GetIDNumber(), expected.ObservedUsers[0].CompanyName, expected.ObservedUsers[0].PrivacyKey, expected.ObservedUsers[0].SchoolBus.ID, expected.ObservedUsers[0].SchoolBus.LicensePlate, expected.ObservedUsers[0].SchoolBus.Model, expected.ObservedUsers[0].SchoolBus.Brand, expected.ObservedUsers[0].SchoolBus.SchoolBusLicense, expected.ObservedUsers[0].SchoolBus.CreatedAt, expected.ObservedUsers[0].SchoolBus.UpdatedAt)
-		mock.ExpectQuery(statementObservedUser).WillReturnRows(rows)
-
-		observerUser, err = ur.GetObserverUser(&user)
-
-		assert.NotNil(t, err)
-	})
-
-	t.Run("GetObserverUser observed user scan error", func(t *testing.T) {
 		rows := sqlmock.NewRows([]string{"id", "name", "last_name", "school_name", "school_start_time", "school_end_time", "observer_user_id", "created_at", "updated_at"}).
 			AddRow(expected.Children[0].ID, expected.Children[0].Name, expected.Children[0].LastName, expected.Children[0].SchoolName, expected.Children[0].SchoolStartTime, expected.Children[0].SchoolEndTime, expected.Children[0].ObserverUserID, expected.Children[0].CreatedAt, expected.Children[0].UpdatedAt)
 		mock.ExpectQuery(statementChildren).WillReturnRows(rows)
 
-		rows = sqlmock.NewRows([]string{"id", "name", "last_name", "id_number", "company_name", "privacy_key", "school_bus_id", "license_plate", "model", "brand", "school_bus_license", "created_at", "updated_at"}).
-			AddRow(expected.ObservedUsers[0].GetUserID(), expected.ObservedUsers[0].GetName(), expected.ObservedUsers[0].GetLastName(), expected.ObservedUsers[0].GetIDNumber(), expected.ObservedUsers[0].CompanyName, expected.ObservedUsers[0].PrivacyKey, expected.ObservedUsers[0].SchoolBus.ID, expected.ObservedUsers[0].SchoolBus.LicensePlate, expected.ObservedUsers[0].SchoolBus.Model, expected.ObservedUsers[0].SchoolBus.Brand, expected.ObservedUsers[0].SchoolBus.SchoolBusLicense, expected.ObservedUsers[0].SchoolBus.CreatedAt, expected.ObservedUsers[0].SchoolBus.UpdatedAt)
-		mock.ExpectQuery(statementObservedUser).WillReturnError(web.ErrInternalServerError)
-
-		observerUser, err = ur.GetObserverUser(&user)
+		observerUser, err := ur.GetObserverUser(&user)
 
 		assert.NotNil(t, err)
+		assert.Equal(t, web.ErrInternalServerError, err)
+		assert.Nil(t, observerUser)
+	})
+
+	t.Run("get observer user, children scan error", func(t *testing.T) {
+		mock.ExpectQuery(statementChildren).WillReturnError(web.ErrInternalServerError)
+
+		rows := sqlmock.NewRows([]string{"id", "name", "last_name", "id_number", "company_name", "privacy_key", "school_bus_id", "license_plate", "model", "brand", "school_bus_license", "created_at", "updated_at"}).
+			AddRow(expected.ObservedUsers[0].GetUserID(), expected.ObservedUsers[0].GetName(), expected.ObservedUsers[0].GetLastName(), expected.ObservedUsers[0].GetIDNumber(), expected.ObservedUsers[0].CompanyName, expected.ObservedUsers[0].PrivacyKey, expected.ObservedUsers[0].SchoolBus.ID, expected.ObservedUsers[0].SchoolBus.LicensePlate, expected.ObservedUsers[0].SchoolBus.Model, expected.ObservedUsers[0].SchoolBus.Brand, expected.ObservedUsers[0].SchoolBus.SchoolBusLicense, expected.ObservedUsers[0].SchoolBus.CreatedAt, expected.ObservedUsers[0].SchoolBus.UpdatedAt)
+		mock.ExpectQuery(statementObservedUser).WillReturnRows(rows)
+
+		observerUser, err := ur.GetObserverUser(&user)
+
+		assert.NotNil(t, err)
+		assert.Equal(t, web.ErrInternalServerError, err)
+		assert.Nil(t, observerUser)
 	})
 
 	t.Run("GetObserverUser successful", func(t *testing.T) {
@@ -333,10 +334,10 @@ func TestGetObserverUser(t *testing.T) {
 		mockWithGoRoutine.ExpectQuery(statementObservedUser).WillReturnRows(rows)
 
 		observerUser, err = urWithGoRoutine.GetObserverUser(&user)
-		time.Sleep(500 * time.Millisecond)
+		time.Sleep(200 * time.Millisecond)
 
 		assert.Nil(t, err)
-		assert.Equal(t, expectedObserverUser, *observerUser)
+		assert.Equal(t, expectedObserverUser, observerUser)
 	})
 }
 
@@ -361,7 +362,7 @@ func TestGetObservedUser(t *testing.T) {
 			CompanyName: "school bus company",
 		}
 		expectedObservedUser  = model.NewObservedUser(expected)
-		observerUser          *model.IUser
+		observerUser          model.IUser
 		statementObservedUser = "SELECT ou.user_id, ou.school_bus_id, ou.privacy_key, ou.company_name, sb.license_plate, sb.model, sb.brand, sb.school_bus_license, sb.created_at, sb.updated_at FROM ObservedUsers AS ou INNER JOIN SchoolBuses AS sb WHERE user_id = ?"
 		user                  = model.ObservedUser{User: expected.User}
 	)
@@ -377,8 +378,7 @@ func TestGetObservedUser(t *testing.T) {
 
 	ur := NewUserRepository(gdb, context.Background())
 
-	t.Run("GetObservedUser successful", func(t *testing.T) {
-
+	t.Run("get observed user successful", func(t *testing.T) {
 		rows := sqlmock.NewRows([]string{"user_id", "school_bus_id", "privacy_key", "company_name", "license_plate", "model", "brand", "school_bus_license", "created_at", "updated_at"}).
 			AddRow(expected.User.ID, expected.SchoolBus.ID, expected.PrivacyKey, expected.CompanyName, expected.SchoolBus.LicensePlate, expected.SchoolBus.Model, expected.SchoolBus.Brand, expected.SchoolBus.SchoolBusLicense, expected.SchoolBus.CreatedAt, expected.SchoolBus.UpdatedAt)
 		mock.ExpectQuery(statementObservedUser).WithArgs(expected.User.ID).WillReturnRows(rows)
@@ -386,10 +386,10 @@ func TestGetObservedUser(t *testing.T) {
 		observerUser, err = ur.GetObservedUser(&user)
 
 		assert.Nil(t, err)
-		assert.Equal(t, expectedObservedUser, *observerUser)
+		assert.Equal(t, expectedObservedUser, observerUser)
 	})
 
-	t.Run("GetObservedUser scan error", func(t *testing.T) {
+	t.Run("get observed user scan error", func(t *testing.T) {
 		mock.ExpectQuery(statementObservedUser).WithArgs(expected.User.ID).WillReturnError(web.ErrInternalServerError)
 
 		observerUser, err = ur.GetObservedUser(&user)

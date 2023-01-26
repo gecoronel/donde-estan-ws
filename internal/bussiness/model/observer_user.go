@@ -10,7 +10,7 @@ func NewObserverUser(observer ObserverUser) IUser {
 	return observer
 }
 
-func (observer ObserverUser) GetUserID() uint {
+func (observer ObserverUser) GetUserID() uint64 {
 	return observer.User.ID
 }
 

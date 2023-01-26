@@ -1,6 +1,6 @@
 package main
 
-import "github.com/gcoron/donde-estan-ws/internal/infrastructure/delivery/api"
+import "github.com/gecoronel/donde-estan-ws/internal/infrastructure/delivery/api"
 
 func main() {
 	api.StartApp()

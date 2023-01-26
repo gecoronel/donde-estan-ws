@@ -7,7 +7,7 @@ package mock_gateway
 import (
 	reflect "reflect"
 
-	model "github.com/gcoron/donde-estan-ws/internal/bussiness/model"
+	model "github.com/gecoronel/donde-estan-ws/internal/bussiness/model"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -50,7 +50,7 @@ func (mr *MockUserRepositoryMockRecorder) FindByUsername(arg0 interface{}) *gomo
 }
 
 // Get mocks base method.
-func (m *MockUserRepository) Get(arg0 uint) (*model.User, error) {
+func (m *MockUserRepository) Get(arg0 uint64) (*model.User, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", arg0)
 	ret0, _ := ret[0].(*model.User)
@@ -65,10 +65,10 @@ func (mr *MockUserRepositoryMockRecorder) Get(arg0 interface{}) *gomock.Call {
 }
 
 // GetObservedUser mocks base method.
-func (m *MockUserRepository) GetObservedUser(arg0 *model.ObservedUser) (*model.IUser, error) {
+func (m *MockUserRepository) GetObservedUser(arg0 *model.ObservedUser) (model.IUser, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetObservedUser", arg0)
-	ret0, _ := ret[0].(*model.IUser)
+	ret0, _ := ret[0].(model.IUser)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -80,10 +80,10 @@ func (mr *MockUserRepositoryMockRecorder) GetObservedUser(arg0 interface{}) *gom
 }
 
 // GetObserverUser mocks base method.
-func (m *MockUserRepository) GetObserverUser(arg0 *model.ObserverUser) (*model.IUser, error) {
+func (m *MockUserRepository) GetObserverUser(arg0 *model.ObserverUser) (model.IUser, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetObserverUser", arg0)
-	ret0, _ := ret[0].(*model.IUser)
+	ret0, _ := ret[0].(model.IUser)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

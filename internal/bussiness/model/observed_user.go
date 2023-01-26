@@ -12,7 +12,7 @@ func NewObservedUser(observed ObservedUser) IUser {
 	return observed
 }
 
-func (u ObservedUser) GetUserID() uint {
+func (u ObservedUser) GetUserID() uint64 {
 	return u.User.ID
 }
 
