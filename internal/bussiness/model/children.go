@@ -1,6 +1,6 @@
 package model
 
-type Children struct {
+type Child struct {
 	ID              uint   `json:"id" gorm:"primaryKey,autoIncrement"`
 	ObserverUserID  uint   `json:"observer_user_id"`
 	Name            string `json:"name"`

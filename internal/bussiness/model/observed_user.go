@@ -1,117 +1,125 @@
 package model
 
+import "github.com/go-playground/validator/v10"
+
 type ObservedUser struct {
-	User          User           `gorm:"one2one,embedded,foreignKey:id"`
-	PrivacyKey    string         `db:"privacy_key" json:"privacy_key" gorm:"unique"`
-	CompanyName   string         `db:"company_name" json:"company_name"`
-	SchoolBus     SchoolBus      `db:"school_bus" json:"school_bus"`
+	User          User           `gorm:"one2one,embedded,foreignKey:id" validate:"required"`
+	PrivacyKey    string         `db:"privacy_key" json:"privacy_key" gorm:"unique" validate:"required"`
+	CompanyName   string         `db:"company_name" json:"company_name" validate:"required"`
+	SchoolBus     SchoolBus      `db:"school_bus" json:"school_bus" validate:"required"`
 	ObserverUsers []ObserverUser `json:",omitempty" gorm:"foreignKey:ObservedUsers"`
 }
 
-func NewObservedUser(observed ObservedUser) IUser {
+func NewObservedUser(observed *ObservedUser) IUser {
 	return observed
 }
 
-func (u ObservedUser) GetUserID() uint64 {
-	return u.User.ID
+func (observed *ObservedUser) GetUserID() uint64 {
+	return observed.User.ID
 }
 
-func (u ObservedUser) GetName() string {
-	return u.User.Name
+func (observed *ObservedUser) GetName() string {
+	return observed.User.Name
 }
 
-func (u ObservedUser) SetName(name string) {
-	u.User.Name = name
+func (observed *ObservedUser) SetName(name string) {
+	observed.User.Name = name
 }
 
-func (u ObservedUser) GetLastName() string {
-	return u.User.LastName
+func (observed *ObservedUser) GetLastName() string {
+	return observed.User.LastName
 }
 
-func (u ObservedUser) SetLastName(lastName string) {
-	u.User.LastName = lastName
+func (observed *ObservedUser) SetLastName(lastName string) {
+	observed.User.LastName = lastName
 }
 
-func (u ObservedUser) GetIDNumber() string {
-	return u.User.IDNumber
+func (observed *ObservedUser) GetIDNumber() string {
+	return observed.User.IDNumber
 }
 
-func (u ObservedUser) SetIDNumber(idNumber string) {
-	u.User.IDNumber = idNumber
+func (observed *ObservedUser) SetIDNumber(idNumber string) {
+	observed.User.IDNumber = idNumber
 }
 
-func (u ObservedUser) GetEmail() string {
-	return u.User.Email
+func (observed *ObservedUser) GetEmail() string {
+	return observed.User.Email
 }
 
-func (u ObservedUser) SetEmail(email string) {
-	u.User.Email = email
+func (observed *ObservedUser) SetEmail(email string) {
+	observed.User.Email = email
 }
 
-func (u ObservedUser) GetUsername() string {
-	return u.User.Username
+func (observed *ObservedUser) GetUsername() string {
+	return observed.User.Username
 }
 
-func (u ObservedUser) SetUsername(username string) {
-	u.User.Username = username
+func (observed *ObservedUser) SetUsername(username string) {
+	observed.User.Username = username
 }
 
-func (u ObservedUser) GetPassword() string {
-	return u.User.Password
+func (observed *ObservedUser) GetPassword() string {
+	return observed.User.Password
 }
 
-func (u ObservedUser) SetPassword(password string) {
-	u.User.Password = password
+func (observed *ObservedUser) SetPassword(password string) {
+	observed.User.Password = password
 }
 
-func (u ObservedUser) GetEnabled() bool {
-	return u.User.Enabled
+func (observed *ObservedUser) GetEnabled() bool {
+	return observed.User.Enabled
 }
 
-func (u ObservedUser) SetEnabled(enabled bool) {
-	u.User.Enabled = enabled
+func (observed *ObservedUser) SetEnabled(enabled bool) {
+	observed.User.Enabled = enabled
 }
 
-func (u ObservedUser) GetType() string {
-	return u.User.Type
+func (observed *ObservedUser) GetType() string {
+	return observed.User.Type
 }
 
-func (u ObservedUser) GetPrivacyKey() string {
-	return u.PrivacyKey
+func (observed *ObservedUser) GetPrivacyKey() string {
+	return observed.PrivacyKey
 }
 
-func (u ObservedUser) SetPrivacyKey(privacyKey string) {
-	u.PrivacyKey = privacyKey
+func (observed *ObservedUser) SetPrivacyKey(privacyKey string) {
+	observed.PrivacyKey = privacyKey
 }
 
-func (u ObservedUser) GetCompanyName() string {
-	return u.CompanyName
+func (observed *ObservedUser) GetCompanyName() string {
+	return observed.CompanyName
 }
 
-func (u ObservedUser) SetCompanyName(companyName string) {
-	u.CompanyName = companyName
+func (observed *ObservedUser) SetCompanyName(companyName string) {
+	observed.CompanyName = companyName
 }
 
-func (u ObservedUser) GetLicensePlate() string {
-	return u.SchoolBus.LicensePlate
+func (observed *ObservedUser) GetLicensePlate() string {
+	return observed.SchoolBus.LicensePlate
 }
 
-func (u ObservedUser) SetLicensePlate(licensePlate string) {
-	u.SchoolBus.LicensePlate = licensePlate
+func (observed *ObservedUser) SetLicensePlate(licensePlate string) {
+	observed.SchoolBus.LicensePlate = licensePlate
 }
 
-func (u ObservedUser) GetSchoolBusLicense() string {
-	return u.SchoolBus.SchoolBusLicense
+func (observed *ObservedUser) GetSchoolBusLicense() string {
+	return observed.SchoolBus.License
 }
 
-func (u ObservedUser) SetSchoolBusLicense(schoolBusLicense string) {
-	u.SchoolBus.SchoolBusLicense = schoolBusLicense
+func (observed *ObservedUser) SetSchoolBusLicense(schoolBusLicense string) {
+	observed.SchoolBus.License = schoolBusLicense
 }
 
-func (u ObservedUser) SetObserverUsers(observerUsers []ObserverUser) {
-	u.ObserverUsers = observerUsers
+func (observed *ObservedUser) SetObserverUsers(observerUsers []ObserverUser) {
+	observed.ObserverUsers = observerUsers
 }
 
-func (u ObservedUser) GetObserverUsers() []ObserverUser {
-	return u.ObserverUsers
+func (observed *ObservedUser) GetObserverUsers() []ObserverUser {
+	return observed.ObserverUsers
+}
+
+var validateObserved = validator.New()
+
+func (observed *ObservedUser) Validate() error {
+	return validateObserved.Struct(observed)
 }

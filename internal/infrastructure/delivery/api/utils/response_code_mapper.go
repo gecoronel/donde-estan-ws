@@ -25,5 +25,5 @@ func GetHTTPCodeByError(err error) int {
 	}
 
 	// If not exist a status! This doesn't have to happen.
-	return http.StatusTeapot
+	return http.StatusInternalServerError
 }

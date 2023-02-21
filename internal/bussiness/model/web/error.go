@@ -14,6 +14,7 @@ var (
 	ErrConflict            = errors.New("conflict")
 	ErrNotFound            = errors.New("not found")
 	ErrInternalServerError = errors.New("impossible to solve")
+	ErrNoRows              = errors.New("sql: no rows in result set")
 )
 
 // Error is our custom commercial agreements implementation.

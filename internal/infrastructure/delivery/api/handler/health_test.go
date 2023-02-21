@@ -12,16 +12,16 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestPing(t *testing.T) {
+func TestHealth(t *testing.T) {
 	m := gomock.NewController(t)
 	defer m.Finish()
 
 	d := mock_middleware.Dependencies{}
 	router := configureRoutes(d)
 
-	t.Run("successful ping", func(t *testing.T) {
+	t.Run("successful health", func(t *testing.T) {
 		w := httptest.NewRecorder()
-		r, err := http.NewRequest("GET", "/ping", nil)
+		r, err := http.NewRequest("GET", "/health", nil)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -35,10 +35,12 @@ func configureRoutes(d mock_middleware.Dependencies) *chi.Mux {
 	router := chi.NewRouter()
 	router.NotFound(web.DefaultNotFoundHandler)
 	router.Use(mock_middleware.MockIoc(d))
-	router.Get("/ping", Pong)
+	router.Get("/health", Health)
 	router.Route("/where/are/they", func(r chi.Router) {
 		r.Post("/login", Login)
 		r.Get("/users/{id}", Get)
+		r.Post("/users/observed", CreateObservedUser)
+		r.Post("/users/observer", CreateObserverUser)
 	})
 
 	return router

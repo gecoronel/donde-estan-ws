@@ -13,10 +13,12 @@ const UserRepositoryType = "UserRepository"
 
 // UserRepository is an interface that provides the necessary methods for the user repository.
 type UserRepository interface {
-	Save(model.User) (*model.User, error)
 	Get(uint64) (*model.User, error)
 	GetUsers(string, string) (*[]model.User, error)
 	FindByUsername(string) (*model.User, error)
-	GetObservedUser(*model.ObservedUser) (model.IUser, error)
-	GetObserverUser(*model.ObserverUser) (model.IUser, error)
+	FindByEmail(string) (*model.User, error)
+	GetObservedUser(uint64) (model.IUser, error)
+	SaveObservedUser(model.ObservedUser) (*model.ObservedUser, error)
+	GetObserverUser(uint64) (model.IUser, error)
+	SaveObserverUser(model.ObserverUser) (*model.ObserverUser, error)
 }

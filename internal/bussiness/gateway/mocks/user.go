@@ -34,6 +34,21 @@ func (m *MockUserRepository) EXPECT() *MockUserRepositoryMockRecorder {
 	return m.recorder
 }
 
+// FindByEmail mocks base method.
+func (m *MockUserRepository) FindByEmail(arg0 string) (*model.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindByEmail", arg0)
+	ret0, _ := ret[0].(*model.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindByEmail indicates an expected call of FindByEmail.
+func (mr *MockUserRepositoryMockRecorder) FindByEmail(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByEmail", reflect.TypeOf((*MockUserRepository)(nil).FindByEmail), arg0)
+}
+
 // FindByUsername mocks base method.
 func (m *MockUserRepository) FindByUsername(arg0 string) (*model.User, error) {
 	m.ctrl.T.Helper()
@@ -65,7 +80,7 @@ func (mr *MockUserRepositoryMockRecorder) Get(arg0 interface{}) *gomock.Call {
 }
 
 // GetObservedUser mocks base method.
-func (m *MockUserRepository) GetObservedUser(arg0 *model.ObservedUser) (model.IUser, error) {
+func (m *MockUserRepository) GetObservedUser(arg0 uint64) (model.IUser, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetObservedUser", arg0)
 	ret0, _ := ret[0].(model.IUser)
@@ -80,7 +95,7 @@ func (mr *MockUserRepositoryMockRecorder) GetObservedUser(arg0 interface{}) *gom
 }
 
 // GetObserverUser mocks base method.
-func (m *MockUserRepository) GetObserverUser(arg0 *model.ObserverUser) (model.IUser, error) {
+func (m *MockUserRepository) GetObserverUser(arg0 uint64) (model.IUser, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetObserverUser", arg0)
 	ret0, _ := ret[0].(model.IUser)
@@ -109,17 +124,32 @@ func (mr *MockUserRepositoryMockRecorder) GetUsers(arg0, arg1 interface{}) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUsers", reflect.TypeOf((*MockUserRepository)(nil).GetUsers), arg0, arg1)
 }
 
-// Save mocks base method.
-func (m *MockUserRepository) Save(arg0 model.User) (*model.User, error) {
+// SaveObservedUser mocks base method.
+func (m *MockUserRepository) SaveObservedUser(arg0 model.ObservedUser) (*model.ObservedUser, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Save", arg0)
-	ret0, _ := ret[0].(*model.User)
+	ret := m.ctrl.Call(m, "SaveObservedUser", arg0)
+	ret0, _ := ret[0].(*model.ObservedUser)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// Save indicates an expected call of Save.
-func (mr *MockUserRepositoryMockRecorder) Save(arg0 interface{}) *gomock.Call {
+// SaveObservedUser indicates an expected call of SaveObservedUser.
+func (mr *MockUserRepositoryMockRecorder) SaveObservedUser(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Save", reflect.TypeOf((*MockUserRepository)(nil).Save), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveObservedUser", reflect.TypeOf((*MockUserRepository)(nil).SaveObservedUser), arg0)
+}
+
+// SaveObserverUser mocks base method.
+func (m *MockUserRepository) SaveObserverUser(arg0 model.ObserverUser) (*model.ObserverUser, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SaveObserverUser", arg0)
+	ret0, _ := ret[0].(*model.ObserverUser)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SaveObserverUser indicates an expected call of SaveObserverUser.
+func (mr *MockUserRepositoryMockRecorder) SaveObserverUser(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveObserverUser", reflect.TypeOf((*MockUserRepository)(nil).SaveObserverUser), arg0)
 }

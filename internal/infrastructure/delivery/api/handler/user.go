@@ -23,7 +23,7 @@ func Get(w http.ResponseWriter, r *http.Request) {
 		log.Error("get user failure in get param: ", err)
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(web.NewError(http.StatusBadRequest, err.Error()))
+		_ = json.NewEncoder(w).Encode(web.NewError(http.StatusBadRequest, err.Error()))
 		return
 	}
 
@@ -33,13 +33,13 @@ func Get(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		httpStatusCode := utils.GetHTTPCodeByError(err)
 		w.WriteHeader(httpStatusCode)
-		json.NewEncoder(w).Encode(web.NewError(httpStatusCode, err.Error()))
+		_ = json.NewEncoder(w).Encode(web.NewError(httpStatusCode, err.Error()))
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(user)
+	_ = json.NewEncoder(w).Encode(user)
 }
 
 func Login(w http.ResponseWriter, r *http.Request) {
@@ -54,7 +54,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		log.Error("body is wrong. ")
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(web.NewError(http.StatusBadRequest, err.Error()))
+		_ = json.NewEncoder(w).Encode(web.NewError(http.StatusBadRequest, err.Error()))
 		return
 	}
 
@@ -62,7 +62,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		log.Error("invalid body")
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(web.NewError(http.StatusBadRequest, err.Error()))
+		_ = json.NewEncoder(w).Encode(web.NewError(http.StatusBadRequest, err.Error()))
 		return
 	}
 
@@ -72,11 +72,134 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		httpStatusCode := utils.GetHTTPCodeByError(err)
 		w.WriteHeader(httpStatusCode)
-		json.NewEncoder(w).Encode(web.NewError(httpStatusCode, err.Error()))
+		_ = json.NewEncoder(w).Encode(web.NewError(httpStatusCode, err.Error()))
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(user)
+	_ = json.NewEncoder(w).Encode(user)
+}
+
+func CreateObservedUser(w http.ResponseWriter, r *http.Request) {
+	serviceLocator := context.GetServiceLocator(r.Context())
+	useCase := serviceLocator.GetInstance(usecase.UserUseCaseType).(usecase.UserUseCase)
+
+	var (
+		u            *model.User
+		observedUser model.ObservedUser
+		err          error
+	)
+
+	d := json.NewDecoder(r.Body)
+	d.DisallowUnknownFields()
+	if err = d.Decode(&observedUser); err != nil {
+		log.Error("invalid body for creation of observed user")
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(web.NewError(http.StatusBadRequest, err.Error()))
+		return
+	}
+
+	if err = observedUser.Validate(); err != nil {
+		log.Error("validation failed for creation of observed user")
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(web.NewError(http.StatusBadRequest, err.Error()))
+		return
+	}
+
+	u, _ = useCase.FindByUsername(observedUser.GetUsername(), serviceLocator)
+	if u != nil {
+		log.Error("creation observed user failed: ", web.ErrConflict)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusConflict)
+		_ = json.NewEncoder(w).Encode(web.NewError(http.StatusConflict, web.ErrConflict.Error()))
+		return
+	}
+
+	u, _ = useCase.FindByEmail(observedUser.GetEmail(), serviceLocator)
+	if u != nil {
+		log.Error("creation observed user failed: ", web.ErrConflict)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusConflict)
+		_ = json.NewEncoder(w).Encode(web.NewError(http.StatusConflict, web.ErrConflict.Error()))
+		return
+	}
+
+	user, err := useCase.CreateObservedUser(observedUser, serviceLocator)
+	if err != nil {
+		log.Error("creation observed user failed: ", err)
+		w.Header().Set("Content-Type", "application/json")
+		httpStatusCode := utils.GetHTTPCodeByError(err)
+		w.WriteHeader(httpStatusCode)
+		_ = json.NewEncoder(w).Encode(web.NewError(httpStatusCode, err.Error()))
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(user)
+}
+
+func CreateObserverUser(w http.ResponseWriter, r *http.Request) {
+	serviceLocator := context.GetServiceLocator(r.Context())
+	useCase := serviceLocator.GetInstance(usecase.UserUseCaseType).(usecase.UserUseCase)
+
+	var (
+		u            *model.User
+		observerUser model.ObserverUser
+		user         *model.ObserverUser
+		err          error
+	)
+
+	d := json.NewDecoder(r.Body)
+	d.DisallowUnknownFields()
+	if err = d.Decode(&observerUser); err != nil {
+		log.Error("invalid body for creation of observer user")
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(web.NewError(http.StatusBadRequest, err.Error()))
+		return
+	}
+
+	if err = observerUser.Validate(); err != nil {
+		log.Error("validation failed for creation of observer user")
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(web.NewError(http.StatusBadRequest, err.Error()))
+		return
+	}
+
+	u, _ = useCase.FindByUsername(observerUser.GetUsername(), serviceLocator)
+	if u != nil {
+		log.Error("creation observed user failed: ", web.ErrConflict)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusConflict)
+		_ = json.NewEncoder(w).Encode(web.NewError(http.StatusConflict, web.ErrConflict.Error()))
+		return
+	}
+
+	u, _ = useCase.FindByEmail(observerUser.GetEmail(), serviceLocator)
+	if u != nil {
+		log.Error("creation observed user failed: ", web.ErrConflict)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusConflict)
+		_ = json.NewEncoder(w).Encode(web.NewError(http.StatusConflict, web.ErrConflict.Error()))
+		return
+	}
+
+	user, err = useCase.CreateObserverUser(observerUser, serviceLocator)
+	if err != nil {
+		log.Error("creation observer user failed ", err)
+		w.Header().Set("Content-Type", "application/json")
+		httpStatusCode := utils.GetHTTPCodeByError(err)
+		w.WriteHeader(httpStatusCode)
+		_ = json.NewEncoder(w).Encode(web.NewError(httpStatusCode, err.Error()))
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(user)
 }
