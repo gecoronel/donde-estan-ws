@@ -17,9 +17,6 @@ func GetHTTPCodeByError(err error) int {
 	if errors.Is(err, web.ErrConflict) {
 		return http.StatusConflict
 	}
-	if errors.Is(err, web.ErrConflict) {
-		return http.StatusConflict
-	}
 	if errors.Is(err, web.ErrNotFound) {
 		return http.StatusNotFound
 	}
@@ -28,5 +25,5 @@ func GetHTTPCodeByError(err error) int {
 	}
 
 	// If not exist a status! This doesn't have to happen.
-	return http.StatusTeapot
+	return http.StatusInternalServerError
 }
