@@ -11,8 +11,7 @@ import (
 var (
 	ErrIncorrectPassword   = errors.New("password incorrect")
 	ErrBadRequest          = errors.New("bad request")
-	ErrUsernameConflict    = errors.New("username conflict")
-	ErrEmailConflict       = errors.New("email conflict")
+	ErrConflict            = errors.New("conflict")
 	ErrNotFound            = errors.New("not found")
 	ErrInternalServerError = errors.New("impossible to solve")
 	ErrNoRows              = errors.New("sql: no rows in result set")

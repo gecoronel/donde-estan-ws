@@ -14,10 +14,10 @@ func GetHTTPCodeByError(err error) int {
 	if errors.Is(err, web.ErrBadRequest) {
 		return http.StatusBadRequest
 	}
-	if errors.Is(err, web.ErrUsernameConflict) {
+	if errors.Is(err, web.ErrConflict) {
 		return http.StatusConflict
 	}
-	if errors.Is(err, web.ErrEmailConflict) {
+	if errors.Is(err, web.ErrConflict) {
 		return http.StatusConflict
 	}
 	if errors.Is(err, web.ErrNotFound) {

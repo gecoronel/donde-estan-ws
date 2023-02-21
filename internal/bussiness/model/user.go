@@ -34,50 +34,50 @@ type User struct {
 	UpdatedAt string `db:"updated_at" json:"updated_at,omitempty"`
 }
 
-func (u User) SetName(name string) {
+func (u *User) SetName(name string) {
 	u.Name = name
 }
 
-func (u User) GetName() string {
+func (u *User) GetName() string {
 	return u.Name
 }
 
-func (u User) SetLastName(lastName string) {
+func (u *User) SetLastName(lastName string) {
 	u.LastName = lastName
 }
 
-func (u User) GetLastName() string {
+func (u *User) GetLastName() string {
 	return u.LastName
 }
 
-func (u User) SetIDNumber(idNumber string) {
+func (u *User) SetIDNumber(idNumber string) {
 	u.IDNumber = idNumber
 }
 
-func (u User) GetIDNumber() string {
+func (u *User) GetIDNumber() string {
 	return u.IDNumber
 }
 
-func (u User) SetEmail(email string) {
+func (u *User) SetEmail(email string) {
 	u.Email = email
 }
 
-func (u User) GetEmail() string {
+func (u *User) GetEmail() string {
 	return u.Email
 }
 
-func (u User) SetUsername(username string) {
+func (u *User) SetUsername(username string) {
 	u.Username = username
 }
 
-func (u User) GetUsername() string {
+func (u *User) GetUsername() string {
 	return u.Username
 }
 
-func (u User) SetPassword(password string) {
+func (u *User) SetPassword(password string) {
 	u.Password = password
 }
 
-func (u User) GetPassword() string {
+func (u *User) GetPassword() string {
 	return u.Password
 }

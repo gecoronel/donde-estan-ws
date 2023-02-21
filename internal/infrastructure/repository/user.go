@@ -193,7 +193,7 @@ func (r UserRepository) GetObservedUser(id uint64) (model.IUser, error) {
 		return nil, err
 	}
 
-	u := model.NewObservedUser(observed)
+	u := model.NewObservedUser(&observed)
 	return u, nil
 }
 
@@ -260,8 +260,8 @@ func (r UserRepository) GetObserverUser(id uint64) (model.IUser, error) {
 		statementUser         = fmt.Sprintf(queryGetUser, id)
 		statementChildren     = fmt.Sprintf(queryGetChildren, id)
 		statementObservedUser = fmt.Sprintf(queryGetObservedUserOfObserverUser, id)
-		children              []model.Children
-		child                 model.Children
+		children              []model.Child
+		child                 model.Child
 		observedUsers         []odUser
 		observedUser          odUser
 		u                     model.IUser
@@ -312,7 +312,7 @@ func (r UserRepository) GetObserverUser(id uint64) (model.IUser, error) {
 
 	ou.Children = children
 	ou.ObservedUsers = mapToObservedUser(observedUsers)
-	u = model.NewObserverUser(ou)
+	u = model.NewObserverUser(&ou)
 	return u, nil
 }
 
@@ -457,7 +457,7 @@ func mapToObservedUser(users []odUser) []model.ObservedUser {
 
 type (
 	allowScan interface {
-		model.User | model.ObserverUser | model.ObservedUser | model.Children | model.SchoolBus | odUser
+		model.User | model.ObserverUser | model.ObservedUser | model.Child | model.SchoolBus | odUser
 	}
 	odUser struct {
 		ID               uint64 `json:"id"`

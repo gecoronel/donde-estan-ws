@@ -117,8 +117,8 @@ func TestUseCaseLogin(t *testing.T) {
 		User: user,
 	}
 
-	observedU := model.NewObservedUser(observedUser)
-	observerU := model.NewObserverUser(observerUser)
+	observedU := model.NewObservedUser(&observedUser)
+	observerU := model.NewObserverUser(&observerUser)
 
 	m := gomock.NewController(t)
 	defer m.Finish()

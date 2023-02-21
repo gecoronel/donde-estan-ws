@@ -41,7 +41,10 @@ func TestGet(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		r.URL.Query().Set("id", "invalid")
+
+		q := r.URL.Query()
+		q.Add("id", "invalid")
+		r.URL.RawQuery = q.Encode()
 		r.Header.Set("Content-Type", "application/json")
 
 		router.ServeHTTP(w, r)
@@ -109,7 +112,7 @@ func TestLogin(t *testing.T) {
 		},
 		ObserverUsers: nil,
 	}
-	u := model.NewObservedUser(user)
+	u := model.NewObservedUser(&user)
 
 	m := gomock.NewController(t)
 	defer m.Finish()

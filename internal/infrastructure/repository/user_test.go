@@ -546,7 +546,7 @@ func TestGetObservedUser(t *testing.T) {
 			PrivacyKey:  "juan.perez.12345678",
 			CompanyName: "school bus company",
 		}
-		expectedObservedUser  = model.NewObservedUser(expected)
+		expectedObservedUser  = model.NewObservedUser(&expected)
 		observedUser          model.IUser
 		user                  = model.ObservedUser{User: expected.User}
 		statementObservedUser = `
@@ -611,7 +611,7 @@ var observer = model.ObserverUser{
 		CreatedAt: "2022-12-10 17:49:30",
 		UpdatedAt: "2022-12-10 17:49:30",
 	},
-	Children: []model.Children{
+	Children: []model.Child{
 		{
 			ID:              1,
 			ObserverUserID:  2,
@@ -729,7 +729,7 @@ func TestGetObserverUser(t *testing.T) {
 				Enabled:  true,
 				Type:     "observer",
 			},
-			Children: []model.Children{
+			Children: []model.Child{
 				{
 					ID:              1,
 					ObserverUserID:  2,
@@ -755,7 +755,7 @@ func TestGetObserverUser(t *testing.T) {
 				},
 			},
 		}
-		expectedObserverUser                = model.NewObserverUser(expected)
+		expectedObserverUser                = model.NewObserverUser(&expected)
 		observerUser                        model.IUser
 		statementUser                       = fmt.Sprintf(queryGetUser, expected.User.ID)
 		statementChildren                   = fmt.Sprintf(queryGetChildren, expected.User.ID)
