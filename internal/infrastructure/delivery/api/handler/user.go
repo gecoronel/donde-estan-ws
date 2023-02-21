@@ -23,9 +23,7 @@ func Get(w http.ResponseWriter, r *http.Request) {
 		log.Error("get user failure in get param: ", err)
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
-		if err = json.NewEncoder(w).Encode(web.NewError(http.StatusBadRequest, err.Error())); err != nil {
-			log.Error("error encoding error data: ", err)
-		}
+		_ = json.NewEncoder(w).Encode(web.NewError(http.StatusBadRequest, err.Error()))
 		return
 	}
 
@@ -35,18 +33,13 @@ func Get(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		httpStatusCode := utils.GetHTTPCodeByError(err)
 		w.WriteHeader(httpStatusCode)
-		if err = json.NewEncoder(w).Encode(web.NewError(httpStatusCode, err.Error())); err != nil {
-			log.Error("error encoding error data: ", err)
-		}
+		_ = json.NewEncoder(w).Encode(web.NewError(httpStatusCode, err.Error()))
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	if err = json.NewEncoder(w).Encode(user); err != nil {
-		log.Error("error encoding user data: ", err)
-		return
-	}
+	_ = json.NewEncoder(w).Encode(user)
 }
 
 func Login(w http.ResponseWriter, r *http.Request) {
@@ -61,9 +54,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		log.Error("body is wrong. ")
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
-		if err = json.NewEncoder(w).Encode(web.NewError(http.StatusBadRequest, err.Error())); err != nil {
-			log.Error("error encoding error data: ", err)
-		}
+		_ = json.NewEncoder(w).Encode(web.NewError(http.StatusBadRequest, err.Error()))
 		return
 	}
 
@@ -71,9 +62,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		log.Error("invalid body")
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
-		if err = json.NewEncoder(w).Encode(web.NewError(http.StatusBadRequest, err.Error())); err != nil {
-			log.Error("error encoding error data: ", err)
-		}
+		_ = json.NewEncoder(w).Encode(web.NewError(http.StatusBadRequest, err.Error()))
 		return
 	}
 
@@ -83,18 +72,13 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		httpStatusCode := utils.GetHTTPCodeByError(err)
 		w.WriteHeader(httpStatusCode)
-		if err = json.NewEncoder(w).Encode(web.NewError(httpStatusCode, err.Error())); err != nil {
-			log.Error("error encoding error data: ", err)
-		}
+		_ = json.NewEncoder(w).Encode(web.NewError(httpStatusCode, err.Error()))
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	if err = json.NewEncoder(w).Encode(user); err != nil {
-		log.Error("error encoding user data: ", err)
-		return
-	}
+	_ = json.NewEncoder(w).Encode(user)
 }
 
 func CreateObservedUser(w http.ResponseWriter, r *http.Request) {
@@ -113,9 +97,7 @@ func CreateObservedUser(w http.ResponseWriter, r *http.Request) {
 		log.Error("invalid body for creation of observed user")
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
-		if err = json.NewEncoder(w).Encode(web.NewError(http.StatusBadRequest, err.Error())); err != nil {
-			log.Error("error encoding error data: ", err)
-		}
+		_ = json.NewEncoder(w).Encode(web.NewError(http.StatusBadRequest, err.Error()))
 		return
 	}
 
@@ -123,9 +105,7 @@ func CreateObservedUser(w http.ResponseWriter, r *http.Request) {
 		log.Error("validation failed for creation of observed user")
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
-		if err = json.NewEncoder(w).Encode(web.NewError(http.StatusBadRequest, err.Error())); err != nil {
-			log.Error("error encoding error data: ", err)
-		}
+		_ = json.NewEncoder(w).Encode(web.NewError(http.StatusBadRequest, err.Error()))
 		return
 	}
 
@@ -134,9 +114,7 @@ func CreateObservedUser(w http.ResponseWriter, r *http.Request) {
 		log.Error("creation observed user failed: ", web.ErrConflict)
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusConflict)
-		if err = json.NewEncoder(w).Encode(web.NewError(http.StatusConflict, web.ErrConflict.Error())); err != nil {
-			log.Error("error encoding error data: ", err)
-		}
+		_ = json.NewEncoder(w).Encode(web.NewError(http.StatusConflict, web.ErrConflict.Error()))
 		return
 	}
 
@@ -145,9 +123,7 @@ func CreateObservedUser(w http.ResponseWriter, r *http.Request) {
 		log.Error("creation observed user failed: ", web.ErrConflict)
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusConflict)
-		if err = json.NewEncoder(w).Encode(web.NewError(http.StatusConflict, web.ErrConflict.Error())); err != nil {
-			log.Error("error encoding error data: ", err)
-		}
+		_ = json.NewEncoder(w).Encode(web.NewError(http.StatusConflict, web.ErrConflict.Error()))
 		return
 	}
 
@@ -157,17 +133,13 @@ func CreateObservedUser(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		httpStatusCode := utils.GetHTTPCodeByError(err)
 		w.WriteHeader(httpStatusCode)
-		if err = json.NewEncoder(w).Encode(web.NewError(httpStatusCode, err.Error())); err != nil {
-			log.Error("error encoding error data: ", err)
-		}
+		_ = json.NewEncoder(w).Encode(web.NewError(httpStatusCode, err.Error()))
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	if err = json.NewEncoder(w).Encode(user); err != nil {
-		log.Error("error encoding user data: ", err)
-	}
+	_ = json.NewEncoder(w).Encode(user)
 }
 
 func CreateObserverUser(w http.ResponseWriter, r *http.Request) {
@@ -187,9 +159,7 @@ func CreateObserverUser(w http.ResponseWriter, r *http.Request) {
 		log.Error("invalid body for creation of observer user")
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
-		if err = json.NewEncoder(w).Encode(web.NewError(http.StatusBadRequest, err.Error())); err != nil {
-			log.Error("error encoding error data: ", err)
-		}
+		_ = json.NewEncoder(w).Encode(web.NewError(http.StatusBadRequest, err.Error()))
 		return
 	}
 
@@ -197,9 +167,7 @@ func CreateObserverUser(w http.ResponseWriter, r *http.Request) {
 		log.Error("validation failed for creation of observer user")
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
-		if err = json.NewEncoder(w).Encode(web.NewError(http.StatusBadRequest, err.Error())); err != nil {
-			log.Error("error encoding error data: ", err)
-		}
+		_ = json.NewEncoder(w).Encode(web.NewError(http.StatusBadRequest, err.Error()))
 		return
 	}
 
@@ -208,9 +176,7 @@ func CreateObserverUser(w http.ResponseWriter, r *http.Request) {
 		log.Error("creation observed user failed: ", web.ErrConflict)
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusConflict)
-		if err = json.NewEncoder(w).Encode(web.NewError(http.StatusConflict, web.ErrConflict.Error())); err != nil {
-			log.Error("error encoding error data: ", err)
-		}
+		_ = json.NewEncoder(w).Encode(web.NewError(http.StatusConflict, web.ErrConflict.Error()))
 		return
 	}
 
@@ -219,9 +185,7 @@ func CreateObserverUser(w http.ResponseWriter, r *http.Request) {
 		log.Error("creation observed user failed: ", web.ErrConflict)
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusConflict)
-		if err = json.NewEncoder(w).Encode(web.NewError(http.StatusConflict, web.ErrConflict.Error())); err != nil {
-			log.Error("error encoding error data: ", err)
-		}
+		_ = json.NewEncoder(w).Encode(web.NewError(http.StatusConflict, web.ErrConflict.Error()))
 		return
 	}
 
@@ -231,15 +195,11 @@ func CreateObserverUser(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		httpStatusCode := utils.GetHTTPCodeByError(err)
 		w.WriteHeader(httpStatusCode)
-		if err = json.NewEncoder(w).Encode(web.NewError(httpStatusCode, err.Error())); err != nil {
-			log.Error("error encoding error data: ", err)
-		}
+		_ = json.NewEncoder(w).Encode(web.NewError(httpStatusCode, err.Error()))
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	if err = json.NewEncoder(w).Encode(user); err != nil {
-		log.Error("error encoding user data: ", err)
-	}
+	_ = json.NewEncoder(w).Encode(user)
 }
