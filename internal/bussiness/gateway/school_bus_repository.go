@@ -3,10 +3,7 @@
 // Package gateway representing the invocation to outer layers, needed by application business logic: external services, data repositories, events, etc.
 package gateway
 
-import (
-	"github.com/gecoronel/donde-estan-ws/internal/bussiness/model"
-	_ "github.com/golang/mock/mockgen/model"
-)
+import "github.com/gecoronel/donde-estan-ws/internal/bussiness/model"
 
 // SchoolBusRepositoryType define IoC key for user repository
 const SchoolBusRepositoryType = "SchoolBusRepository"
