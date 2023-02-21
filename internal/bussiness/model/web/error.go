@@ -11,9 +11,11 @@ import (
 var (
 	ErrIncorrectPassword   = errors.New("password incorrect")
 	ErrBadRequest          = errors.New("bad request")
-	ErrConflict            = errors.New("conflict")
+	ErrUsernameConflict    = errors.New("username conflict")
+	ErrEmailConflict       = errors.New("email conflict")
 	ErrNotFound            = errors.New("not found")
 	ErrInternalServerError = errors.New("impossible to solve")
+	ErrNoRows              = errors.New("sql: no rows in result set")
 )
 
 // Error is our custom commercial agreements implementation.

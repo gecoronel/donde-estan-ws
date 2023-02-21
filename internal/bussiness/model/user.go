@@ -22,12 +22,12 @@ type IUser interface {
 
 type User struct {
 	ID        uint64 `db:"id" json:"id" gorm:"primaryKey,autoIncrement"`
-	Name      string `db:"name" json:"name"`
-	LastName  string `db:"last_name" json:"last_name"`
-	IDNumber  string `db:"id_number" json:"id_number"`
-	Username  string `db:"username" json:"username,omitempty" gorm:"unique"`
-	Password  string `db:"password" json:"password,omitempty"`
-	Email     string `db:"email" json:"email,omitempty" gorm:"unique"`
+	Name      string `db:"name" json:"name" validate:"required"`
+	LastName  string `db:"last_name" json:"last_name" validate:"required"`
+	IDNumber  string `db:"id_number" json:"id_number" validate:"required"`
+	Username  string `db:"username" json:"username,omitempty" gorm:"unique" validate:"required"`
+	Password  string `db:"password" json:"password,omitempty" validate:"required"`
+	Email     string `db:"email" json:"email,omitempty" gorm:"unique" validate:"required"`
 	Enabled   bool   `db:"enabled" json:"enabled,omitempty"`
 	Type      string `db:"type" json:"type,omitempty"`
 	CreatedAt string `db:"created_at" json:"created_at,omitempty"`

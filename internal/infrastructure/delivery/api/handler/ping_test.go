@@ -39,6 +39,8 @@ func configureRoutes(d mock_middleware.Dependencies) *chi.Mux {
 	router.Route("/where/are/they", func(r chi.Router) {
 		r.Post("/login", Login)
 		r.Get("/users/{id}", Get)
+		r.Post("/users/observed", CreateObservedUser)
+		r.Post("/users/observer", CreateObserverUser)
 	})
 
 	return router

@@ -3,6 +3,8 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"errors"
+	"fmt"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"regexp"
@@ -43,7 +45,7 @@ func TestGetUser(t *testing.T) {
 	db, mock := NewMock()
 	defer db.Close()
 
-	gdb, err := gorm.Open(mysql.New(mysql.Config{Conn: db, SkipInitializeWithVersion: true}), &gorm.Config{}) // open gorm db
+	gdb, err := gorm.Open(mysql.New(mysql.Config{Conn: db, SkipInitializeWithVersion: true}), &gorm.Config{})
 	if err != nil {
 		log.Error("error opening database connection")
 		t.Fail()
@@ -84,35 +86,6 @@ func TestGetUser(t *testing.T) {
 
 }
 
-func TestSaveUser(t *testing.T) {
-	db, mock := NewMock()
-	defer db.Close()
-
-	gdb, err := gorm.Open(mysql.New(mysql.Config{Conn: db, SkipInitializeWithVersion: true}), &gorm.Config{}) // open gorm db
-	if err != nil {
-		log.Error("error opening database connection")
-	}
-
-	ur := NewUserRepository(gdb, context.Background())
-
-	query := "INSERT INTO `users` (`name`,`last_name`,`id_number`,`username`,`password`,`email`,`enabled`,`type`,`created_at`,`updated_at`,`id`) VALUES (?,?,?,?,?,?,?,?,?,?,?)" //"INSERT INTO `users` VALUES `users`\\.`id` = \\?"
-
-	t.Run("SaveUser successful", func(t *testing.T) {
-		mock.ExpectBegin()
-		mock.
-			ExpectExec(regexp.QuoteMeta(query)).
-			WithArgs(u.Name, u.LastName, u.IDNumber, u.Username, u.Password, u.Email, u.Enabled, u.Type, u.CreatedAt, u.UpdatedAt, u.ID).
-			WillReturnResult(sqlmock.NewResult(int64(1), 1))
-		mock.ExpectCommit()
-
-		user, err := ur.Save(u)
-		assert.NotNil(t, user)
-		assert.NoError(t, err)
-		assert.Equal(t, u.ID, user.ID)
-	})
-
-}
-
 func TestFindByUsername(t *testing.T) {
 	db, mock := NewMock()
 	defer db.Close()
@@ -124,7 +97,7 @@ func TestFindByUsername(t *testing.T) {
 
 	ur := NewUserRepository(gdb, context.Background())
 
-	query := "SELECT * FROM USERS WHERE username = ?"
+	query := "SELECT * FROM Users WHERE username = ?"
 
 	t.Run("FindByUsername successful", func(t *testing.T) {
 		rows := sqlmock.NewRows([]string{"id", "name", "lastname", "id_number", "username", "password", "email", "enabled", "type", "created_at", "updated_at"}).
@@ -156,11 +129,69 @@ func TestFindByUsername(t *testing.T) {
 	})
 
 	t.Run("FindByUsername nil rows error", func(t *testing.T) {
+		mock.ExpectQuery(regexp.QuoteMeta(query)).WithArgs(u.Username).WillReturnError(web.ErrNoRows)
+
+		user, err := ur.FindByUsername(u.Username)
+		assert.Nil(t, user)
+		assert.Nil(t, err)
+	})
+
+}
+
+func TestFindByEmail(t *testing.T) {
+	db, mock := NewMock()
+	defer db.Close()
+
+	gdb, err := gorm.Open(mysql.New(mysql.Config{Conn: db, SkipInitializeWithVersion: true}), &gorm.Config{})
+	if err != nil {
+		log.Error("error opening database connection")
+	}
+
+	ur := NewUserRepository(gdb, context.Background())
+
+	query := "SELECT * FROM Users WHERE email = ?"
+
+	t.Run("FindByEmail successful", func(t *testing.T) {
+		rows := sqlmock.NewRows(
+			[]string{"id", "name", "lastname", "id_number", "username", "password", "email", "enabled", "type",
+				"created_at", "updated_at"},
+		).
+			AddRow(
+				u.ID, u.Name, u.LastName, u.IDNumber, u.Username, u.Password, u.Email, u.Enabled, u.Type, u.CreatedAt,
+				u.UpdatedAt,
+			)
+		mock.ExpectQuery(regexp.QuoteMeta(query)).WithArgs(u.Email).WillReturnRows(rows)
+
+		user, err := ur.FindByEmail(u.Email)
+		assert.NotNil(t, user)
+		assert.NoError(t, err)
+		assert.Equal(t, u.Email, user.Email)
+	})
+
+	t.Run("FindByEmail scan error", func(t *testing.T) {
+		rows := sqlmock.NewRows([]string{"id", "name", "lastname", "id_number", "username", "password"}).
+			AddRow(u.ID, u.Name, u.LastName, u.IDNumber, u.Username, u.Password)
+		mock.ExpectQuery(regexp.QuoteMeta(query)).WithArgs(u.Email).WillReturnRows(rows)
+
+		user, err := ur.FindByEmail(u.Email)
+		assert.Nil(t, user)
+		assert.Error(t, err)
+	})
+
+	t.Run("FindByEmail rows error", func(t *testing.T) {
+		mock.ExpectQuery(regexp.QuoteMeta(query)).WithArgs(u.Email).WillReturnError(web.ErrInternalServerError)
+
+		user, err := ur.FindByEmail(u.Email)
+		assert.Nil(t, user)
+		assert.Error(t, err)
+	})
+
+	t.Run("FindByEmail nil rows error", func(t *testing.T) {
 		rows := sqlmock.NewRows([]string{"id", "name", "lastname", "numberID", "username", "password", "email"}).
 			AddRow(u.ID, u.Name, u.LastName, u.IDNumber, "invalid username", u.Password, u.Email)
 		mock.ExpectQuery(regexp.QuoteMeta(query)).WithArgs("not found").WillReturnRows(rows)
 
-		user, err := ur.FindByUsername(u.Username)
+		user, err := ur.FindByEmail(u.Email)
 		assert.Nil(t, user)
 		assert.Error(t, err)
 	})
@@ -218,126 +249,282 @@ func TestGetUsers(t *testing.T) {
 
 }
 
-func TestGetObserverUser(t *testing.T) {
-	var (
-		err      error
-		expected = model.ObserverUser{
-			User: model.User{
-				ID:        2,
-				Name:      "Maria",
-				LastName:  "Dominguez",
-				IDNumber:  "87654321",
-				Username:  "mdominguez",
-				Password:  "mdominguez1234",
-				Email:     "mdominguez@mail.com",
-				Enabled:   true,
-				Type:      "observer",
-				CreatedAt: "2022-12-10 17:49:30",
-				UpdatedAt: "2022-12-10 17:49:30",
-			},
-			Children: []model.Children{
-				{
-					ID:              1,
-					ObserverUserID:  2,
-					Name:            "Pilar",
-					LastName:        "Dominguez",
-					SchoolName:      "La Salle",
-					SchoolStartTime: "08:00:00",
-					SchoolEndTime:   "12:00:00",
-					CreatedAt:       "2022-12-10 17:49:32",
-					UpdatedAt:       "2022-12-10 17:49:32",
-				},
-			},
-			ObservedUsers: []model.ObservedUser{
-				{
-					User:        model.User{ID: 1, Name: "Juan", LastName: "Perez", IDNumber: "12345678"},
-					PrivacyKey:  "juan.perez.12345678",
-					CompanyName: "company school bus",
-					SchoolBus: model.SchoolBus{
-						ID:               1,
-						LicensePlate:     "11AAA222",
-						Model:            "Master",
-						Brand:            "Renault",
-						SchoolBusLicense: "11222",
-						CreatedAt:        "2022-12-10 17:49:30",
-						UpdatedAt:        "2022-12-10 17:49:30",
-					},
-				},
-			},
-		}
-		expectedObserverUser  = model.NewObserverUser(expected)
-		observerUser          model.IUser
-		statementChildren     = "SELECT c.id, c.name, c.last_name, c.school_name, c.school_start_time, c.school_end_time, c.observer_user_id, c.created_at, c.updated_at FROM ObserverUsers AS oru INNER JOIN Children AS c ON  oru.user_id = c.observer_user_id;"
-		statementObservedUser = "SELECT u.id, u.name, u.last_name, u.id_number, odu.company_name, odu.privacy_key, sb.id AS school_bus_id, sb.license_plate, sb.model, sb.brand, sb.school_bus_license, sb.created_at, sb.updated_at FROM ObserverUsers AS oru INNER JOIN ObservedUsers AS odu INNER JOIN ObservedUsersObserverUsers AS oduoru INNER JOIN Users AS u INNER JOIN SchoolBuses AS sb ON odu.user_id = oduoru.observed_user_id AND oru.user_id = oduoru.observer_user_id AND u.id = odu.user_id AND odu.school_bus_id = sb.id;"
-		user                  = model.ObserverUser{User: expected.User}
-	)
+var observed = model.ObservedUser{
+	User: model.User{
+		ID:        1,
+		Name:      "Juan",
+		LastName:  "Perez",
+		IDNumber:  "12345678",
+		Username:  "jperez",
+		Password:  "jperez1234",
+		Email:     "jperez@mail.com",
+		Enabled:   true,
+		Type:      "observed",
+		CreatedAt: "2022-12-10 17:49:30",
+		UpdatedAt: "2022-12-10 17:49:30",
+	},
+	PrivacyKey:  "juan.perez.12345678",
+	CompanyName: "school bus company",
+	SchoolBus: model.SchoolBus{
+		ID:           "1",
+		LicensePlate: "11AAA22",
+		Model:        "Master",
+		Brand:        "Renault",
+		License:      "111",
+		CreatedAt:    "2023-02-18 17:09:33",
+		UpdatedAt:    "2023-02-18 17:09:33",
+	},
+}
+
+func TestSaveObservedUser(t *testing.T) {
 	db, mock := NewMock()
 	defer db.Close()
 
-	gdb, err := gorm.Open(mysql.New(mysql.Config{Conn: db, SkipInitializeWithVersion: true}), &gorm.Config{}) // open gorm db
+	gdb, err := gorm.Open(mysql.New(mysql.Config{Conn: db, SkipInitializeWithVersion: true}), &gorm.Config{})
 	if err != nil {
 		log.Error("error opening database connection")
-		t.Fail()
 	}
 
 	ur := NewUserRepository(gdb, context.Background())
 
-	t.Run("get observer user, observer user scan error", func(t *testing.T) {
-		mock.ExpectQuery(statementObservedUser).WillReturnError(web.ErrInternalServerError)
-
-		rows := sqlmock.NewRows([]string{"id", "name", "last_name", "school_name", "school_start_time", "school_end_time", "observer_user_id", "created_at", "updated_at"}).
-			AddRow(expected.Children[0].ID, expected.Children[0].Name, expected.Children[0].LastName, expected.Children[0].SchoolName, expected.Children[0].SchoolStartTime, expected.Children[0].SchoolEndTime, expected.Children[0].ObserverUserID, expected.Children[0].CreatedAt, expected.Children[0].UpdatedAt)
-		mock.ExpectQuery(statementChildren).WillReturnRows(rows)
-
-		observerUser, err := ur.GetObserverUser(&user)
-
-		assert.NotNil(t, err)
-		assert.Equal(t, web.ErrInternalServerError, err)
-		assert.Nil(t, observerUser)
-	})
-
-	t.Run("get observer user, children scan error", func(t *testing.T) {
-		mock.ExpectQuery(statementChildren).WillReturnError(web.ErrInternalServerError)
-
-		rows := sqlmock.NewRows([]string{"id", "name", "last_name", "id_number", "company_name", "privacy_key", "school_bus_id", "license_plate", "model", "brand", "school_bus_license", "created_at", "updated_at"}).
-			AddRow(expected.ObservedUsers[0].GetUserID(), expected.ObservedUsers[0].GetName(), expected.ObservedUsers[0].GetLastName(), expected.ObservedUsers[0].GetIDNumber(), expected.ObservedUsers[0].CompanyName, expected.ObservedUsers[0].PrivacyKey, expected.ObservedUsers[0].SchoolBus.ID, expected.ObservedUsers[0].SchoolBus.LicensePlate, expected.ObservedUsers[0].SchoolBus.Model, expected.ObservedUsers[0].SchoolBus.Brand, expected.ObservedUsers[0].SchoolBus.SchoolBusLicense, expected.ObservedUsers[0].SchoolBus.CreatedAt, expected.ObservedUsers[0].SchoolBus.UpdatedAt)
-		mock.ExpectQuery(statementObservedUser).WillReturnRows(rows)
-
-		observerUser, err := ur.GetObserverUser(&user)
-
-		assert.NotNil(t, err)
-		assert.Equal(t, web.ErrInternalServerError, err)
-		assert.Nil(t, observerUser)
-	})
-
-	t.Run("GetObserverUser successful", func(t *testing.T) {
-		dbWithGoRoutine, mockWithGoRoutine := NewMock()
-		defer dbWithGoRoutine.Close()
-
-		gdbWithGoRoutine, errWithGoRoutine := gorm.Open(mysql.New(mysql.Config{Conn: dbWithGoRoutine, SkipInitializeWithVersion: true}), &gorm.Config{}) // open gorm db
-		if errWithGoRoutine != nil {
-			log.Error("error opening database connection")
-			t.Fail()
-		}
-
-		urWithGoRoutine := NewUserRepository(gdbWithGoRoutine, context.Background())
-
+	t.Run("SaveObservedUser successful", func(t *testing.T) {
+		mock.ExpectBegin()
 		// note this line is important for unordered expectation matching
-		mockWithGoRoutine.MatchExpectationsInOrder(false)
+		mock.MatchExpectationsInOrder(false)
+		mock.
+			ExpectExec(regexp.QuoteMeta(querySaveUser)).
+			WithArgs(observed.User.Name, observed.User.LastName, observed.User.IDNumber, observed.User.Username,
+				observed.User.Password, observed.User.Email, observed.User.Type).
+			WillReturnResult(sqlmock.NewResult(int64(1), 1))
 
-		rows := sqlmock.NewRows([]string{"id", "name", "last_name", "school_name", "school_start_time", "school_end_time", "observer_user_id", "created_at", "updated_at"}).
-			AddRow(expected.Children[0].ID, expected.Children[0].Name, expected.Children[0].LastName, expected.Children[0].SchoolName, expected.Children[0].SchoolStartTime, expected.Children[0].SchoolEndTime, expected.Children[0].ObserverUserID, expected.Children[0].CreatedAt, expected.Children[0].UpdatedAt)
-		mockWithGoRoutine.ExpectQuery(statementChildren).WillReturnRows(rows)
+		rows := sqlmock.NewRows([]string{"id"}).
+			AddRow(observed.User.ID)
+		mock.ExpectQuery(regexp.QuoteMeta(querySelectUserIDByUsername)).
+			WithArgs(observed.User.Username).
+			WillReturnRows(rows)
 
-		rows = sqlmock.NewRows([]string{"id", "name", "last_name", "id_number", "company_name", "privacy_key", "school_bus_id", "license_plate", "model", "brand", "school_bus_license", "created_at", "updated_at"}).
-			AddRow(expected.ObservedUsers[0].GetUserID(), expected.ObservedUsers[0].GetName(), expected.ObservedUsers[0].GetLastName(), expected.ObservedUsers[0].GetIDNumber(), expected.ObservedUsers[0].CompanyName, expected.ObservedUsers[0].PrivacyKey, expected.ObservedUsers[0].SchoolBus.ID, expected.ObservedUsers[0].SchoolBus.LicensePlate, expected.ObservedUsers[0].SchoolBus.Model, expected.ObservedUsers[0].SchoolBus.Brand, expected.ObservedUsers[0].SchoolBus.SchoolBusLicense, expected.ObservedUsers[0].SchoolBus.CreatedAt, expected.ObservedUsers[0].SchoolBus.UpdatedAt)
-		mockWithGoRoutine.ExpectQuery(statementObservedUser).WillReturnRows(rows)
+		mock.
+			ExpectExec(regexp.QuoteMeta(querySaveSchoolBus)).
+			WithArgs(observed.SchoolBus.ID, observed.SchoolBus.LicensePlate, observed.SchoolBus.Model,
+				observed.SchoolBus.Brand, observed.SchoolBus.License).
+			WillReturnResult(sqlmock.NewResult(int64(1), 1))
 
-		observerUser, err = urWithGoRoutine.GetObserverUser(&user)
-		time.Sleep(200 * time.Millisecond)
+		rows = sqlmock.NewRows([]string{"id", "license_plate", "model", "brand", "school_bus_license", "created_at",
+			"updated_at"}).
+			AddRow(observed.User.ID, observed.SchoolBus.LicensePlate, observed.SchoolBus.Model,
+				observed.SchoolBus.Brand, observed.SchoolBus.License, observed.SchoolBus.CreatedAt,
+				observed.SchoolBus.UpdatedAt)
+		mock.ExpectQuery(regexp.QuoteMeta(querySelectSchoolBusByID)).
+			WithArgs(observed.SchoolBus.ID).
+			WillReturnRows(rows)
 
-		assert.Nil(t, err)
-		assert.Equal(t, expectedObserverUser, observerUser)
+		mock.
+			ExpectExec(regexp.QuoteMeta(querySaveObservedUser)).
+			WithArgs(observed.User.ID, observed.PrivacyKey, observed.CompanyName, observed.SchoolBus.ID).
+			WillReturnResult(sqlmock.NewResult(int64(1), 1))
+
+		rows = sqlmock.NewRows([]string{"user_id", "privacy_key", "company_name"}).
+			AddRow(observed.User.ID, observed.PrivacyKey, observed.CompanyName)
+		mock.ExpectQuery(regexp.QuoteMeta(queryGetObservedUserByID)).
+			WithArgs(observed.User.ID).
+			WillReturnRows(rows)
+
+		mock.ExpectCommit()
+
+		user, err := ur.SaveObservedUser(observed)
+		assert.NotNil(t, user)
+		assert.NoError(t, err)
+		assert.Equal(t, observed.User.ID, user.User.ID)
+	})
+
+	t.Run("SaveObservedUser error saving user", func(t *testing.T) {
+		mock.ExpectBegin()
+		// note this line is important for unordered expectation matching
+		mock.MatchExpectationsInOrder(false)
+		mock.
+			ExpectExec(regexp.QuoteMeta(querySaveUser)).
+			WithArgs(observed.User.Name, observed.User.LastName, observed.User.IDNumber, observed.User.Username,
+				observed.User.Password, observed.User.Email, observed.User.Type).
+			WillReturnError(errors.New("some error"))
+
+		mock.ExpectCommit()
+
+		user, err := ur.SaveObservedUser(observed)
+		assert.Nil(t, user)
+		assert.NotNil(t, err)
+	})
+
+	t.Run("SaveObservedUser error selecting user", func(t *testing.T) {
+		mock.ExpectBegin()
+		// note this line is important for unordered expectation matching
+		mock.MatchExpectationsInOrder(false)
+		mock.
+			ExpectExec(regexp.QuoteMeta(querySaveUser)).
+			WithArgs(observed.User.Name, observed.User.LastName, observed.User.IDNumber, observed.User.Username,
+				observed.User.Password, observed.User.Email, observed.User.Type).
+			WillReturnResult(sqlmock.NewResult(int64(1), 1))
+
+		mock.ExpectQuery(regexp.QuoteMeta(querySelectUserIDByUsername)).
+			WithArgs(observed.User.Username).
+			WillReturnError(errors.New("some error"))
+
+		mock.ExpectCommit()
+
+		user, err := ur.SaveObservedUser(observed)
+		assert.Nil(t, user)
+		assert.NotNil(t, err)
+	})
+
+	t.Run("SaveObservedUser error saving school bus", func(t *testing.T) {
+		mock.ExpectBegin()
+		// note this line is important for unordered expectation matching
+		mock.MatchExpectationsInOrder(false)
+		mock.
+			ExpectExec(regexp.QuoteMeta(querySaveUser)).
+			WithArgs(observed.User.Name, observed.User.LastName, observed.User.IDNumber, observed.User.Username,
+				observed.User.Password, observed.User.Email, observed.User.Type).
+			WillReturnResult(sqlmock.NewResult(int64(1), 1))
+
+		rows := sqlmock.NewRows([]string{"id"}).
+			AddRow(observed.User.ID)
+		mock.ExpectQuery(regexp.QuoteMeta(querySelectUserIDByUsername)).
+			WithArgs(observed.User.Username).
+			WillReturnRows(rows)
+
+		mock.
+			ExpectExec(regexp.QuoteMeta(querySaveSchoolBus)).
+			WithArgs(observed.SchoolBus.ID, observed.SchoolBus.LicensePlate, observed.SchoolBus.Model,
+				observed.SchoolBus.Brand, observed.SchoolBus.License).
+			WillReturnError(errors.New("some error"))
+
+		mock.ExpectCommit()
+
+		user, err := ur.SaveObservedUser(observed)
+		assert.Nil(t, user)
+		assert.NotNil(t, err)
+	})
+
+	t.Run("SaveObservedUser error selecting school bus", func(t *testing.T) {
+		mock.ExpectBegin()
+		// note this line is important for unordered expectation matching
+		mock.MatchExpectationsInOrder(false)
+		mock.
+			ExpectExec(regexp.QuoteMeta(querySaveUser)).
+			WithArgs(observed.User.Name, observed.User.LastName, observed.User.IDNumber, observed.User.Username,
+				observed.User.Password, observed.User.Email, observed.User.Type).
+			WillReturnResult(sqlmock.NewResult(int64(1), 1))
+
+		rows := sqlmock.NewRows([]string{"id"}).
+			AddRow(observed.User.ID)
+		mock.ExpectQuery(regexp.QuoteMeta(querySelectUserIDByUsername)).
+			WithArgs(observed.User.Username).
+			WillReturnRows(rows)
+
+		mock.
+			ExpectExec(regexp.QuoteMeta(querySaveSchoolBus)).
+			WithArgs(observed.SchoolBus.ID, observed.SchoolBus.LicensePlate, observed.SchoolBus.Model,
+				observed.SchoolBus.Brand, observed.SchoolBus.License).
+			WillReturnResult(sqlmock.NewResult(int64(1), 1))
+
+		mock.ExpectQuery(regexp.QuoteMeta(querySelectSchoolBusByID)).
+			WithArgs(observed.SchoolBus.ID).
+			WillReturnError(errors.New("some error"))
+
+		mock.ExpectCommit()
+
+		user, err := ur.SaveObservedUser(observed)
+		assert.Nil(t, user)
+		assert.NotNil(t, err)
+	})
+
+	t.Run("SaveObservedUser error savin observed user", func(t *testing.T) {
+		mock.ExpectBegin()
+		// note this line is important for unordered expectation matching
+		mock.MatchExpectationsInOrder(false)
+		mock.
+			ExpectExec(regexp.QuoteMeta(querySaveUser)).
+			WithArgs(observed.User.Name, observed.User.LastName, observed.User.IDNumber, observed.User.Username,
+				observed.User.Password, observed.User.Email, observed.User.Type).
+			WillReturnResult(sqlmock.NewResult(int64(1), 1))
+
+		rows := sqlmock.NewRows([]string{"id"}).
+			AddRow(observed.User.ID)
+		mock.ExpectQuery(regexp.QuoteMeta(querySelectUserIDByUsername)).
+			WithArgs(observed.User.Username).
+			WillReturnRows(rows)
+
+		mock.
+			ExpectExec(regexp.QuoteMeta(querySaveSchoolBus)).
+			WithArgs(observed.SchoolBus.ID, observed.SchoolBus.LicensePlate, observed.SchoolBus.Model,
+				observed.SchoolBus.Brand, observed.SchoolBus.License).
+			WillReturnResult(sqlmock.NewResult(int64(1), 1))
+
+		rows = sqlmock.NewRows([]string{"id", "license_plate", "model", "brand", "school_bus_license", "created_at",
+			"updated_at"}).
+			AddRow(observed.User.ID, observed.SchoolBus.LicensePlate, observed.SchoolBus.Model,
+				observed.SchoolBus.Brand, observed.SchoolBus.License, observed.SchoolBus.CreatedAt,
+				observed.SchoolBus.UpdatedAt)
+		mock.ExpectQuery(regexp.QuoteMeta(querySelectSchoolBusByID)).
+			WithArgs(observed.SchoolBus.ID).
+			WillReturnRows(rows)
+
+		mock.
+			ExpectExec(regexp.QuoteMeta(querySaveObservedUser)).
+			WithArgs(observed.User.ID, observed.PrivacyKey, observed.CompanyName, observed.SchoolBus.ID).
+			WillReturnError(errors.New("some error"))
+
+		mock.ExpectCommit()
+
+		user, err := ur.SaveObservedUser(observed)
+		assert.Nil(t, user)
+		assert.NotNil(t, err)
+	})
+
+	t.Run("SaveObservedUser error selecting observed user", func(t *testing.T) {
+		mock.ExpectBegin()
+		// note this line is important for unordered expectation matching
+		mock.MatchExpectationsInOrder(false)
+		mock.
+			ExpectExec(regexp.QuoteMeta(querySaveUser)).
+			WithArgs(observed.User.Name, observed.User.LastName, observed.User.IDNumber, observed.User.Username,
+				observed.User.Password, observed.User.Email, observed.User.Type).
+			WillReturnResult(sqlmock.NewResult(int64(1), 1))
+
+		rows := sqlmock.NewRows([]string{"id"}).
+			AddRow(observed.User.ID)
+		mock.ExpectQuery(regexp.QuoteMeta(querySelectUserIDByUsername)).
+			WithArgs(observed.User.Username).
+			WillReturnRows(rows)
+
+		mock.
+			ExpectExec(regexp.QuoteMeta(querySaveSchoolBus)).
+			WithArgs(observed.SchoolBus.ID, observed.SchoolBus.LicensePlate, observed.SchoolBus.Model,
+				observed.SchoolBus.Brand, observed.SchoolBus.License).
+			WillReturnResult(sqlmock.NewResult(int64(1), 1))
+
+		rows = sqlmock.NewRows([]string{"id", "license_plate", "model", "brand", "school_bus_license", "created_at",
+			"updated_at"}).
+			AddRow(observed.User.ID, observed.SchoolBus.LicensePlate, observed.SchoolBus.Model,
+				observed.SchoolBus.Brand, observed.SchoolBus.License, observed.SchoolBus.CreatedAt,
+				observed.SchoolBus.UpdatedAt)
+		mock.ExpectQuery(regexp.QuoteMeta(querySelectSchoolBusByID)).
+			WithArgs(observed.SchoolBus.ID).
+			WillReturnRows(rows)
+
+		mock.
+			ExpectExec(regexp.QuoteMeta(querySaveObservedUser)).
+			WithArgs(observed.User.ID, observed.PrivacyKey, observed.CompanyName, observed.SchoolBus.ID).
+			WillReturnResult(sqlmock.NewResult(int64(1), 1))
+
+		mock.ExpectQuery(regexp.QuoteMeta(queryGetObservedUserByID)).
+			WithArgs(observed.User.ID).
+			WillReturnError(errors.New("some error"))
+
+		mock.ExpectCommit()
+
+		user, err := ur.SaveObservedUser(observed)
+		assert.Nil(t, user)
+		assert.NotNil(t, err)
 	})
 }
 
@@ -346,25 +533,31 @@ func TestGetObservedUser(t *testing.T) {
 		err      error
 		expected = model.ObservedUser{
 			User: model.User{
-				ID:        1,
-				Name:      "Juan",
-				LastName:  "Perez",
-				IDNumber:  "12345678",
-				Username:  "jperez",
-				Password:  "jperez1234",
-				Email:     "jperez@mail.com",
-				Enabled:   true,
-				Type:      "observed",
-				CreatedAt: "2022-12-10 17:49:30",
-				UpdatedAt: "2022-12-10 17:49:30",
+				ID:       1,
+				Name:     "Juan",
+				LastName: "Perez",
+				IDNumber: "12345678",
+				Username: "jperez",
+				Password: "jperez1234",
+				Email:    "jperez@mail.com",
+				Enabled:  true,
+				Type:     "observed",
 			},
 			PrivacyKey:  "juan.perez.12345678",
 			CompanyName: "school bus company",
 		}
 		expectedObservedUser  = model.NewObservedUser(expected)
-		observerUser          model.IUser
-		statementObservedUser = "SELECT ou.user_id, ou.school_bus_id, ou.privacy_key, ou.company_name, sb.license_plate, sb.model, sb.brand, sb.school_bus_license, sb.created_at, sb.updated_at FROM ObservedUsers AS ou INNER JOIN SchoolBuses AS sb WHERE user_id = ?"
+		observedUser          model.IUser
 		user                  = model.ObservedUser{User: expected.User}
+		statementObservedUser = `
+			SELECT u.id, u.name, u.last_name, u.id_number, u.username, u.password, u.email, u.type, u.enabled, 
+			       ou.privacy_key, ou.company_name, sb.id, sb.license_plate, sb.model, sb.brand, sb.license, 
+			       sb.created_at, sb.updated_at 
+			FROM ObservedUsers AS ou 
+			    INNER JOIN Users AS u ON u.id = ou.user_id 
+			    INNER JOIN SchoolBuses AS sb ON sb.id = ou.school_bus_id 
+			WHERE u.id = ?
+			`
 	)
 
 	db, mock := NewMock()
@@ -379,21 +572,332 @@ func TestGetObservedUser(t *testing.T) {
 	ur := NewUserRepository(gdb, context.Background())
 
 	t.Run("get observed user successful", func(t *testing.T) {
-		rows := sqlmock.NewRows([]string{"user_id", "school_bus_id", "privacy_key", "company_name", "license_plate", "model", "brand", "school_bus_license", "created_at", "updated_at"}).
-			AddRow(expected.User.ID, expected.SchoolBus.ID, expected.PrivacyKey, expected.CompanyName, expected.SchoolBus.LicensePlate, expected.SchoolBus.Model, expected.SchoolBus.Brand, expected.SchoolBus.SchoolBusLicense, expected.SchoolBus.CreatedAt, expected.SchoolBus.UpdatedAt)
+		rows := sqlmock.NewRows([]string{"user_id", "name", "last_name", "id_number", "username", "password", "email",
+			"type", "enabled", "school_bus_id", "privacy_key", "company_name", "license_plate", "model", "brand",
+			"license", "created_at", "updated_at"}).
+			AddRow(expected.User.ID, expected.User.Name, expected.User.LastName, expected.User.IDNumber,
+				expected.User.Username, expected.User.Password, expected.User.Email, expected.User.Type,
+				expected.User.Enabled, expected.SchoolBus.ID, expected.PrivacyKey, expected.CompanyName,
+				expected.SchoolBus.LicensePlate, expected.SchoolBus.Model, expected.SchoolBus.Brand,
+				expected.SchoolBus.License, expected.SchoolBus.CreatedAt, expected.SchoolBus.UpdatedAt)
 		mock.ExpectQuery(statementObservedUser).WithArgs(expected.User.ID).WillReturnRows(rows)
 
-		observerUser, err = ur.GetObservedUser(&user)
+		observedUser, err = ur.GetObservedUser(user.GetUserID())
 
 		assert.Nil(t, err)
-		assert.Equal(t, expectedObservedUser, observerUser)
+		assert.Equal(t, expectedObservedUser, observedUser)
 	})
 
 	t.Run("get observed user scan error", func(t *testing.T) {
 		mock.ExpectQuery(statementObservedUser).WithArgs(expected.User.ID).WillReturnError(web.ErrInternalServerError)
 
-		observerUser, err = ur.GetObservedUser(&user)
+		observedUser, err = ur.GetObservedUser(user.GetUserID())
 
 		assert.NotNil(t, err)
+	})
+}
+
+var observer = model.ObserverUser{
+	User: model.User{
+		ID:        2,
+		Name:      "Maria",
+		LastName:  "Dominguez",
+		IDNumber:  "87654321",
+		Username:  "mdominguez",
+		Password:  "mdominguez1234",
+		Email:     "mdominguez@mail.com",
+		Enabled:   true,
+		Type:      "observer",
+		CreatedAt: "2022-12-10 17:49:30",
+		UpdatedAt: "2022-12-10 17:49:30",
+	},
+	Children: []model.Children{
+		{
+			ID:              1,
+			ObserverUserID:  2,
+			Name:            "Pilar",
+			LastName:        "Dominguez",
+			SchoolName:      "La Salle",
+			SchoolStartTime: "08:00:00",
+			SchoolEndTime:   "12:00:00",
+			CreatedAt:       "2022-12-10 17:49:32",
+			UpdatedAt:       "2022-12-10 17:49:32",
+		},
+	},
+	ObservedUsers: []model.ObservedUser{
+		{
+			User:        model.User{ID: 1, Name: "Juan", LastName: "Perez", IDNumber: "12345678"},
+			PrivacyKey:  "juan.perez.12345678",
+			CompanyName: "company school bus",
+			SchoolBus: model.SchoolBus{
+				ID:           "1",
+				LicensePlate: "11AAA222",
+				Model:        "Master",
+				Brand:        "Renault",
+				License:      "11222",
+				CreatedAt:    "2022-12-10 17:49:30",
+				UpdatedAt:    "2022-12-10 17:49:30",
+			},
+		},
+	},
+}
+
+func TestSaveObserverUser(t *testing.T) {
+	db, mock := NewMock()
+	defer db.Close()
+
+	gdb, err := gorm.Open(mysql.New(mysql.Config{Conn: db, SkipInitializeWithVersion: true}), &gorm.Config{})
+	if err != nil {
+		log.Error("error opening database connection")
+	}
+
+	ur := NewUserRepository(gdb, context.Background())
+
+	t.Run("SaveUser successful", func(t *testing.T) {
+		mock.ExpectBegin()
+		// note this line is important for unordered expectation matching
+		mock.MatchExpectationsInOrder(false)
+		mock.
+			ExpectExec(regexp.QuoteMeta(querySaveUser)).
+			WithArgs(
+				observer.User.Name, observer.User.LastName, observer.User.IDNumber, observer.User.Username,
+				observer.User.Password, observer.User.Email, observer.User.Type,
+			).
+			WillReturnResult(sqlmock.NewResult(int64(1), 1))
+
+		rows := sqlmock.NewRows([]string{"id"}).AddRow(observer.User.ID)
+		mock.ExpectQuery(querySelectUserIDByUsername).WillReturnRows(rows)
+
+		mock.ExpectCommit()
+
+		user, err := ur.SaveObserverUser(observer)
+		assert.NotNil(t, user)
+		assert.NoError(t, err)
+		assert.Equal(t, user.User.ID, observer.User.ID)
+	})
+
+	t.Run("SaveUser error saving observer user", func(t *testing.T) {
+		mock.ExpectBegin()
+		// note this line is important for unordered expectation matching
+		mock.MatchExpectationsInOrder(false)
+		mock.
+			ExpectExec(regexp.QuoteMeta(querySaveUser)).
+			WithArgs(observer.User.Name, observer.User.LastName, observer.User.IDNumber, observer.User.Username,
+				observer.User.Password, observer.User.Email, observer.User.Type).
+			WillReturnError(errors.New("some error"))
+
+		mock.ExpectCommit()
+
+		user, err := ur.SaveObserverUser(observer)
+		assert.Nil(t, user)
+		assert.NotNil(t, err)
+	})
+
+	t.Run("SaveUser error selecting observer user", func(t *testing.T) {
+		mock.ExpectBegin()
+		// note this line is important for unordered expectation matching
+		mock.MatchExpectationsInOrder(false)
+		mock.
+			ExpectExec(regexp.QuoteMeta(querySaveUser)).
+			WithArgs(observer.User.Name, observer.User.LastName, observer.User.IDNumber, observer.User.Username,
+				observer.User.Password, observer.User.Email, observer.User.Type).
+			WillReturnResult(sqlmock.NewResult(int64(1), 1))
+
+		mock.ExpectQuery(querySelectUserIDByUsername).WillReturnError(errors.New("some error"))
+
+		mock.ExpectCommit()
+
+		user, err := ur.SaveObserverUser(observer)
+		assert.Nil(t, user)
+		assert.NotNil(t, err)
+	})
+
+}
+
+func TestGetObserverUser(t *testing.T) {
+	var (
+		err      error
+		expected = model.ObserverUser{
+			User: model.User{
+				ID:       2,
+				Name:     "Maria",
+				LastName: "Dominguez",
+				IDNumber: "87654321",
+				Username: "mdominguez",
+				Password: "mdominguez1234",
+				Email:    "mdominguez@mail.com",
+				Enabled:  true,
+				Type:     "observer",
+			},
+			Children: []model.Children{
+				{
+					ID:              1,
+					ObserverUserID:  2,
+					Name:            "Pilar",
+					LastName:        "Dominguez",
+					SchoolName:      "La Salle",
+					SchoolStartTime: "08:00:00",
+					SchoolEndTime:   "12:00:00",
+				},
+			},
+			ObservedUsers: []model.ObservedUser{
+				{
+					User:        model.User{ID: 1, Name: "Juan", LastName: "Perez", IDNumber: "12345678"},
+					PrivacyKey:  "juan.perez.12345678",
+					CompanyName: "company school bus",
+					SchoolBus: model.SchoolBus{
+						ID:           "1",
+						LicensePlate: "11AAA222",
+						Model:        "Master",
+						Brand:        "Renault",
+						License:      "11222",
+					},
+				},
+			},
+		}
+		expectedObserverUser                = model.NewObserverUser(expected)
+		observerUser                        model.IUser
+		statementUser                       = fmt.Sprintf(queryGetUser, expected.User.ID)
+		statementChildren                   = fmt.Sprintf(queryGetChildren, expected.User.ID)
+		statementObservedUserOfObserverUser = fmt.Sprintf(queryGetObservedUserOfObserverUser, expected.User.ID)
+		user                                = model.ObserverUser{User: expected.User}
+	)
+	db, mock := NewMock()
+	defer db.Close()
+
+	gdb, err := gorm.Open(mysql.New(mysql.Config{Conn: db, SkipInitializeWithVersion: true}), &gorm.Config{})
+	if err != nil {
+		log.Error("error opening database connection")
+		t.Fail()
+	}
+
+	ur := NewUserRepository(gdb, context.Background())
+
+	t.Run("get observer user, error scaning user", func(t *testing.T) {
+		// note this line is important for unordered expectation matching
+		mock.MatchExpectationsInOrder(false)
+
+		mock.ExpectQuery(statementUser).WillReturnError(web.ErrInternalServerError)
+
+		rows := sqlmock.NewRows([]string{"id", "name", "last_name", "school_name", "school_start_time",
+			"school_end_time", "observer_user_id", "created_at", "updated_at"}).
+			AddRow(expected.Children[0].ID, expected.Children[0].Name, expected.Children[0].LastName,
+				expected.Children[0].SchoolName, expected.Children[0].SchoolStartTime,
+				expected.Children[0].SchoolEndTime, expected.Children[0].ObserverUserID, expected.Children[0].CreatedAt,
+				expected.Children[0].UpdatedAt)
+		mock.ExpectQuery(statementChildren).WillReturnRows(rows)
+
+		rows = sqlmock.NewRows([]string{"id", "name", "last_name", "id_number", "company_name", "privacy_key",
+			"school_bus_id", "license_plate", "model", "brand", "school_bus_license", "created_at", "updated_at"}).
+			AddRow(expected.ObservedUsers[0].User.ID, expected.ObservedUsers[0].User.Name,
+				expected.ObservedUsers[0].User.LastName, expected.ObservedUsers[0].User.IDNumber,
+				expected.ObservedUsers[0].CompanyName, expected.ObservedUsers[0].PrivacyKey,
+				expected.ObservedUsers[0].SchoolBus.ID, expected.ObservedUsers[0].SchoolBus.LicensePlate,
+				expected.ObservedUsers[0].SchoolBus.Model, expected.ObservedUsers[0].SchoolBus.Brand,
+				expected.ObservedUsers[0].SchoolBus.License, expected.ObservedUsers[0].SchoolBus.CreatedAt,
+				expected.ObservedUsers[0].SchoolBus.UpdatedAt)
+		mock.ExpectQuery(statementObservedUserOfObserverUser).WillReturnRows(rows)
+
+		observerUser, err := ur.GetObserverUser(user.GetUserID())
+
+		assert.NotNil(t, err)
+		assert.Equal(t, web.ErrInternalServerError, err)
+		assert.Nil(t, observerUser)
+	})
+
+	t.Run("get observer user, error scaning children", func(t *testing.T) {
+		// note this line is important for unordered expectation matching
+		mock.MatchExpectationsInOrder(false)
+
+		rows := sqlmock.NewRows([]string{"id", "name", "last_name", "id_number", "username", "password", "email",
+			"type", "enabled"}).
+			AddRow(expected.User.ID, expected.User.Name, expected.User.LastName, expected.User.IDNumber,
+				expected.User.Username, expected.User.Password, expected.User.Email, expected.User.Type,
+				expected.User.Enabled)
+		mock.ExpectQuery(statementUser).WillReturnRows(rows)
+
+		mock.ExpectQuery(statementChildren).WillReturnError(web.ErrInternalServerError)
+
+		rows = sqlmock.NewRows([]string{"id", "name", "last_name", "id_number", "company_name", "privacy_key",
+			"school_bus_id", "license_plate", "model", "brand", "school_bus_license", "created_at", "updated_at"}).
+			AddRow(expected.ObservedUsers[0].User.ID, expected.ObservedUsers[0].User.Name,
+				expected.ObservedUsers[0].User.LastName, expected.ObservedUsers[0].User.IDNumber,
+				expected.ObservedUsers[0].CompanyName, expected.ObservedUsers[0].PrivacyKey,
+				expected.ObservedUsers[0].SchoolBus.ID, expected.ObservedUsers[0].SchoolBus.LicensePlate,
+				expected.ObservedUsers[0].SchoolBus.Model, expected.ObservedUsers[0].SchoolBus.Brand,
+				expected.ObservedUsers[0].SchoolBus.License, expected.ObservedUsers[0].SchoolBus.CreatedAt,
+				expected.ObservedUsers[0].SchoolBus.UpdatedAt)
+		mock.ExpectQuery(statementObservedUserOfObserverUser).WillReturnRows(rows)
+
+		observerUser, err := ur.GetObserverUser(user.GetUserID())
+
+		assert.NotNil(t, err)
+		assert.Equal(t, web.ErrInternalServerError, err)
+		assert.Nil(t, observerUser)
+	})
+
+	t.Run("get observer user, error scaning observerd user of observer user", func(t *testing.T) {
+		// note this line is important for unordered expectation matching
+		mock.MatchExpectationsInOrder(false)
+
+		rows := sqlmock.NewRows([]string{"id", "name", "last_name", "id_number", "username", "password", "email",
+			"type", "enabled"}).
+			AddRow(expected.User.ID, expected.User.Name, expected.User.LastName, expected.User.IDNumber,
+				expected.User.Username, expected.User.Password, expected.User.Email, expected.User.Type,
+				expected.User.Enabled)
+		mock.ExpectQuery(statementUser).WillReturnRows(rows)
+
+		rows = sqlmock.NewRows([]string{"id", "name", "last_name", "school_name", "school_start_time",
+			"school_end_time", "observer_user_id", "created_at", "updated_at"}).
+			AddRow(expected.Children[0].ID, expected.Children[0].Name, expected.Children[0].LastName,
+				expected.Children[0].SchoolName, expected.Children[0].SchoolStartTime,
+				expected.Children[0].SchoolEndTime, expected.Children[0].ObserverUserID, expected.Children[0].CreatedAt,
+				expected.Children[0].UpdatedAt)
+		mock.ExpectQuery(statementChildren).WillReturnRows(rows)
+
+		mock.ExpectQuery(statementObservedUserOfObserverUser).WillReturnError(web.ErrInternalServerError)
+
+		observerUser, err := ur.GetObserverUser(user.GetUserID())
+
+		assert.NotNil(t, err)
+		assert.Equal(t, web.ErrInternalServerError, err)
+		assert.Nil(t, observerUser)
+	})
+
+	t.Run("get observer user successful", func(t *testing.T) {
+		// note this line is important for unordered expectation matching
+		mock.MatchExpectationsInOrder(false)
+
+		rows := sqlmock.NewRows([]string{"id", "name", "last_name", "id_number", "username", "password", "email",
+			"type", "enabled"}).
+			AddRow(expected.User.ID, expected.User.Name, expected.User.LastName, expected.User.IDNumber,
+				expected.User.Username, expected.User.Password, expected.User.Email, expected.User.Type,
+				expected.User.Enabled)
+		mock.ExpectQuery(statementUser).WillReturnRows(rows)
+
+		rows = sqlmock.NewRows([]string{"id", "name", "last_name", "school_name", "school_start_time",
+			"school_end_time", "observer_user_id", "created_at", "updated_at"}).
+			AddRow(expected.Children[0].ID, expected.Children[0].Name, expected.Children[0].LastName,
+				expected.Children[0].SchoolName, expected.Children[0].SchoolStartTime,
+				expected.Children[0].SchoolEndTime, expected.Children[0].ObserverUserID, expected.Children[0].CreatedAt,
+				expected.Children[0].UpdatedAt)
+		mock.ExpectQuery(statementChildren).WillReturnRows(rows)
+
+		rows = sqlmock.NewRows([]string{"id", "name", "last_name", "id_number", "company_name", "privacy_key",
+			"school_bus_id", "license_plate", "model", "brand", "school_bus_license", "created_at", "updated_at"}).
+			AddRow(expected.ObservedUsers[0].User.ID, expected.ObservedUsers[0].User.Name,
+				expected.ObservedUsers[0].User.LastName, expected.ObservedUsers[0].User.IDNumber,
+				expected.ObservedUsers[0].CompanyName, expected.ObservedUsers[0].PrivacyKey,
+				expected.ObservedUsers[0].SchoolBus.ID, expected.ObservedUsers[0].SchoolBus.LicensePlate,
+				expected.ObservedUsers[0].SchoolBus.Model, expected.ObservedUsers[0].SchoolBus.Brand,
+				expected.ObservedUsers[0].SchoolBus.License, expected.ObservedUsers[0].SchoolBus.CreatedAt,
+				expected.ObservedUsers[0].SchoolBus.UpdatedAt)
+		mock.ExpectQuery(statementObservedUserOfObserverUser).WillReturnRows(rows)
+
+		observerUser, err = ur.GetObserverUser(user.GetUserID())
+		time.Sleep(200 * time.Millisecond)
+
+		assert.Nil(t, err)
+		assert.Equal(t, expectedObserverUser, observerUser)
 	})
 }

@@ -38,11 +38,11 @@ ENGINE = InnoDB;
 -- Table `DondeEstanApp`.`SchoolBuses`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `DondeEstanApp`.`SchoolBuses` (
-  `id` INT NOT NULL AUTO_INCREMENT,
+  `id` VARCHAR(45) NOT NULL,
   `license_plate` VARCHAR(45) NOT NULL,
   `model` VARCHAR(45) NOT NULL,
   `brand` VARCHAR(45) NOT NULL,
-  `school_bus_license` VARCHAR(45) NOT NULL,
+  `license` VARCHAR(45) NOT NULL,
   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`))
@@ -56,7 +56,7 @@ CREATE TABLE IF NOT EXISTS `DondeEstanApp`.`ObservedUsers` (
   `privacy_key` VARCHAR(45) NOT NULL,
   `company_name` VARCHAR(45) NOT NULL,
   `user_id` INT NOT NULL,
-  `school_bus_id` INT NOT NULL,
+  `school_bus_id` VARCHAR(45) NOT NULL,
   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`user_id`),
@@ -98,6 +98,7 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `DondeEstanApp`.`Addresses` (
   `id` INT NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(45) NOT NULL,
   `street` VARCHAR(45) NOT NULL,
   `number` VARCHAR(45) NOT NULL,
   `floor` VARCHAR(5) NULL DEFAULT NULL,

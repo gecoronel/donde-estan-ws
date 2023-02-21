@@ -2,7 +2,7 @@
 // Source: user.go
 
 // Package mock_usecase is a generated GoMock package.
-package mocks
+package mock_usecase
 
 import (
 	reflect "reflect"
@@ -33,6 +33,66 @@ func NewMockUserUseCase(ctrl *gomock.Controller) *MockUserUseCase {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockUserUseCase) EXPECT() *MockUserUseCaseMockRecorder {
 	return m.recorder
+}
+
+// CreateObservedUser mocks base method.
+func (m *MockUserUseCase) CreateObservedUser(arg0 model.ObservedUser, arg1 gateway.ServiceLocator) (*model.ObservedUser, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateObservedUser", arg0, arg1)
+	ret0, _ := ret[0].(*model.ObservedUser)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateObservedUser indicates an expected call of CreateObservedUser.
+func (mr *MockUserUseCaseMockRecorder) CreateObservedUser(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateObservedUser", reflect.TypeOf((*MockUserUseCase)(nil).CreateObservedUser), arg0, arg1)
+}
+
+// CreateObserverUser mocks base method.
+func (m *MockUserUseCase) CreateObserverUser(arg0 model.ObserverUser, arg1 gateway.ServiceLocator) (*model.ObserverUser, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateObserverUser", arg0, arg1)
+	ret0, _ := ret[0].(*model.ObserverUser)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateObserverUser indicates an expected call of CreateObserverUser.
+func (mr *MockUserUseCaseMockRecorder) CreateObserverUser(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateObserverUser", reflect.TypeOf((*MockUserUseCase)(nil).CreateObserverUser), arg0, arg1)
+}
+
+// FindByEmail mocks base method.
+func (m *MockUserUseCase) FindByEmail(arg0 string, arg1 gateway.ServiceLocator) (*model.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindByEmail", arg0, arg1)
+	ret0, _ := ret[0].(*model.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindByEmail indicates an expected call of FindByEmail.
+func (mr *MockUserUseCaseMockRecorder) FindByEmail(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByEmail", reflect.TypeOf((*MockUserUseCase)(nil).FindByEmail), arg0, arg1)
+}
+
+// FindByUsername mocks base method.
+func (m *MockUserUseCase) FindByUsername(arg0 string, arg1 gateway.ServiceLocator) (*model.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindByUsername", arg0, arg1)
+	ret0, _ := ret[0].(*model.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindByUsername indicates an expected call of FindByUsername.
+func (mr *MockUserUseCaseMockRecorder) FindByUsername(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByUsername", reflect.TypeOf((*MockUserUseCase)(nil).FindByUsername), arg0, arg1)
 }
 
 // Get mocks base method.

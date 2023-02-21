@@ -21,7 +21,7 @@ type injectorImpl struct {
 
 // GetInstance Gets some instance of a type.
 // Parameters:
-// 		- typeName: the name of the type to be obtain.
+//   - typeName: the name of the type to be obtained.
 func (injector *injectorImpl) GetInstance(typeName string) interface{} {
 	if provider := injector.context.GetProvider(typeName); provider != nil {
 		return provider()
