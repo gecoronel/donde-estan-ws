@@ -35,7 +35,7 @@ func TestGetSchoolBus(t *testing.T) {
 
 	ur := NewSchoolBusRepository(gdb, context.Background())
 
-	t.Run("GetSchoolBus successful", func(t *testing.T) {
+	t.Run("successful get school bus", func(t *testing.T) {
 		rows := sqlmock.NewRows([]string{"id", "license_plate", "model", "brand", "license", "created_at", "updated_at"}).
 			AddRow(sb.ID, sb.LicensePlate, sb.Model, sb.Brand, sb.License, sb.CreatedAt, sb.UpdatedAt)
 		mock.ExpectQuery(regexp.QuoteMeta(querySelectSchoolBusByID)).WithArgs(sb.ID).WillReturnRows(rows)
@@ -46,7 +46,7 @@ func TestGetSchoolBus(t *testing.T) {
 		assert.Equal(t, sb.ID, schoolBus.ID)
 	})
 
-	t.Run("GetSchoolBus error", func(t *testing.T) {
+	t.Run("error getting school bus", func(t *testing.T) {
 		mock.ExpectQuery(regexp.QuoteMeta(querySelectSchoolBusByID)).
 			WithArgs(sb.ID).
 			WillReturnError(web.ErrInternalServerError)
@@ -56,7 +56,7 @@ func TestGetSchoolBus(t *testing.T) {
 		assert.Nil(t, user)
 	})
 
-	t.Run("GetSchoolBus not found error", func(t *testing.T) {
+	t.Run("not found error getting school bus", func(t *testing.T) {
 		mock.ExpectQuery(regexp.QuoteMeta(querySelectSchoolBusByID)).
 			WithArgs(sb.ID).
 			WillReturnError(web.ErrNoRows)
@@ -80,7 +80,7 @@ func TestSave(t *testing.T) {
 
 	ur := NewSchoolBusRepository(gdb, context.Background())
 
-	t.Run("SaveSchoolBus successful", func(t *testing.T) {
+	t.Run("successful save school bus", func(t *testing.T) {
 		mock.ExpectBegin()
 		// note this line is important for unordered expectation matching
 		mock.MatchExpectationsInOrder(false)
@@ -101,7 +101,7 @@ func TestSave(t *testing.T) {
 		assert.Equal(t, sb.ID, schoolBus.ID)
 	})
 
-	t.Run("GetSchoolBus error saving school bus", func(t *testing.T) {
+	t.Run("error saving school bus", func(t *testing.T) {
 		mock.ExpectQuery(regexp.QuoteMeta(querySaveSchoolBus)).
 			WithArgs(sb.ID, sb.LicensePlate, sb.Model, sb.Brand, sb.License).
 			WillReturnError(web.ErrInternalServerError)
@@ -111,7 +111,7 @@ func TestSave(t *testing.T) {
 		assert.Nil(t, schoolBus)
 	})
 
-	t.Run("SaveSchoolBus error selecting school bus", func(t *testing.T) {
+	t.Run("error selecting school bus", func(t *testing.T) {
 		mock.ExpectBegin()
 		// note this line is important for unordered expectation matching
 		mock.MatchExpectationsInOrder(false)
@@ -145,7 +145,7 @@ func TestUpdate(t *testing.T) {
 
 	ur := NewSchoolBusRepository(gdb, context.Background())
 
-	t.Run("UpdateSchoolBus successful", func(t *testing.T) {
+	t.Run("successful update school bus", func(t *testing.T) {
 		mock.ExpectBegin()
 		// note this line is important for unordered expectation matching
 		mock.MatchExpectationsInOrder(false)
@@ -166,7 +166,7 @@ func TestUpdate(t *testing.T) {
 		assert.Equal(t, sb.ID, schoolBus.ID)
 	})
 
-	t.Run("UpdateSchoolBus error saving school bus", func(t *testing.T) {
+	t.Run("error updating school bus", func(t *testing.T) {
 		mock.ExpectQuery(regexp.QuoteMeta(queryUpdateSchoolBus)).
 			WithArgs(sb.ID, sb.LicensePlate, sb.Model, sb.Brand, sb.License, sb.UpdatedAt, sb.ID).
 			WillReturnError(web.ErrInternalServerError)
@@ -176,7 +176,7 @@ func TestUpdate(t *testing.T) {
 		assert.Nil(t, schoolBus)
 	})
 
-	t.Run("UpdateSchoolBus error selecting school bus", func(t *testing.T) {
+	t.Run("error selecting school bus", func(t *testing.T) {
 		mock.ExpectBegin()
 		// note this line is important for unordered expectation matching
 		mock.MatchExpectationsInOrder(false)
@@ -210,7 +210,7 @@ func TestDelete(t *testing.T) {
 
 	ur := NewSchoolBusRepository(gdb, context.Background())
 
-	t.Run("DeleteSchoolBus successful", func(t *testing.T) {
+	t.Run("successful delete school bus", func(t *testing.T) {
 
 		mock.ExpectExec(regexp.QuoteMeta(queryDeleteSchoolBus)).
 			WithArgs(sb.ID).
@@ -220,7 +220,7 @@ func TestDelete(t *testing.T) {
 		assert.NoError(t, err)
 	})
 
-	t.Run("DeleteSchoolBus error deleting school bus", func(t *testing.T) {
+	t.Run("error deleting school bus", func(t *testing.T) {
 		mock.ExpectQuery(regexp.QuoteMeta(querySaveSchoolBus)).
 			WithArgs(sb.ID).
 			WillReturnError(web.ErrInternalServerError)

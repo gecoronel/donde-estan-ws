@@ -56,7 +56,7 @@ func TestUseCaseGetSchoolBus(t *testing.T) {
 		assert.Equalf(t, web.ErrNotFound, err, "Expected error %v, received %d", nil, err)
 	})
 
-	t.Run("successful getting school bus", func(t *testing.T) {
+	t.Run("successful get school bus", func(t *testing.T) {
 		mockSchoolBusRepository := mock_gateway.NewMockSchoolBusRepository(m)
 		mockSchoolBusRepository.EXPECT().Get(gomock.Any()).Return(&sb, nil)
 
@@ -89,7 +89,7 @@ func TestUseCaseSaveSchoolBus(t *testing.T) {
 		assert.Equalf(t, web.ErrInternalServerError, err, "Expected error %v, received %d", nil, err)
 	})
 
-	t.Run("successful saving school bus", func(t *testing.T) {
+	t.Run("successful save school bus", func(t *testing.T) {
 		mockSchoolBusRepository := mock_gateway.NewMockSchoolBusRepository(m)
 		mockSchoolBusRepository.EXPECT().Save(gomock.Any()).Return(&sb, nil)
 
@@ -151,7 +151,7 @@ func TestUseCaseUpdateSchoolBus(t *testing.T) {
 		assert.Equalf(t, web.ErrNotFound, err, "Expected error %v, received %d", nil, err)
 	})
 
-	t.Run("successful updating school bus", func(t *testing.T) {
+	t.Run("successful update school bus", func(t *testing.T) {
 		sb.Brand = "Fiat"
 		mockSchoolBusRepository := mock_gateway.NewMockSchoolBusRepository(m)
 		mockSchoolBusRepository.EXPECT().Get(gomock.Any()).Return(&sb, nil)
@@ -213,7 +213,7 @@ func TestUseCaseDeleteSchoolBus(t *testing.T) {
 		assert.Equalf(t, web.ErrNotFound, err, "Expected error %v, received %d", nil, err)
 	})
 
-	t.Run("successful updating school bus", func(t *testing.T) {
+	t.Run("successful update school bus", func(t *testing.T) {
 		mockSchoolBusRepository := mock_gateway.NewMockSchoolBusRepository(m)
 		mockSchoolBusRepository.EXPECT().Get(gomock.Any()).Return(&sb, nil)
 		mockSchoolBusRepository.EXPECT().Delete(gomock.Any()).Return(nil)
