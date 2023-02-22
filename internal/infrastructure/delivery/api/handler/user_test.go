@@ -61,7 +61,7 @@ func TestGet(t *testing.T) {
 
 		mockUserUseCase := mock_usecase.NewMockUserUseCase(m)
 		mockUserUseCase.EXPECT().Get(gomock.Any(), gomock.Any()).Return(nil, web.ErrInternalServerError)
-		d = mock_middleware.Dependencies{UseCase: mockUserUseCase}
+		d = mock_middleware.Dependencies{UserUseCase: mockUserUseCase}
 		router = configureRoutes(d)
 		router.ServeHTTP(w, r)
 		assert.Equalf(t, http.StatusInternalServerError, w.Code, "Expected response code %d, received %d", http.StatusOK, w.Code)
@@ -77,7 +77,7 @@ func TestGet(t *testing.T) {
 
 		mockUserUseCase := mock_usecase.NewMockUserUseCase(m)
 		mockUserUseCase.EXPECT().Get(gomock.Any(), gomock.Any()).Return(&user, nil)
-		d = mock_middleware.Dependencies{UseCase: mockUserUseCase}
+		d = mock_middleware.Dependencies{UserUseCase: mockUserUseCase}
 		router = configureRoutes(d)
 		router.ServeHTTP(w, r)
 		assert.Equalf(t, http.StatusOK, w.Code, "Expected response code %d, received %d", http.StatusOK, w.Code)
@@ -122,7 +122,7 @@ func TestLogin(t *testing.T) {
 
 	t.Run("bad request for handler login", func(t *testing.T) {
 		w := httptest.NewRecorder()
-		r, err := http.NewRequest("POST", "/where/are/they/login", bytes.NewBuffer([]byte(`invalid"`)))
+		r, err := http.NewRequest("POST", "/where/are/they/users/login", bytes.NewBuffer([]byte(`invalid"`)))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -134,7 +134,7 @@ func TestLogin(t *testing.T) {
 
 	t.Run("bad request in login validation", func(t *testing.T) {
 		w := httptest.NewRecorder()
-		r, err := http.NewRequest("POST", "/where/are/they/login", bytes.NewBuffer([]byte(`{"username": "jperez"}`)))
+		r, err := http.NewRequest("POST", "/where/are/they/users/login", bytes.NewBuffer([]byte(`{"username": "jperez"}`)))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -146,7 +146,7 @@ func TestLogin(t *testing.T) {
 
 	t.Run("successful login", func(t *testing.T) {
 		w := httptest.NewRecorder()
-		r, err := http.NewRequest("POST", "/where/are/they/login", bytes.NewBuffer([]byte(`{"username": "jperez", "password": "jperez1234"}`)))
+		r, err := http.NewRequest("POST", "/where/are/they/users/login", bytes.NewBuffer([]byte(`{"username": "jperez", "password": "jperez1234"}`)))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -154,7 +154,7 @@ func TestLogin(t *testing.T) {
 
 		mockUserUseCase := mock_usecase.NewMockUserUseCase(m)
 		mockUserUseCase.EXPECT().Login(gomock.Any(), gomock.Any()).Return(u, nil)
-		d = mock_middleware.Dependencies{UseCase: mockUserUseCase}
+		d = mock_middleware.Dependencies{UserUseCase: mockUserUseCase}
 		router = configureRoutes(d)
 		router.ServeHTTP(w, r)
 		assert.Equalf(t, http.StatusOK, w.Code, "Expected response code %d, received %d", http.StatusOK, w.Code)
@@ -162,7 +162,7 @@ func TestLogin(t *testing.T) {
 
 	t.Run("unsuccessful login", func(t *testing.T) {
 		w := httptest.NewRecorder()
-		r, err := http.NewRequest("POST", "/where/are/they/login", bytes.NewBuffer([]byte(`{"username": "jperez", "password": "jperez1234"}`)))
+		r, err := http.NewRequest("POST", "/where/are/they/users/login", bytes.NewBuffer([]byte(`{"username": "jperez", "password": "jperez1234"}`)))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -170,7 +170,7 @@ func TestLogin(t *testing.T) {
 
 		mockUserUseCase := mock_usecase.NewMockUserUseCase(m)
 		mockUserUseCase.EXPECT().Login(gomock.Any(), gomock.Any()).Return(nil, web.ErrInternalServerError)
-		d = mock_middleware.Dependencies{UseCase: mockUserUseCase}
+		d = mock_middleware.Dependencies{UserUseCase: mockUserUseCase}
 		router = configureRoutes(d)
 		router.ServeHTTP(w, r)
 		assert.Equalf(t, http.StatusInternalServerError, w.Code, "Expected response code %d, received %d", http.StatusOK, w.Code)
@@ -272,7 +272,7 @@ func TestCreateObservedUser(t *testing.T) {
 
 		mockUserUseCase := mock_usecase.NewMockUserUseCase(m)
 		mockUserUseCase.EXPECT().FindByUsername(gomock.Any(), gomock.Any()).Return(&user.User, nil)
-		d = mock_middleware.Dependencies{UseCase: mockUserUseCase}
+		d = mock_middleware.Dependencies{UserUseCase: mockUserUseCase}
 		router = configureRoutes(d)
 		router.ServeHTTP(w, r)
 		assert.Equalf(t, http.StatusConflict, w.Code, "Expected response code %d, received %d", http.StatusOK,
@@ -312,7 +312,7 @@ func TestCreateObservedUser(t *testing.T) {
 		mockUserUseCase := mock_usecase.NewMockUserUseCase(m)
 		mockUserUseCase.EXPECT().FindByUsername(gomock.Any(), gomock.Any()).Return(nil, nil)
 		mockUserUseCase.EXPECT().FindByEmail(gomock.Any(), gomock.Any()).Return(&user.User, nil)
-		d = mock_middleware.Dependencies{UseCase: mockUserUseCase}
+		d = mock_middleware.Dependencies{UserUseCase: mockUserUseCase}
 		router = configureRoutes(d)
 		router.ServeHTTP(w, r)
 		assert.Equalf(t, http.StatusConflict, w.Code, "Expected response code %d, received %d", http.StatusOK,
@@ -353,7 +353,7 @@ func TestCreateObservedUser(t *testing.T) {
 		mockUserUseCase.EXPECT().FindByUsername(gomock.Any(), gomock.Any()).Return(nil, nil)
 		mockUserUseCase.EXPECT().FindByEmail(gomock.Any(), gomock.Any()).Return(nil, nil)
 		mockUserUseCase.EXPECT().CreateObservedUser(gomock.Any(), gomock.Any()).Return(&user, nil)
-		d = mock_middleware.Dependencies{UseCase: mockUserUseCase}
+		d = mock_middleware.Dependencies{UserUseCase: mockUserUseCase}
 		router = configureRoutes(d)
 		router.ServeHTTP(w, r)
 		assert.Equalf(t, http.StatusOK, w.Code, "Expected response code %d, received %d", http.StatusOK, w.Code)
@@ -394,7 +394,7 @@ func TestCreateObservedUser(t *testing.T) {
 		mockUserUseCase.EXPECT().FindByEmail(gomock.Any(), gomock.Any()).Return(nil, nil)
 		mockUserUseCase.EXPECT().CreateObservedUser(gomock.Any(), gomock.Any()).Return(nil,
 			web.ErrInternalServerError)
-		d = mock_middleware.Dependencies{UseCase: mockUserUseCase}
+		d = mock_middleware.Dependencies{UserUseCase: mockUserUseCase}
 		router = configureRoutes(d)
 		router.ServeHTTP(w, r)
 		assert.Equalf(t, http.StatusInternalServerError, w.Code, "Expected response code %d, received %d",
@@ -476,7 +476,7 @@ func TestCreateObserverUser(t *testing.T) {
 
 		mockUserUseCase := mock_usecase.NewMockUserUseCase(m)
 		mockUserUseCase.EXPECT().FindByUsername(gomock.Any(), gomock.Any()).Return(&user.User, nil)
-		d = mock_middleware.Dependencies{UseCase: mockUserUseCase}
+		d = mock_middleware.Dependencies{UserUseCase: mockUserUseCase}
 		router = configureRoutes(d)
 		router.ServeHTTP(w, r)
 		assert.Equalf(t, http.StatusConflict, w.Code, "Expected response code %d, received %d", http.StatusOK,
@@ -507,7 +507,7 @@ func TestCreateObserverUser(t *testing.T) {
 		mockUserUseCase := mock_usecase.NewMockUserUseCase(m)
 		mockUserUseCase.EXPECT().FindByUsername(gomock.Any(), gomock.Any()).Return(nil, nil)
 		mockUserUseCase.EXPECT().FindByEmail(gomock.Any(), gomock.Any()).Return(&user.User, nil)
-		d = mock_middleware.Dependencies{UseCase: mockUserUseCase}
+		d = mock_middleware.Dependencies{UserUseCase: mockUserUseCase}
 		router = configureRoutes(d)
 		router.ServeHTTP(w, r)
 		assert.Equalf(t, http.StatusConflict, w.Code, "Expected response code %d, received %d", http.StatusOK,
@@ -539,7 +539,7 @@ func TestCreateObserverUser(t *testing.T) {
 		mockUserUseCase.EXPECT().FindByUsername(gomock.Any(), gomock.Any()).Return(nil, nil)
 		mockUserUseCase.EXPECT().FindByEmail(gomock.Any(), gomock.Any()).Return(nil, nil)
 		mockUserUseCase.EXPECT().CreateObserverUser(gomock.Any(), gomock.Any()).Return(&user, nil)
-		d = mock_middleware.Dependencies{UseCase: mockUserUseCase}
+		d = mock_middleware.Dependencies{UserUseCase: mockUserUseCase}
 		router = configureRoutes(d)
 		router.ServeHTTP(w, r)
 		assert.Equalf(t, http.StatusOK, w.Code, "Expected response code %d, received %d", http.StatusOK, w.Code)
@@ -571,7 +571,7 @@ func TestCreateObserverUser(t *testing.T) {
 		mockUserUseCase.EXPECT().FindByEmail(gomock.Any(), gomock.Any()).Return(nil, nil)
 		mockUserUseCase.EXPECT().CreateObserverUser(gomock.Any(), gomock.Any()).Return(nil,
 			web.ErrInternalServerError)
-		d = mock_middleware.Dependencies{UseCase: mockUserUseCase}
+		d = mock_middleware.Dependencies{UserUseCase: mockUserUseCase}
 		router = configureRoutes(d)
 		router.ServeHTTP(w, r)
 		assert.Equalf(t, http.StatusInternalServerError, w.Code, "Expected response code %d, received %d",
