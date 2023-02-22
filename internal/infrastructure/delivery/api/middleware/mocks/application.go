@@ -12,8 +12,9 @@ import (
 )
 
 type Dependencies struct {
-	UseCase    *mock_usecase.MockUserUseCase
-	Repository *mock_gateway.MockUserRepository
+	UserUseCase      *mock_usecase.MockUserUseCase
+	SchoolBusUseCase *mock_usecase.MockSchoolBusUseCase
+	Repository       *mock_gateway.MockUserRepository
 }
 
 func MockIoc(d Dependencies) func(next http.Handler) http.Handler {
@@ -33,7 +34,8 @@ func MockIoc(d Dependencies) func(next http.Handler) http.Handler {
 
 			// Register UseCase
 			//iocContext.Bind(usecase.GetConfigurationsUseCaseType).ToInstance(usecase.NewGetConfigurationsUseCase())
-			iocContext.Bind(usecase.UserUseCaseType).ToInstance(d.UseCase)
+			iocContext.Bind(usecase.UserUseCaseType).ToInstance(d.UserUseCase)
+			iocContext.Bind(usecase.SchoolBusUseCaseType).ToInstance(d.SchoolBusUseCase)
 
 			// Register Repositories
 			//iocContext.Bind(gateway.MetricCollectorType).ToInstance(metricCollector)

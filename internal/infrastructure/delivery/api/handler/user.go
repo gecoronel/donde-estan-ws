@@ -14,7 +14,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func Get(w http.ResponseWriter, r *http.Request) {
+func GetUser(w http.ResponseWriter, r *http.Request) {
 	serviceLocator := context.GetServiceLocator(r.Context())
 	useCase := serviceLocator.GetInstance(usecase.UserUseCaseType).(usecase.UserUseCase)
 

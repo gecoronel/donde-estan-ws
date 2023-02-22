@@ -1,4 +1,4 @@
-//go:generate mockgen --source=user_repository.go --destination=././mocks/user.go
+//go:generate mockgen --source=school_bus_repository.go --destination=././mocks/school_bus.go
 
 // Package gateway representing the invocation to outer layers, needed by application business logic: external services, data repositories, events, etc.
 package gateway
@@ -12,5 +12,6 @@ const SchoolBusRepositoryType = "SchoolBusRepository"
 type SchoolBusRepository interface {
 	Get(string) (*model.SchoolBus, error)
 	Save(model.SchoolBus) (*model.SchoolBus, error)
-	FindByID(string) (*model.SchoolBus, error)
+	Update(model.SchoolBus) (*model.SchoolBus, error)
+	Delete(string) error
 }

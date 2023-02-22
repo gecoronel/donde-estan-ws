@@ -37,10 +37,15 @@ func configureRoutes(d mock_middleware.Dependencies) *chi.Mux {
 	router.Use(mock_middleware.MockIoc(d))
 	router.Get("/health", Health)
 	router.Route("/where/are/they", func(r chi.Router) {
-		r.Post("/login", Login)
-		r.Get("/users/{id}", Get)
+		r.Post("/users/login", Login)
+		r.Get("/users/{id}", GetUser)
 		r.Post("/users/observed", CreateObservedUser)
 		r.Post("/users/observer", CreateObserverUser)
+
+		r.Get("/school-bus/{id}", GetSchoolBus)
+		r.Post("/school-bus", SaveSchoolBus)
+		r.Put("/school-bus", UpdateSchoolBus)
+		r.Delete("/school-bus/{id}", DeleteSchoolBus)
 	})
 
 	return router

@@ -36,9 +36,6 @@ const (
 	querySaveObservedUser = `
 		INSERT INTO ObservedUsers (user_id, privacy_key, company_name, school_bus_id) VALUES (?, ?, ?, ?);
 	`
-	querySaveSchoolBus = `
-		INSERT INTO SchoolBuses (id, license_plate, model, brand, license) VALUES (?, ?, ?, ?, ?);
-	`
 	queryGetObservedUserByID = `SELECT user_id, privacy_key, company_name FROM ObservedUsers WHERE user_id = ?`
 
 	queryGetUser = `
