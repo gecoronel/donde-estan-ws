@@ -2,11 +2,12 @@ package repository
 
 import (
 	"context"
+	"gorm.io/gorm"
+
 	"github.com/gecoronel/donde-estan-ws/internal/bussiness/gateway"
 	"github.com/gecoronel/donde-estan-ws/internal/bussiness/model"
 	"github.com/gecoronel/donde-estan-ws/internal/bussiness/model/web"
 	log "github.com/sirupsen/logrus"
-	"gorm.io/gorm"
 )
 
 const (
