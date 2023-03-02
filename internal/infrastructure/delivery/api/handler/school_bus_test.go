@@ -28,302 +28,310 @@ func TestGetSchoolBus(t *testing.T) {
 	m := gomock.NewController(t)
 	defer m.Finish()
 
-	d := mock_middleware.Dependencies{}
-	router := configureRoutes(d)
+	tests := []struct {
+		name         string
+		mock         func() *mock_usecase.MockSchoolBusUseCase
+		path         string
+		expectedCode int
+	}{
+		{
+			name: "error getting school bus",
+			mock: func() *mock_usecase.MockSchoolBusUseCase {
+				mockSchoolBusUseCase := mock_usecase.NewMockSchoolBusUseCase(m)
+				mockSchoolBusUseCase.EXPECT().Get(gomock.Any(), gomock.Any()).Return(nil, web.ErrInternalServerError)
+				return mockSchoolBusUseCase
+			},
+			path:         "/where/are/they/school-bus/1",
+			expectedCode: http.StatusInternalServerError,
+		},
+		{
+			name: "not found error getting school bus",
+			mock: func() *mock_usecase.MockSchoolBusUseCase {
+				mockSchoolBusUseCase := mock_usecase.NewMockSchoolBusUseCase(m)
+				mockSchoolBusUseCase.EXPECT().Get(gomock.Any(), gomock.Any()).Return(nil, web.ErrNotFound)
+				return mockSchoolBusUseCase
+			},
+			path:         "/where/are/they/school-bus/1",
+			expectedCode: http.StatusNotFound,
+		},
+		{
+			name: "successful get school bus",
+			mock: func() *mock_usecase.MockSchoolBusUseCase {
+				mockSchoolBusUseCase := mock_usecase.NewMockSchoolBusUseCase(m)
+				mockSchoolBusUseCase.EXPECT().Get(gomock.Any(), gomock.Any()).Return(&sb, nil)
+				return mockSchoolBusUseCase
+			},
+			path:         "/where/are/they/school-bus/1",
+			expectedCode: http.StatusOK,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			w := httptest.NewRecorder()
+			r, err := http.NewRequest(http.MethodGet, test.path, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+			r.Header.Set("Content-Type", "application/json")
 
-	t.Run("error getting school bus", func(t *testing.T) {
-		w := httptest.NewRecorder()
-		r, err := http.NewRequest(http.MethodGet, "/where/are/they/school-bus/1", nil)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		r.Header.Set("Content-Type", "application/json")
-		mockSchoolBusUseCase := mock_usecase.NewMockSchoolBusUseCase(m)
-		mockSchoolBusUseCase.EXPECT().Get(gomock.Any(), gomock.Any()).Return(nil, web.ErrInternalServerError)
-		d = mock_middleware.Dependencies{SchoolBusUseCase: mockSchoolBusUseCase}
-		router = configureRoutes(d)
-		router.ServeHTTP(w, r)
-		assert.Equalf(t, http.StatusInternalServerError, w.Code, "Expected response code %d, received %d",
-			http.StatusInternalServerError, w.Code)
-	})
-
-	t.Run("not found error getting school bus", func(t *testing.T) {
-		w := httptest.NewRecorder()
-		r, err := http.NewRequest(http.MethodGet, "/where/are/they/school-bus/1", nil)
-		if err != nil {
-			t.Fatal(err)
-		}
-		r.Header.Set("Content-Type", "application/json")
-
-		mockSchoolBusUseCase := mock_usecase.NewMockSchoolBusUseCase(m)
-		mockSchoolBusUseCase.EXPECT().Get(gomock.Any(), gomock.Any()).Return(nil, web.ErrNotFound)
-		d = mock_middleware.Dependencies{SchoolBusUseCase: mockSchoolBusUseCase}
-		router = configureRoutes(d)
-		router.ServeHTTP(w, r)
-		assert.Equalf(t, http.StatusNotFound, w.Code, "Expected response code %d, received %d",
-			http.StatusOK, w.Code)
-	})
-
-	t.Run("successful get school bus", func(t *testing.T) {
-		w := httptest.NewRecorder()
-		r, err := http.NewRequest(http.MethodGet, "/where/are/they/school-bus/1", nil)
-		if err != nil {
-			t.Fatal(err)
-		}
-		r.Header.Set("Content-Type", "application/json")
-
-		mockSchoolBusUseCase := mock_usecase.NewMockSchoolBusUseCase(m)
-		mockSchoolBusUseCase.EXPECT().Get(gomock.Any(), gomock.Any()).Return(&sb, nil)
-		d = mock_middleware.Dependencies{SchoolBusUseCase: mockSchoolBusUseCase}
-		router = configureRoutes(d)
-		router.ServeHTTP(w, r)
-		assert.Equalf(t, http.StatusOK, w.Code, "Expected response code %d, received %d", http.StatusOK, w.Code)
-	})
+			d := mock_middleware.Dependencies{SchoolBusUseCase: test.mock()}
+			router := configureRoutes(d)
+			router.ServeHTTP(w, r)
+			assert.Equalf(t, test.expectedCode, w.Code, "Expected code %v, received %v", test.expectedCode, w.Code)
+		})
+	}
 }
 
 func TestSaveSchoolBus(t *testing.T) {
 	m := gomock.NewController(t)
 	defer m.Finish()
 
-	d := mock_middleware.Dependencies{}
-	router := configureRoutes(d)
-
-	t.Run("bad request error saving school bus", func(t *testing.T) {
-		w := httptest.NewRecorder()
-		r, err := http.NewRequest(http.MethodPost, "/where/are/they/school-bus", bytes.NewBuffer([]byte(`{
+	tests := []struct {
+		name         string
+		mock         func() *mock_usecase.MockSchoolBusUseCase
+		path         string
+		body         string
+		expectedCode int
+	}{
+		{
+			name: "bad request error saving school bus",
+			mock: func() *mock_usecase.MockSchoolBusUseCase {
+				mockSchoolBusUseCase := mock_usecase.NewMockSchoolBusUseCase(m)
+				return mockSchoolBusUseCase
+			},
+			path: "/where/are/they/school-bus",
+			body: `{
 			"id": 12345,
 			"license_plate": "11AAA55",
 			"model": "Fiat",
 			"brand": "Ducato",
 			"license": "555",
 			"updated_at": "2023-02-22 11:55:14"
-		}`)))
-		if err != nil {
-			t.Fatal(err)
-		}
-		r.Header.Set("Content-Type", "application/json")
-
-		router.ServeHTTP(w, r)
-		assert.Equalf(t, http.StatusBadRequest, w.Code, "Expected response code %d, received %d",
-			http.StatusOK, w.Code)
-	})
-
-	t.Run("validate error saving school bus", func(t *testing.T) {
-		w := httptest.NewRecorder()
-		r, err := http.NewRequest(http.MethodPost, "/where/are/they/school-bus", bytes.NewBuffer([]byte(`{
+		}`,
+			expectedCode: http.StatusBadRequest,
+		},
+		{
+			name: "validate error saving school bus",
+			mock: func() *mock_usecase.MockSchoolBusUseCase {
+				mockSchoolBusUseCase := mock_usecase.NewMockSchoolBusUseCase(m)
+				return mockSchoolBusUseCase
+			},
+			path: "/where/are/they/school-bus",
+			body: `{
 			"id": "0000-0000-0005",
 			"model": "Fiat",
 			"brand": "Ducato",
 			"license": "555",
 			"updated_at": "2023-02-22 11:55:14"
-		}`)))
-		if err != nil {
-			t.Fatal(err)
-		}
-		r.Header.Set("Content-Type", "application/json")
-
-		router.ServeHTTP(w, r)
-		assert.Equalf(t, http.StatusBadRequest, w.Code, "Expected response code %d, received %d",
-			http.StatusBadRequest, w.Code)
-	})
-
-	t.Run("error getting school bus", func(t *testing.T) {
-		w := httptest.NewRecorder()
-		r, err := http.NewRequest(http.MethodPost, "/where/are/they/school-bus", bytes.NewBuffer([]byte(`{
+		}`,
+			expectedCode: http.StatusBadRequest,
+		},
+		{
+			name: "error saving school bus",
+			mock: func() *mock_usecase.MockSchoolBusUseCase {
+				mockSchoolBusUseCase := mock_usecase.NewMockSchoolBusUseCase(m)
+				mockSchoolBusUseCase.EXPECT().Save(gomock.Any(), gomock.Any()).Return(nil, web.ErrInternalServerError)
+				return mockSchoolBusUseCase
+			},
+			path: "/where/are/they/school-bus",
+			body: `{
 			"id": "0000-0000-0005",
 			"license_plate": "11AAA55",
 			"model": "Fiat",
 			"brand": "Ducato",
 			"license": "555",
 			"updated_at": "2023-02-22 11:55:14"
-		}`)))
-		if err != nil {
-			t.Fatal(err)
-		}
-		r.Header.Set("Content-Type", "application/json")
-
-		mockSchoolBusUseCase := mock_usecase.NewMockSchoolBusUseCase(m)
-		mockSchoolBusUseCase.EXPECT().Save(gomock.Any(), gomock.Any()).Return(nil, web.ErrInternalServerError)
-		d = mock_middleware.Dependencies{SchoolBusUseCase: mockSchoolBusUseCase}
-		router = configureRoutes(d)
-		router.ServeHTTP(w, r)
-		assert.Equalf(t, http.StatusInternalServerError, w.Code, "Expected response code %d, received %d",
-			http.StatusInternalServerError, w.Code)
-	})
-
-	t.Run("successful get school bus", func(t *testing.T) {
-		w := httptest.NewRecorder()
-		r, err := http.NewRequest(http.MethodPost, "/where/are/they/school-bus", bytes.NewBuffer([]byte(`{
+		}`,
+			expectedCode: http.StatusInternalServerError,
+		},
+		{
+			name: "successful save school bus",
+			mock: func() *mock_usecase.MockSchoolBusUseCase {
+				mockSchoolBusUseCase := mock_usecase.NewMockSchoolBusUseCase(m)
+				mockSchoolBusUseCase.EXPECT().Save(gomock.Any(), gomock.Any()).Return(&sb, nil)
+				return mockSchoolBusUseCase
+			},
+			path: "/where/are/they/school-bus",
+			body: `{
 			"id": "0000-0000-0005",
 			"license_plate": "11AAA55",
 			"model": "Fiat",
 			"brand": "Ducato",
 			"license": "555",
 			"updated_at": "2023-02-22 11:55:14"
-		}`)))
-		if err != nil {
-			t.Fatal(err)
-		}
-		r.Header.Set("Content-Type", "application/json")
+		}`,
+			expectedCode: http.StatusOK,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			w := httptest.NewRecorder()
+			r, err := http.NewRequest(http.MethodPost, test.path, bytes.NewBuffer([]byte(test.body)))
+			if err != nil {
+				t.Fatal(err)
+			}
+			r.Header.Set("Content-Type", "application/json")
 
-		mockSchoolBusUseCase := mock_usecase.NewMockSchoolBusUseCase(m)
-		mockSchoolBusUseCase.EXPECT().Save(gomock.Any(), gomock.Any()).Return(&sb, nil)
-		d = mock_middleware.Dependencies{SchoolBusUseCase: mockSchoolBusUseCase}
-		router = configureRoutes(d)
-		router.ServeHTTP(w, r)
-		assert.Equalf(t, http.StatusOK, w.Code, "Expected response code %d, received %d", http.StatusOK, w.Code)
-	})
+			d := mock_middleware.Dependencies{SchoolBusUseCase: test.mock()}
+			router := configureRoutes(d)
+			router.ServeHTTP(w, r)
+			assert.Equalf(t, test.expectedCode, w.Code, "Expected code %v, received %v", test.expectedCode, w.Code)
+		})
+	}
 }
 
 func TestUpdateSchoolBus(t *testing.T) {
 	m := gomock.NewController(t)
 	defer m.Finish()
 
-	d := mock_middleware.Dependencies{}
-	router := configureRoutes(d)
-
-	t.Run("bad request error updating school bus", func(t *testing.T) {
-		w := httptest.NewRecorder()
-		r, err := http.NewRequest(http.MethodPut, "/where/are/they/school-bus", bytes.NewBuffer([]byte(`{
+	tests := []struct {
+		name         string
+		mock         func() *mock_usecase.MockSchoolBusUseCase
+		path         string
+		body         string
+		expectedCode int
+	}{
+		{
+			name: "bad request error updating school bus",
+			mock: func() *mock_usecase.MockSchoolBusUseCase {
+				mockSchoolBusUseCase := mock_usecase.NewMockSchoolBusUseCase(m)
+				return mockSchoolBusUseCase
+			},
+			path: "/where/are/they/school-bus",
+			body: `{
 			"id": 12345,
 			"license_plate": "11AAA55",
 			"model": "Fiat",
 			"brand": "Ducato",
 			"license": "555",
 			"updated_at": "2023-02-22 11:55:14"
-		}`)))
-		if err != nil {
-			t.Fatal(err)
-		}
-		r.Header.Set("Content-Type", "application/json")
-
-		router.ServeHTTP(w, r)
-		assert.Equalf(t, http.StatusBadRequest, w.Code, "Expected response code %d, received %d",
-			http.StatusOK, w.Code)
-	})
-
-	t.Run("validate error updating school bus", func(t *testing.T) {
-		w := httptest.NewRecorder()
-		r, err := http.NewRequest(http.MethodPut, "/where/are/they/school-bus", bytes.NewBuffer([]byte(`{
+		}`,
+			expectedCode: http.StatusBadRequest,
+		},
+		{
+			name: "validate error updating school bus",
+			mock: func() *mock_usecase.MockSchoolBusUseCase {
+				mockSchoolBusUseCase := mock_usecase.NewMockSchoolBusUseCase(m)
+				return mockSchoolBusUseCase
+			},
+			path: "/where/are/they/school-bus",
+			body: `{
 			"id": "0000-0000-0005",
 			"model": "Fiat",
 			"brand": "Ducato",
 			"license": "555",
 			"updated_at": "2023-02-22 11:55:14"
-		}`)))
-		if err != nil {
-			t.Fatal(err)
-		}
-		r.Header.Set("Content-Type", "application/json")
-
-		router.ServeHTTP(w, r)
-		assert.Equalf(t, http.StatusBadRequest, w.Code, "Expected response code %d, received %d",
-			http.StatusBadRequest, w.Code)
-	})
-
-	t.Run("error updating school bus", func(t *testing.T) {
-		w := httptest.NewRecorder()
-		r, err := http.NewRequest(http.MethodPut, "/where/are/they/school-bus", bytes.NewBuffer([]byte(`{
+		}`,
+			expectedCode: http.StatusBadRequest,
+		},
+		{
+			name: "error updating school bus",
+			mock: func() *mock_usecase.MockSchoolBusUseCase {
+				mockSchoolBusUseCase := mock_usecase.NewMockSchoolBusUseCase(m)
+				mockSchoolBusUseCase.EXPECT().Update(gomock.Any(), gomock.Any()).Return(nil, web.ErrInternalServerError)
+				return mockSchoolBusUseCase
+			},
+			path: "/where/are/they/school-bus",
+			body: `{
 			"id": "0000-0000-0005",
 			"license_plate": "11AAA55",
 			"model": "Fiat",
 			"brand": "Ducato",
 			"license": "555",
 			"updated_at": "2023-02-22 11:55:14"
-		}`)))
-		if err != nil {
-			t.Fatal(err)
-		}
-		r.Header.Set("Content-Type", "application/json")
-
-		mockSchoolBusUseCase := mock_usecase.NewMockSchoolBusUseCase(m)
-		mockSchoolBusUseCase.EXPECT().Update(gomock.Any(), gomock.Any()).Return(nil, web.ErrInternalServerError)
-		d = mock_middleware.Dependencies{SchoolBusUseCase: mockSchoolBusUseCase}
-		router = configureRoutes(d)
-		router.ServeHTTP(w, r)
-		assert.Equalf(t, http.StatusInternalServerError, w.Code, "Expected response code %d, received %d",
-			http.StatusInternalServerError, w.Code)
-	})
-
-	t.Run("successful update school bus", func(t *testing.T) {
-		w := httptest.NewRecorder()
-		r, err := http.NewRequest(http.MethodPut, "/where/are/they/school-bus", bytes.NewBuffer([]byte(`{
+		}`,
+			expectedCode: http.StatusInternalServerError,
+		},
+		{
+			name: "successful update school bus",
+			mock: func() *mock_usecase.MockSchoolBusUseCase {
+				mockSchoolBusUseCase := mock_usecase.NewMockSchoolBusUseCase(m)
+				mockSchoolBusUseCase.EXPECT().Update(gomock.Any(), gomock.Any()).Return(&sb, nil)
+				return mockSchoolBusUseCase
+			},
+			path: "/where/are/they/school-bus",
+			body: `{
 			"id": "0000-0000-0005",
 			"license_plate": "11AAA55",
 			"model": "Fiat",
 			"brand": "Ducato",
 			"license": "555",
 			"updated_at": "2023-02-22 11:55:14"
-		}`)))
-		if err != nil {
-			t.Fatal(err)
-		}
-		r.Header.Set("Content-Type", "application/json")
+		}`,
+			expectedCode: http.StatusOK,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			w := httptest.NewRecorder()
+			r, err := http.NewRequest(http.MethodPut, test.path, bytes.NewBuffer([]byte(test.body)))
+			if err != nil {
+				t.Fatal(err)
+			}
+			r.Header.Set("Content-Type", "application/json")
 
-		mockSchoolBusUseCase := mock_usecase.NewMockSchoolBusUseCase(m)
-		mockSchoolBusUseCase.EXPECT().Update(gomock.Any(), gomock.Any()).Return(&sb, nil)
-		d = mock_middleware.Dependencies{SchoolBusUseCase: mockSchoolBusUseCase}
-		router = configureRoutes(d)
-		router.ServeHTTP(w, r)
-		assert.Equalf(t, http.StatusOK, w.Code, "Expected response code %d, received %d", http.StatusOK, w.Code)
-	})
+			d := mock_middleware.Dependencies{SchoolBusUseCase: test.mock()}
+			router := configureRoutes(d)
+			router.ServeHTTP(w, r)
+			assert.Equalf(t, test.expectedCode, w.Code, "Expected code %v, received %v", test.expectedCode, w.Code)
+		})
+	}
 }
 
 func TestDeleteSchoolBus(t *testing.T) {
 	m := gomock.NewController(t)
 	defer m.Finish()
 
-	d := mock_middleware.Dependencies{}
-	router := configureRoutes(d)
+	tests := []struct {
+		name         string
+		mock         func() *mock_usecase.MockSchoolBusUseCase
+		path         string
+		expectedCode int
+	}{
+		{
+			name: "error deleting school bus",
+			mock: func() *mock_usecase.MockSchoolBusUseCase {
+				mockSchoolBusUseCase := mock_usecase.NewMockSchoolBusUseCase(m)
+				mockSchoolBusUseCase.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(web.ErrInternalServerError)
+				return mockSchoolBusUseCase
+			},
+			path:         "/where/are/they/school-bus/1",
+			expectedCode: http.StatusInternalServerError,
+		},
+		{
+			name: "not found error deleting school bus",
+			mock: func() *mock_usecase.MockSchoolBusUseCase {
+				mockSchoolBusUseCase := mock_usecase.NewMockSchoolBusUseCase(m)
+				mockSchoolBusUseCase.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(web.ErrNotFound)
+				return mockSchoolBusUseCase
+			},
+			path:         "/where/are/they/school-bus/1",
+			expectedCode: http.StatusNotFound,
+		},
+		{
+			name: "successful delete school bus",
+			mock: func() *mock_usecase.MockSchoolBusUseCase {
+				mockSchoolBusUseCase := mock_usecase.NewMockSchoolBusUseCase(m)
+				mockSchoolBusUseCase.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(nil)
+				return mockSchoolBusUseCase
+			},
+			path:         "/where/are/they/school-bus/1",
+			expectedCode: http.StatusOK,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			w := httptest.NewRecorder()
+			r, err := http.NewRequest(http.MethodDelete, test.path, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+			r.Header.Set("Content-Type", "application/json")
 
-	t.Run("error deleting school bus", func(t *testing.T) {
-		w := httptest.NewRecorder()
-		r, err := http.NewRequest(http.MethodDelete, "/where/are/they/school-bus/1", nil)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		r.Header.Set("Content-Type", "application/json")
-		mockSchoolBusUseCase := mock_usecase.NewMockSchoolBusUseCase(m)
-		mockSchoolBusUseCase.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(web.ErrInternalServerError)
-		d = mock_middleware.Dependencies{SchoolBusUseCase: mockSchoolBusUseCase}
-		router = configureRoutes(d)
-		router.ServeHTTP(w, r)
-		assert.Equalf(t, http.StatusInternalServerError, w.Code, "Expected response code %d, received %d",
-			http.StatusInternalServerError, w.Code)
-	})
-
-	t.Run("not found error deleting school bus", func(t *testing.T) {
-		w := httptest.NewRecorder()
-		r, err := http.NewRequest(http.MethodDelete, "/where/are/they/school-bus/1", nil)
-		if err != nil {
-			t.Fatal(err)
-		}
-		r.Header.Set("Content-Type", "application/json")
-
-		mockSchoolBusUseCase := mock_usecase.NewMockSchoolBusUseCase(m)
-		mockSchoolBusUseCase.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(web.ErrNotFound)
-		d = mock_middleware.Dependencies{SchoolBusUseCase: mockSchoolBusUseCase}
-		router = configureRoutes(d)
-		router.ServeHTTP(w, r)
-		assert.Equalf(t, http.StatusNotFound, w.Code, "Expected response code %d, received %d",
-			http.StatusOK, w.Code)
-	})
-
-	t.Run("successful delete school bus", func(t *testing.T) {
-		w := httptest.NewRecorder()
-		r, err := http.NewRequest(http.MethodDelete, "/where/are/they/school-bus/1", nil)
-		if err != nil {
-			t.Fatal(err)
-		}
-		r.Header.Set("Content-Type", "application/json")
-
-		mockSchoolBusUseCase := mock_usecase.NewMockSchoolBusUseCase(m)
-		mockSchoolBusUseCase.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(nil)
-		d = mock_middleware.Dependencies{SchoolBusUseCase: mockSchoolBusUseCase}
-		router = configureRoutes(d)
-		router.ServeHTTP(w, r)
-		assert.Equalf(t, http.StatusOK, w.Code, "Expected response code %d, received %d", http.StatusOK, w.Code)
-	})
+			d := mock_middleware.Dependencies{SchoolBusUseCase: test.mock()}
+			router := configureRoutes(d)
+			router.ServeHTTP(w, r)
+			assert.Equalf(t, test.expectedCode, w.Code, "Expected code %v, received %v", test.expectedCode, w.Code)
+		})
+	}
 }
