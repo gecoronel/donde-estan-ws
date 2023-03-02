@@ -9,12 +9,12 @@ import (
 )
 
 var (
-	ErrIncorrectPassword   = errors.New("password incorrect")
-	ErrBadRequest          = errors.New("bad request")
-	ErrConflict            = errors.New("conflict")
-	ErrNotFound            = errors.New("not found")
-	ErrInternalServerError = errors.New("impossible to solve")
-	ErrNoRows              = errors.New("sql: no rows in result set")
+	ErrIncorrectUserOrPassword = errors.New("user or password incorrect")
+	ErrBadRequest              = errors.New("bad request")
+	ErrConflict                = errors.New("conflict")
+	ErrNotFound                = errors.New("not found")
+	ErrInternalServerError     = errors.New("impossible to solve")
+	ErrNoRows                  = errors.New("sql: no rows in result set")
 )
 
 // Error is our custom commercial agreements implementation.

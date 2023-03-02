@@ -8,7 +8,7 @@ import (
 )
 
 func GetHTTPCodeByError(err error) int {
-	if errors.Is(err, web.ErrIncorrectPassword) {
+	if errors.Is(err, web.ErrIncorrectUserOrPassword) {
 		return http.StatusBadRequest
 	}
 	if errors.Is(err, web.ErrBadRequest) {

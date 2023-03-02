@@ -15,7 +15,7 @@ import (
 )
 
 func TestUseCaseGet(t *testing.T) {
-	user := model.User{
+	observedUser := model.User{
 		ID:        1,
 		Name:      "Juan",
 		LastName:  "Perez",
@@ -29,60 +29,82 @@ func TestUseCaseGet(t *testing.T) {
 		UpdatedAt: "2022-12-10 17:49:30",
 	}
 
+	observerUser := observedUser
+	observerUser.ID = 2
+	observerUser.Type = observer
+
 	m := gomock.NewController(t)
 	defer m.Finish()
 
-	t.Run("error login in find by username", func(t *testing.T) {
-		mockUserRepository := mock_gateway.NewMockUserRepository(m)
-		mockUserRepository.EXPECT().Get(gomock.Any()).Return(nil, web.ErrInternalServerError)
+	tests := []struct {
+		name          string
+		mock          func() *mock_gateway.MockUserRepository
+		input         uint64
+		expectedUser  *model.User
+		expectedError error
+	}{
+		{
+			name: "error login in find by username",
+			mock: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				mockUserRepository.EXPECT().Get(gomock.Any()).Return(nil, web.ErrInternalServerError)
+				return mockUserRepository
+			},
+			input:         observedUser.ID,
+			expectedUser:  nil,
+			expectedError: web.ErrInternalServerError,
+		},
+		{
+			name: "not found error login for observed user",
+			mock: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				mockUserRepository.EXPECT().Get(gomock.Any()).Return(nil, nil)
+				return mockUserRepository
+			},
+			input:         observerUser.ID,
+			expectedUser:  nil,
+			expectedError: web.ErrNotFound,
+		},
+		{
+			name: "successful login for observer user",
+			mock: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				mockUserRepository.EXPECT().Get(gomock.Any()).Return(&observerUser, nil)
+				return mockUserRepository
+			},
+			input:         observerUser.ID,
+			expectedUser:  &observerUser,
+			expectedError: nil,
+		},
+		{
+			name: "successful login for observed user",
+			mock: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				mockUserRepository.EXPECT().Get(gomock.Any()).Return(&observedUser, nil)
+				return mockUserRepository
+			},
+			input:         observedUser.ID,
+			expectedUser:  &observedUser,
+			expectedError: nil,
+		},
+	}
+	for _, test := range tests {
+		mockUserRepository := test.mock()
 
-		context := getContextUser(mockUserRepository)
-		serviceLocator := ctx.GetServiceLocator(context)
-		uc := serviceLocator.GetInstance(UserUseCaseType).(UserUseCase)
+		t.Run(test.name, func(t *testing.T) {
+			context := getContextUser(mockUserRepository)
+			serviceLocator := ctx.GetServiceLocator(context)
+			uc := serviceLocator.GetInstance(UserUseCaseType).(UserUseCase)
 
-		u, err := uc.Get(1, serviceLocator)
+			u, err := uc.Get(test.input, serviceLocator)
 
-		assert.Nil(t, u)
-		assert.Equalf(t, web.ErrInternalServerError, err, "Expected error %v, received %d", nil, err)
-	})
-
-	t.Run("successful login for observer user", func(t *testing.T) {
-		mockUserRepository := mock_gateway.NewMockUserRepository(m)
-		user.Type = observer
-		mockUserRepository.EXPECT().Get(gomock.Any()).Return(nil, nil)
-
-		context := getContextUser(mockUserRepository)
-		serviceLocator := ctx.GetServiceLocator(context)
-		uc := serviceLocator.GetInstance(UserUseCaseType).(UserUseCase)
-
-		u, err := uc.Get(1, serviceLocator)
-
-		assert.Nil(t, u)
-		assert.Equalf(t, web.ErrNotFound, err, "Expected error %v, received %d", nil, err)
-	})
-
-	t.Run("successful login for observer user", func(t *testing.T) {
-		mockUserRepository := mock_gateway.NewMockUserRepository(m)
-		user.Type = observer
-		mockUserRepository.EXPECT().Get(gomock.Any()).Return(&user, nil)
-
-		context := getContextUser(mockUserRepository)
-		serviceLocator := ctx.GetServiceLocator(context)
-		uc := serviceLocator.GetInstance(UserUseCaseType).(UserUseCase)
-
-		u, err := uc.Get(1, serviceLocator)
-
-		assert.Equalf(t, user, *u, "Expected response %d, received %d", user, u)
-		assert.Equalf(t, nil, err, "Expected error %v, received %d", nil, err)
-	})
+			assert.Equalf(t, test.expectedUser, u, "Expected user %v, received %v", test.expectedUser, u)
+			assert.Equalf(t, test.expectedError, err, "Expected error %v, received %d", test.expectedError, err)
+		})
+	}
 }
 
 func TestUseCaseLogin(t *testing.T) {
-	login := model.Login{
-		Username: "jperez",
-		Password: "jperez1234",
-	}
-
 	user := model.User{
 		ID:        1,
 		Name:      "Juan",
@@ -116,6 +138,9 @@ func TestUseCaseLogin(t *testing.T) {
 	observerUser := model.ObserverUser{
 		User: user,
 	}
+	observerUser.User.Username = "jp"
+	observerUser.User.Password = "jp1234"
+	observerUser.User.Type = observer
 
 	observedU := model.NewObservedUser(&observedUser)
 	observerU := model.NewObserverUser(&observerUser)
@@ -123,96 +148,109 @@ func TestUseCaseLogin(t *testing.T) {
 	m := gomock.NewController(t)
 	defer m.Finish()
 
-	t.Run("error login in find by username", func(t *testing.T) {
-		mockUserRepository := mock_gateway.NewMockUserRepository(m)
-		mockUserRepository.EXPECT().FindByUsername(gomock.Any()).Return(nil, web.ErrInternalServerError)
+	tests := []struct {
+		name          string
+		mock          func() *mock_gateway.MockUserRepository
+		input         model.Login
+		expectedUser  model.IUser
+		expectedError error
+	}{
+		{
+			name: "error login in find by username",
+			mock: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				mockUserRepository.EXPECT().FindByUsername(gomock.Any()).Return(nil, web.ErrInternalServerError)
+				return mockUserRepository
+			},
+			input:         model.Login{Username: observedUser.User.Username, Password: observedUser.User.Password},
+			expectedUser:  nil,
+			expectedError: web.ErrInternalServerError,
+		},
+		{
+			name: "not found error login for observed user",
+			mock: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				mockUserRepository.EXPECT().FindByUsername(gomock.Any()).Return(nil, nil)
+				return mockUserRepository
+			},
+			input:         model.Login{Username: observedUser.User.Username, Password: observedUser.User.Password},
+			expectedUser:  nil,
+			expectedError: web.ErrNotFound,
+		},
+		{
+			name: "incorrect password in login for observer user",
+			mock: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				mockUserRepository.EXPECT().FindByUsername(gomock.Any()).Return(&user, nil)
+				return mockUserRepository
+			},
+			input:         model.Login{Username: observerUser.User.Username, Password: "incorrect"},
+			expectedUser:  nil,
+			expectedError: web.ErrIncorrectUserOrPassword,
+		},
+		{
+			name: "error login for observed user",
+			mock: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				mockUserRepository.EXPECT().FindByUsername(gomock.Any()).Return(&user, nil)
+				mockUserRepository.EXPECT().GetObservedUser(gomock.Any()).Return(nil, web.ErrInternalServerError)
+				return mockUserRepository
+			},
+			input:         model.Login{Username: observedUser.User.Username, Password: observedUser.User.Password},
+			expectedUser:  nil,
+			expectedError: web.ErrInternalServerError,
+		},
+		{
+			name: "error in login for observer user",
+			mock: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				mockUserRepository.EXPECT().FindByUsername(gomock.Any()).Return(&observerUser.User, nil)
+				mockUserRepository.EXPECT().GetObserverUser(gomock.Any()).Return(nil, web.ErrInternalServerError)
+				return mockUserRepository
+			},
+			input:         model.Login{Username: observerUser.User.Username, Password: observerUser.User.Password},
+			expectedUser:  nil,
+			expectedError: web.ErrInternalServerError,
+		},
+		{
+			name: "successful login for observer user",
+			mock: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				mockUserRepository.EXPECT().FindByUsername(gomock.Any()).Return(&observerUser.User, nil)
+				mockUserRepository.EXPECT().GetObserverUser(gomock.Any()).Return(observerU, nil)
+				return mockUserRepository
+			},
+			input:         model.Login{Username: observerUser.User.Username, Password: observerUser.User.Password},
+			expectedUser:  observerU,
+			expectedError: nil,
+		},
+		{
+			name: "successful login for observed user",
+			mock: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				mockUserRepository.EXPECT().FindByUsername(gomock.Any()).Return(&observedUser.User, nil)
+				mockUserRepository.EXPECT().GetObservedUser(gomock.Any()).Return(observedU, nil)
+				return mockUserRepository
+			},
+			input:         model.Login{Username: observedUser.User.Username, Password: observedUser.User.Password},
+			expectedUser:  observedU,
+			expectedError: nil,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			mockUserRepository := test.mock()
 
-		context := getContextUser(mockUserRepository)
+			context := getContextUser(mockUserRepository)
+			serviceLocator := ctx.GetServiceLocator(context)
+			uc := serviceLocator.GetInstance(UserUseCaseType).(UserUseCase)
 
-		serviceLocator := ctx.GetServiceLocator(context)
-		uc := serviceLocator.GetInstance(UserUseCaseType).(UserUseCase)
+			u, err := uc.Login(test.input, serviceLocator)
 
-		uod, err := uc.Login(login, serviceLocator)
-
-		assert.Equalf(t, nil, uod, "Expected response %d, received %d", observedU, uod)
-		assert.Equalf(t, web.ErrInternalServerError, err, "Expected error %v, received %d", nil, err)
-	})
-
-	t.Run("not found error login in find by username", func(t *testing.T) {
-		mockUserRepository := mock_gateway.NewMockUserRepository(m)
-		mockUserRepository.EXPECT().FindByUsername(gomock.Any()).Return(nil, nil)
-
-		context := getContextUser(mockUserRepository)
-		serviceLocator := ctx.GetServiceLocator(context)
-		uc := serviceLocator.GetInstance(UserUseCaseType).(UserUseCase)
-
-		uod, err := uc.Login(login, serviceLocator)
-
-		assert.Equalf(t, nil, uod, "Expected response %d, received %d", observedU, uod)
-		assert.Equalf(t, web.ErrNotFound, err, "Expected error %v, received %d", nil, err)
-	})
-
-	t.Run("error login in find by username for incorrect password", func(t *testing.T) {
-		mockUserRepository := mock_gateway.NewMockUserRepository(m)
-		user.Password = "incorrect"
-		mockUserRepository.EXPECT().FindByUsername(gomock.Any()).Return(&user, nil)
-
-		context := getContextUser(mockUserRepository)
-		serviceLocator := ctx.GetServiceLocator(context)
-		uc := serviceLocator.GetInstance(UserUseCaseType).(UserUseCase)
-
-		uod, err := uc.Login(login, serviceLocator)
-
-		assert.Equalf(t, nil, uod, "Expected response %d, received %d", observedU, uod)
-		assert.Equalf(t, web.ErrIncorrectPassword, err, "Expected error %v, received %d", nil, err)
-		user.Password = "jperez1234"
-	})
-
-	t.Run("error login for observed user", func(t *testing.T) {
-		mockUserRepository := mock_gateway.NewMockUserRepository(m)
-		mockUserRepository.EXPECT().FindByUsername(gomock.Any()).Return(&user, nil)
-		mockUserRepository.EXPECT().GetObservedUser(gomock.Any()).Return(nil, web.ErrInternalServerError)
-
-		context := getContextUser(mockUserRepository)
-		serviceLocator := ctx.GetServiceLocator(context)
-		uc := serviceLocator.GetInstance(UserUseCaseType).(UserUseCase)
-
-		uod, err := uc.Login(login, serviceLocator)
-
-		assert.Equalf(t, nil, uod, "Expected response %d, received %d", observedU, uod)
-		assert.Equalf(t, web.ErrInternalServerError, err, "Expected error %v, received %d", nil, err)
-	})
-
-	t.Run("successful login for observed user", func(t *testing.T) {
-		mockUserRepository := mock_gateway.NewMockUserRepository(m)
-		mockUserRepository.EXPECT().GetObservedUser(gomock.Any()).Return(observedU, nil)
-		mockUserRepository.EXPECT().FindByUsername(gomock.Any()).Return(&user, nil)
-
-		context := getContextUser(mockUserRepository)
-		serviceLocator := ctx.GetServiceLocator(context)
-		uc := serviceLocator.GetInstance(UserUseCaseType).(UserUseCase)
-
-		uod, err := uc.Login(login, serviceLocator)
-
-		assert.Equalf(t, observedU, uod, "Expected response %d, received %d", observedU, uod)
-		assert.Equalf(t, nil, err, "Expected error %v, received %d", nil, err)
-	})
-
-	t.Run("successful login for observer user", func(t *testing.T) {
-		mockUserRepository := mock_gateway.NewMockUserRepository(m)
-		user.Type = observer
-		mockUserRepository.EXPECT().FindByUsername(gomock.Any()).Return(&user, nil)
-		mockUserRepository.EXPECT().GetObserverUser(gomock.Any()).Return(observerU, nil)
-
-		context := getContextUser(mockUserRepository)
-		serviceLocator := ctx.GetServiceLocator(context)
-		uc := serviceLocator.GetInstance(UserUseCaseType).(UserUseCase)
-
-		uor, err := uc.Login(login, serviceLocator)
-
-		assert.Equalf(t, observerU, uor, "Expected response %d, received %d", observedU, uor)
-		assert.Equalf(t, nil, err, "Expected error %v, received %d", nil, err)
-	})
+			assert.Equalf(t, test.expectedUser, u, "Expected user %v, received %v", test.expectedUser, u)
+			assert.Equalf(t, test.expectedError, err, "Expected error %v, received %d", test.expectedError, err)
+		})
+	}
 }
 
 func TestUseCaseCreateObservedUser(t *testing.T) {
@@ -246,33 +284,50 @@ func TestUseCaseCreateObservedUser(t *testing.T) {
 	m := gomock.NewController(t)
 	defer m.Finish()
 
-	t.Run("error create observed user", func(t *testing.T) {
-		mockUserRepository := mock_gateway.NewMockUserRepository(m)
-		mockUserRepository.EXPECT().SaveObservedUser(gomock.Any()).Return(nil, web.ErrInternalServerError)
+	tests := []struct {
+		name          string
+		mock          func() *mock_gateway.MockUserRepository
+		input         model.ObservedUser
+		expectedUser  *model.ObservedUser
+		expectedError error
+	}{
+		{
+			name: "error create observed user",
+			mock: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				mockUserRepository.EXPECT().SaveObservedUser(gomock.Any()).Return(nil, web.ErrInternalServerError)
+				return mockUserRepository
+			},
+			input:         observedUser,
+			expectedUser:  nil,
+			expectedError: web.ErrInternalServerError,
+		},
+		{
+			name: "successful create observed user",
+			mock: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				mockUserRepository.EXPECT().SaveObservedUser(gomock.Any()).Return(&observedUser, nil)
+				return mockUserRepository
+			},
+			input:         observedUser,
+			expectedUser:  &observedUser,
+			expectedError: nil,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			mockUserRepository := test.mock()
 
-		context := getContextUser(mockUserRepository)
-		serviceLocator := ctx.GetServiceLocator(context)
-		uc := serviceLocator.GetInstance(UserUseCaseType).(UserUseCase)
+			context := getContextUser(mockUserRepository)
+			serviceLocator := ctx.GetServiceLocator(context)
+			uc := serviceLocator.GetInstance(UserUseCaseType).(UserUseCase)
 
-		u, err := uc.CreateObservedUser(observedUser, serviceLocator)
+			u, err := uc.CreateObservedUser(test.input, serviceLocator)
 
-		assert.Nil(t, u)
-		assert.Equalf(t, web.ErrInternalServerError, err, "Expected error %v, received %d", nil, err)
-	})
-
-	t.Run("successful create observed user", func(t *testing.T) {
-		mockUserRepository := mock_gateway.NewMockUserRepository(m)
-		mockUserRepository.EXPECT().SaveObservedUser(gomock.Any()).Return(&observedUser, nil)
-
-		context := getContextUser(mockUserRepository)
-		serviceLocator := ctx.GetServiceLocator(context)
-		uc := serviceLocator.GetInstance(UserUseCaseType).(UserUseCase)
-
-		u, err := uc.CreateObservedUser(observedUser, serviceLocator)
-
-		assert.Equalf(t, observedUser, *u, "Expected response %v, received %v", observedUser, u)
-		assert.Equalf(t, nil, err, "Expected error %v, received %d", nil, err)
-	})
+			assert.Equalf(t, test.expectedUser, u, "Expected user %v, received %v", test.expectedUser, u)
+			assert.Equalf(t, test.expectedError, err, "Expected error %v, received %d", test.expectedError, err)
+		})
+	}
 }
 
 func TestUseCaseCreateObserverUser(t *testing.T) {
@@ -295,33 +350,50 @@ func TestUseCaseCreateObserverUser(t *testing.T) {
 	m := gomock.NewController(t)
 	defer m.Finish()
 
-	t.Run("error create observed user", func(t *testing.T) {
-		mockUserRepository := mock_gateway.NewMockUserRepository(m)
-		mockUserRepository.EXPECT().SaveObserverUser(gomock.Any()).Return(nil, web.ErrInternalServerError)
+	tests := []struct {
+		name          string
+		mock          func() *mock_gateway.MockUserRepository
+		input         model.ObserverUser
+		expectedUser  *model.ObserverUser
+		expectedError error
+	}{
+		{
+			name: "error create observed user",
+			mock: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				mockUserRepository.EXPECT().SaveObserverUser(gomock.Any()).Return(nil, web.ErrInternalServerError)
+				return mockUserRepository
+			},
+			input:         observerUser,
+			expectedUser:  nil,
+			expectedError: web.ErrInternalServerError,
+		},
+		{
+			name: "successful create observed user",
+			mock: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				mockUserRepository.EXPECT().SaveObserverUser(gomock.Any()).Return(&observerUser, nil)
+				return mockUserRepository
+			},
+			input:         observerUser,
+			expectedUser:  &observerUser,
+			expectedError: nil,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			mockUserRepository := test.mock()
 
-		context := getContextUser(mockUserRepository)
-		serviceLocator := ctx.GetServiceLocator(context)
-		uc := serviceLocator.GetInstance(UserUseCaseType).(UserUseCase)
+			context := getContextUser(mockUserRepository)
+			serviceLocator := ctx.GetServiceLocator(context)
+			uc := serviceLocator.GetInstance(UserUseCaseType).(UserUseCase)
 
-		u, err := uc.CreateObserverUser(observerUser, serviceLocator)
+			u, err := uc.CreateObserverUser(test.input, serviceLocator)
 
-		assert.Nil(t, u)
-		assert.Equalf(t, web.ErrInternalServerError, err, "Expected error %v, received %d", nil, err)
-	})
-
-	t.Run("successful create observed user", func(t *testing.T) {
-		mockUserRepository := mock_gateway.NewMockUserRepository(m)
-		mockUserRepository.EXPECT().SaveObserverUser(gomock.Any()).Return(&observerUser, nil)
-
-		context := getContextUser(mockUserRepository)
-		serviceLocator := ctx.GetServiceLocator(context)
-		uc := serviceLocator.GetInstance(UserUseCaseType).(UserUseCase)
-
-		u, err := uc.CreateObserverUser(observerUser, serviceLocator)
-
-		assert.Equalf(t, observerUser, *u, "Expected response %v, received %v", observerUser, u)
-		assert.Equalf(t, nil, err, "Expected error %v, received %d", nil, err)
-	})
+			assert.Equalf(t, test.expectedUser, u, "Expected user %v, received %v", test.expectedUser, u)
+			assert.Equalf(t, test.expectedError, err, "Expected error %v, received %d", test.expectedError, err)
+		})
+	}
 }
 
 func TestUseCaseFindByUsername(t *testing.T) {
@@ -342,33 +414,50 @@ func TestUseCaseFindByUsername(t *testing.T) {
 	m := gomock.NewController(t)
 	defer m.Finish()
 
-	t.Run("error find user by username", func(t *testing.T) {
-		mockUserRepository := mock_gateway.NewMockUserRepository(m)
-		mockUserRepository.EXPECT().FindByUsername(gomock.Any()).Return(nil, web.ErrInternalServerError)
+	tests := []struct {
+		name          string
+		mock          func() *mock_gateway.MockUserRepository
+		input         string
+		expectedUser  *model.User
+		expectedError error
+	}{
+		{
+			name: "error create observed user",
+			mock: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				mockUserRepository.EXPECT().FindByUsername(gomock.Any()).Return(nil, web.ErrInternalServerError)
+				return mockUserRepository
+			},
+			input:         user.Username,
+			expectedUser:  nil,
+			expectedError: web.ErrInternalServerError,
+		},
+		{
+			name: "successful create observed user",
+			mock: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				mockUserRepository.EXPECT().FindByUsername(gomock.Any()).Return(&user, nil)
+				return mockUserRepository
+			},
+			input:         user.Username,
+			expectedUser:  &user,
+			expectedError: nil,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			mockUserRepository := test.mock()
 
-		context := getContextUser(mockUserRepository)
-		serviceLocator := ctx.GetServiceLocator(context)
-		uc := serviceLocator.GetInstance(UserUseCaseType).(UserUseCase)
+			context := getContextUser(mockUserRepository)
+			serviceLocator := ctx.GetServiceLocator(context)
+			uc := serviceLocator.GetInstance(UserUseCaseType).(UserUseCase)
 
-		u, err := uc.FindByUsername(user.Username, serviceLocator)
+			u, err := uc.FindByUsername(test.input, serviceLocator)
 
-		assert.Nil(t, u)
-		assert.Equalf(t, web.ErrInternalServerError, err, "Expected error %v, received %d", nil, err)
-	})
-
-	t.Run("successful find user by username", func(t *testing.T) {
-		mockUserRepository := mock_gateway.NewMockUserRepository(m)
-		mockUserRepository.EXPECT().FindByUsername(gomock.Any()).Return(&user, nil)
-
-		context := getContextUser(mockUserRepository)
-		serviceLocator := ctx.GetServiceLocator(context)
-		uc := serviceLocator.GetInstance(UserUseCaseType).(UserUseCase)
-
-		u, err := uc.FindByUsername(user.Username, serviceLocator)
-
-		assert.Equalf(t, user, *u, "Expected response %v, received %v", user, u)
-		assert.Equalf(t, nil, err, "Expected error %v, received %d", nil, err)
-	})
+			assert.Equalf(t, test.expectedUser, u, "Expected user %v, received %v", test.expectedUser, u)
+			assert.Equalf(t, test.expectedError, err, "Expected error %v, received %d", test.expectedError, err)
+		})
+	}
 }
 
 func TestUseCaseFindByEmail(t *testing.T) {
@@ -389,33 +478,50 @@ func TestUseCaseFindByEmail(t *testing.T) {
 	m := gomock.NewController(t)
 	defer m.Finish()
 
-	t.Run("error find user by email", func(t *testing.T) {
-		mockUserRepository := mock_gateway.NewMockUserRepository(m)
-		mockUserRepository.EXPECT().FindByEmail(gomock.Any()).Return(nil, web.ErrInternalServerError)
+	tests := []struct {
+		name          string
+		mock          func() *mock_gateway.MockUserRepository
+		input         string
+		expectedUser  *model.User
+		expectedError error
+	}{
+		{
+			name: "error finding user by email",
+			mock: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				mockUserRepository.EXPECT().FindByEmail(gomock.Any()).Return(nil, web.ErrInternalServerError)
+				return mockUserRepository
+			},
+			input:         user.Email,
+			expectedUser:  nil,
+			expectedError: web.ErrInternalServerError,
+		},
+		{
+			name: "successful find user by email",
+			mock: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				mockUserRepository.EXPECT().FindByEmail(gomock.Any()).Return(&user, nil)
+				return mockUserRepository
+			},
+			input:         user.Email,
+			expectedUser:  &user,
+			expectedError: nil,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			mockUserRepository := test.mock()
 
-		context := getContextUser(mockUserRepository)
-		serviceLocator := ctx.GetServiceLocator(context)
-		uc := serviceLocator.GetInstance(UserUseCaseType).(UserUseCase)
+			context := getContextUser(mockUserRepository)
+			serviceLocator := ctx.GetServiceLocator(context)
+			uc := serviceLocator.GetInstance(UserUseCaseType).(UserUseCase)
 
-		u, err := uc.FindByEmail(user.Email, serviceLocator)
+			u, err := uc.FindByEmail(test.input, serviceLocator)
 
-		assert.Nil(t, u)
-		assert.Equalf(t, web.ErrInternalServerError, err, "Expected error %v, received %d", nil, err)
-	})
-
-	t.Run("successful find user by email", func(t *testing.T) {
-		mockUserRepository := mock_gateway.NewMockUserRepository(m)
-		mockUserRepository.EXPECT().FindByEmail(gomock.Any()).Return(&user, nil)
-
-		context := getContextUser(mockUserRepository)
-		serviceLocator := ctx.GetServiceLocator(context)
-		uc := serviceLocator.GetInstance(UserUseCaseType).(UserUseCase)
-
-		u, err := uc.FindByEmail(user.Email, serviceLocator)
-
-		assert.Equalf(t, user, *u, "Expected response %v, received %v", user, u)
-		assert.Equalf(t, nil, err, "Expected error %v, received %d", nil, err)
-	})
+			assert.Equalf(t, test.expectedUser, u, "Expected user %v, received %v", test.expectedUser, u)
+			assert.Equalf(t, test.expectedError, err, "Expected error %v, received %d", test.expectedError, err)
+		})
+	}
 }
 
 func getContextUser(mock *mock_gateway.MockUserRepository) context.Context {
