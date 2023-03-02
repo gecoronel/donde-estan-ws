@@ -28,204 +28,253 @@ func TestUseCaseGetSchoolBus(t *testing.T) {
 	m := gomock.NewController(t)
 	defer m.Finish()
 
-	t.Run("error getting school bus", func(t *testing.T) {
-		mockSchoolBusRepository := mock_gateway.NewMockSchoolBusRepository(m)
-		mockSchoolBusRepository.EXPECT().Get(gomock.Any()).Return(nil, web.ErrInternalServerError)
+	tests := []struct {
+		name              string
+		mock              func() *mock_gateway.MockSchoolBusRepository
+		input             string
+		expectedSchoolBus *model.SchoolBus
+		expectedError     error
+	}{
+		{
+			name: "error getting school bus",
+			mock: func() *mock_gateway.MockSchoolBusRepository {
+				mockSchoolBusRepository := mock_gateway.NewMockSchoolBusRepository(m)
+				mockSchoolBusRepository.EXPECT().Get(gomock.Any()).Return(nil, web.ErrInternalServerError)
+				return mockSchoolBusRepository
+			},
+			input:             sb.ID,
+			expectedSchoolBus: nil,
+			expectedError:     web.ErrInternalServerError,
+		},
+		{
+			name: "not found error getting school bus",
+			mock: func() *mock_gateway.MockSchoolBusRepository {
+				mockSchoolBusRepository := mock_gateway.NewMockSchoolBusRepository(m)
+				mockSchoolBusRepository.EXPECT().Get(gomock.Any()).Return(nil, nil)
+				return mockSchoolBusRepository
+			},
+			input:             sb.ID,
+			expectedSchoolBus: nil,
+			expectedError:     web.ErrNotFound,
+		},
+		{
+			name: "successful create observed user",
+			mock: func() *mock_gateway.MockSchoolBusRepository {
+				mockSchoolBusRepository := mock_gateway.NewMockSchoolBusRepository(m)
+				mockSchoolBusRepository.EXPECT().Get(gomock.Any()).Return(&sb, nil)
+				return mockSchoolBusRepository
+			},
+			input:             sb.ID,
+			expectedSchoolBus: &sb,
+			expectedError:     nil,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			mockSchoolBusRepository := test.mock()
 
-		context := getContextSchoolBus(mockSchoolBusRepository)
-		serviceLocator := ctx.GetServiceLocator(context)
-		uc := serviceLocator.GetInstance(SchoolBusUseCaseType).(SchoolBusUseCase)
+			context := getContextSchoolBus(mockSchoolBusRepository)
+			serviceLocator := ctx.GetServiceLocator(context)
+			uc := serviceLocator.GetInstance(SchoolBusUseCaseType).(SchoolBusUseCase)
 
-		u, err := uc.Get("1", serviceLocator)
+			u, err := uc.Get(test.input, serviceLocator)
 
-		assert.Nil(t, u)
-		assert.Equalf(t, web.ErrInternalServerError, err, "Expected error %v, received %d", nil, err)
-	})
-
-	t.Run("not found error getting school bus", func(t *testing.T) {
-		mockSchoolBusRepository := mock_gateway.NewMockSchoolBusRepository(m)
-		mockSchoolBusRepository.EXPECT().Get(gomock.Any()).Return(nil, nil)
-
-		context := getContextSchoolBus(mockSchoolBusRepository)
-		serviceLocator := ctx.GetServiceLocator(context)
-		uc := serviceLocator.GetInstance(SchoolBusUseCaseType).(SchoolBusUseCase)
-
-		u, err := uc.Get("1", serviceLocator)
-
-		assert.Nil(t, u)
-		assert.Equalf(t, web.ErrNotFound, err, "Expected error %v, received %d", nil, err)
-	})
-
-	t.Run("successful get school bus", func(t *testing.T) {
-		mockSchoolBusRepository := mock_gateway.NewMockSchoolBusRepository(m)
-		mockSchoolBusRepository.EXPECT().Get(gomock.Any()).Return(&sb, nil)
-
-		context := getContextSchoolBus(mockSchoolBusRepository)
-		serviceLocator := ctx.GetServiceLocator(context)
-		uc := serviceLocator.GetInstance(SchoolBusUseCaseType).(SchoolBusUseCase)
-
-		u, err := uc.Get("1", serviceLocator)
-
-		assert.Equalf(t, sb, *u, "Expected response %v, received %v", sb, u)
-		assert.Equalf(t, nil, err, "Expected error %v, received %d", nil, err)
-	})
+			assert.Equalf(t, test.expectedSchoolBus, u, "Expected user %v, received %v", test.expectedSchoolBus, u)
+			assert.Equalf(t, test.expectedError, err, "Expected error %v, received %d", test.expectedError, err)
+		})
+	}
 }
 
 func TestUseCaseSaveSchoolBus(t *testing.T) {
 	m := gomock.NewController(t)
 	defer m.Finish()
 
-	t.Run("error saving school bus", func(t *testing.T) {
-		mockSchoolBusRepository := mock_gateway.NewMockSchoolBusRepository(m)
-		mockSchoolBusRepository.EXPECT().Save(gomock.Any()).Return(nil, web.ErrInternalServerError)
+	tests := []struct {
+		name              string
+		mock              func() *mock_gateway.MockSchoolBusRepository
+		input             model.SchoolBus
+		expectedSchoolBus *model.SchoolBus
+		expectedError     error
+	}{
+		{
+			name: "error saving school bus",
+			mock: func() *mock_gateway.MockSchoolBusRepository {
+				mockSchoolBusRepository := mock_gateway.NewMockSchoolBusRepository(m)
+				mockSchoolBusRepository.EXPECT().Save(gomock.Any()).Return(nil, web.ErrInternalServerError)
+				return mockSchoolBusRepository
+			},
+			input:             sb,
+			expectedSchoolBus: nil,
+			expectedError:     web.ErrInternalServerError,
+		},
+		{
+			name: "successful save school bus",
+			mock: func() *mock_gateway.MockSchoolBusRepository {
+				mockSchoolBusRepository := mock_gateway.NewMockSchoolBusRepository(m)
+				mockSchoolBusRepository.EXPECT().Save(gomock.Any()).Return(&sb, nil)
+				return mockSchoolBusRepository
+			},
+			input:             sb,
+			expectedSchoolBus: &sb,
+			expectedError:     nil,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			mockSchoolBusRepository := test.mock()
 
-		context := getContextSchoolBus(mockSchoolBusRepository)
-		serviceLocator := ctx.GetServiceLocator(context)
-		uc := serviceLocator.GetInstance(SchoolBusUseCaseType).(SchoolBusUseCase)
+			context := getContextSchoolBus(mockSchoolBusRepository)
+			serviceLocator := ctx.GetServiceLocator(context)
+			uc := serviceLocator.GetInstance(SchoolBusUseCaseType).(SchoolBusUseCase)
 
-		bus, err := uc.Save(sb, serviceLocator)
+			u, err := uc.Save(test.input, serviceLocator)
 
-		assert.Nil(t, bus)
-		assert.Equalf(t, web.ErrInternalServerError, err, "Expected error %v, received %d", nil, err)
-	})
-
-	t.Run("successful save school bus", func(t *testing.T) {
-		mockSchoolBusRepository := mock_gateway.NewMockSchoolBusRepository(m)
-		mockSchoolBusRepository.EXPECT().Save(gomock.Any()).Return(&sb, nil)
-
-		context := getContextSchoolBus(mockSchoolBusRepository)
-		serviceLocator := ctx.GetServiceLocator(context)
-		uc := serviceLocator.GetInstance(SchoolBusUseCaseType).(SchoolBusUseCase)
-
-		bus, err := uc.Save(sb, serviceLocator)
-
-		assert.Equalf(t, sb, *bus, "Expected response %v, received %v", sb, bus)
-		assert.Equalf(t, nil, err, "Expected error %v, received %d", nil, err)
-	})
+			assert.Equalf(t, test.expectedSchoolBus, u, "Expected user %v, received %v", test.expectedSchoolBus, u)
+			assert.Equalf(t, test.expectedError, err, "Expected error %v, received %d", test.expectedError, err)
+		})
+	}
 }
 
 func TestUseCaseUpdateSchoolBus(t *testing.T) {
 	m := gomock.NewController(t)
 	defer m.Finish()
 
-	t.Run("error updating school bus", func(t *testing.T) {
-		mockSchoolBusRepository := mock_gateway.NewMockSchoolBusRepository(m)
-		mockSchoolBusRepository.EXPECT().Get(gomock.Any()).Return(&sb, nil)
-		mockSchoolBusRepository.EXPECT().Update(gomock.Any()).Return(nil, web.ErrInternalServerError)
+	tests := []struct {
+		name              string
+		mock              func() *mock_gateway.MockSchoolBusRepository
+		input             model.SchoolBus
+		expectedSchoolBus *model.SchoolBus
+		expectedError     error
+	}{
+		{
+			name: "error updating school bus",
+			mock: func() *mock_gateway.MockSchoolBusRepository {
+				mockSchoolBusRepository := mock_gateway.NewMockSchoolBusRepository(m)
+				mockSchoolBusRepository.EXPECT().Get(gomock.Any()).Return(&sb, nil)
+				mockSchoolBusRepository.EXPECT().Update(gomock.Any()).Return(nil, web.ErrInternalServerError)
+				return mockSchoolBusRepository
+			},
+			input:             sb,
+			expectedSchoolBus: nil,
+			expectedError:     web.ErrInternalServerError,
+		},
+		{
+			name: "not found error updating school bus",
+			mock: func() *mock_gateway.MockSchoolBusRepository {
+				mockSchoolBusRepository := mock_gateway.NewMockSchoolBusRepository(m)
+				mockSchoolBusRepository.EXPECT().Get(gomock.Any()).Return(nil, nil)
+				return mockSchoolBusRepository
+			},
+			input:             sb,
+			expectedSchoolBus: nil,
+			expectedError:     web.ErrNotFound,
+		},
+		{
+			name: "error getting school bus",
+			mock: func() *mock_gateway.MockSchoolBusRepository {
+				mockSchoolBusRepository := mock_gateway.NewMockSchoolBusRepository(m)
+				mockSchoolBusRepository.EXPECT().Get(gomock.Any()).Return(nil, web.ErrInternalServerError)
+				return mockSchoolBusRepository
+			},
+			input:             sb,
+			expectedSchoolBus: nil,
+			expectedError:     web.ErrInternalServerError,
+		},
+		{
+			name: "successful update school bus",
+			mock: func() *mock_gateway.MockSchoolBusRepository {
+				mockSchoolBusRepository := mock_gateway.NewMockSchoolBusRepository(m)
+				mockSchoolBusRepository.EXPECT().Get(gomock.Any()).Return(&sb, nil)
+				mockSchoolBusRepository.EXPECT().Update(gomock.Any()).Return(&sb, nil)
+				return mockSchoolBusRepository
+			},
+			input:             sb,
+			expectedSchoolBus: &sb,
+			expectedError:     nil,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			mockSchoolBusRepository := test.mock()
 
-		context := getContextSchoolBus(mockSchoolBusRepository)
-		serviceLocator := ctx.GetServiceLocator(context)
-		uc := serviceLocator.GetInstance(SchoolBusUseCaseType).(SchoolBusUseCase)
+			context := getContextSchoolBus(mockSchoolBusRepository)
+			serviceLocator := ctx.GetServiceLocator(context)
+			uc := serviceLocator.GetInstance(SchoolBusUseCaseType).(SchoolBusUseCase)
 
-		bus, err := uc.Update(sb, serviceLocator)
+			u, err := uc.Update(test.input, serviceLocator)
 
-		assert.Nil(t, bus)
-		assert.Equalf(t, web.ErrInternalServerError, err, "Expected error %v, received %d", nil, err)
-	})
-
-	t.Run("error selecting school bus", func(t *testing.T) {
-		mockSchoolBusRepository := mock_gateway.NewMockSchoolBusRepository(m)
-		mockSchoolBusRepository.EXPECT().Get(gomock.Any()).Return(nil, web.ErrInternalServerError)
-
-		context := getContextSchoolBus(mockSchoolBusRepository)
-		serviceLocator := ctx.GetServiceLocator(context)
-		uc := serviceLocator.GetInstance(SchoolBusUseCaseType).(SchoolBusUseCase)
-
-		bus, err := uc.Update(sb, serviceLocator)
-
-		assert.Nil(t, bus)
-		assert.Equalf(t, web.ErrInternalServerError, err, "Expected error %v, received %d", nil, err)
-	})
-
-	t.Run("not found error updating school bus", func(t *testing.T) {
-		mockSchoolBusRepository := mock_gateway.NewMockSchoolBusRepository(m)
-		mockSchoolBusRepository.EXPECT().Get(gomock.Any()).Return(nil, nil)
-
-		context := getContextSchoolBus(mockSchoolBusRepository)
-		serviceLocator := ctx.GetServiceLocator(context)
-		uc := serviceLocator.GetInstance(SchoolBusUseCaseType).(SchoolBusUseCase)
-
-		bus, err := uc.Update(sb, serviceLocator)
-
-		assert.Nil(t, bus)
-		assert.Equalf(t, web.ErrNotFound, err, "Expected error %v, received %d", nil, err)
-	})
-
-	t.Run("successful update school bus", func(t *testing.T) {
-		sb.Brand = "Fiat"
-		mockSchoolBusRepository := mock_gateway.NewMockSchoolBusRepository(m)
-		mockSchoolBusRepository.EXPECT().Get(gomock.Any()).Return(&sb, nil)
-		mockSchoolBusRepository.EXPECT().Update(gomock.Any()).Return(&sb, nil)
-
-		context := getContextSchoolBus(mockSchoolBusRepository)
-		serviceLocator := ctx.GetServiceLocator(context)
-		uc := serviceLocator.GetInstance(SchoolBusUseCaseType).(SchoolBusUseCase)
-
-		bus, err := uc.Update(sb, serviceLocator)
-
-		assert.Equalf(t, "Fiat", bus.Brand, "Expected response %v, received %v", "Fiat", bus.Brand)
-		assert.Equalf(t, sb, *bus, "Expected response %v, received %v", sb, bus)
-		assert.Equalf(t, nil, err, "Expected error %v, received %d", nil, err)
-	})
+			assert.Equalf(t, test.expectedSchoolBus, u, "Expected user %v, received %v", test.expectedSchoolBus, u)
+			assert.Equalf(t, test.expectedError, err, "Expected error %v, received %d", test.expectedError, err)
+		})
+	}
 }
 
 func TestUseCaseDeleteSchoolBus(t *testing.T) {
 	m := gomock.NewController(t)
 	defer m.Finish()
 
-	t.Run("error updating school bus", func(t *testing.T) {
-		mockSchoolBusRepository := mock_gateway.NewMockSchoolBusRepository(m)
-		mockSchoolBusRepository.EXPECT().Get(gomock.Any()).Return(&sb, nil)
-		mockSchoolBusRepository.EXPECT().Delete(gomock.Any()).Return(web.ErrInternalServerError)
+	tests := []struct {
+		name          string
+		mock          func() *mock_gateway.MockSchoolBusRepository
+		input         string
+		expectedError error
+	}{
+		{
+			name: "error updating school bus",
+			mock: func() *mock_gateway.MockSchoolBusRepository {
+				mockSchoolBusRepository := mock_gateway.NewMockSchoolBusRepository(m)
+				mockSchoolBusRepository.EXPECT().Get(gomock.Any()).Return(&sb, nil)
+				mockSchoolBusRepository.EXPECT().Delete(gomock.Any()).Return(web.ErrInternalServerError)
+				return mockSchoolBusRepository
+			},
+			input:         sb.ID,
+			expectedError: web.ErrInternalServerError,
+		},
+		{
+			name: "not found error updating school bus",
+			mock: func() *mock_gateway.MockSchoolBusRepository {
+				mockSchoolBusRepository := mock_gateway.NewMockSchoolBusRepository(m)
+				mockSchoolBusRepository.EXPECT().Get(gomock.Any()).Return(nil, nil)
+				return mockSchoolBusRepository
+			},
+			input:         sb.ID,
+			expectedError: web.ErrNotFound,
+		},
+		{
+			name: "error getting school bus",
+			mock: func() *mock_gateway.MockSchoolBusRepository {
+				mockSchoolBusRepository := mock_gateway.NewMockSchoolBusRepository(m)
+				mockSchoolBusRepository.EXPECT().Get(gomock.Any()).Return(nil, web.ErrInternalServerError)
+				return mockSchoolBusRepository
+			},
+			input:         sb.ID,
+			expectedError: web.ErrInternalServerError,
+		},
+		{
+			name: "successful update school bus",
+			mock: func() *mock_gateway.MockSchoolBusRepository {
+				mockSchoolBusRepository := mock_gateway.NewMockSchoolBusRepository(m)
+				mockSchoolBusRepository.EXPECT().Get(gomock.Any()).Return(&sb, nil)
+				mockSchoolBusRepository.EXPECT().Delete(gomock.Any()).Return(nil)
+				return mockSchoolBusRepository
+			},
+			input:         sb.ID,
+			expectedError: nil,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			mockSchoolBusRepository := test.mock()
 
-		context := getContextSchoolBus(mockSchoolBusRepository)
-		serviceLocator := ctx.GetServiceLocator(context)
-		uc := serviceLocator.GetInstance(SchoolBusUseCaseType).(SchoolBusUseCase)
+			context := getContextSchoolBus(mockSchoolBusRepository)
+			serviceLocator := ctx.GetServiceLocator(context)
+			uc := serviceLocator.GetInstance(SchoolBusUseCaseType).(SchoolBusUseCase)
 
-		err := uc.Delete(sb.ID, serviceLocator)
+			err := uc.Delete(test.input, serviceLocator)
 
-		assert.Equalf(t, web.ErrInternalServerError, err, "Expected error %v, received %d", nil, err)
-	})
-
-	t.Run("error selecting school bus", func(t *testing.T) {
-		mockSchoolBusRepository := mock_gateway.NewMockSchoolBusRepository(m)
-		mockSchoolBusRepository.EXPECT().Get(gomock.Any()).Return(nil, web.ErrInternalServerError)
-
-		context := getContextSchoolBus(mockSchoolBusRepository)
-		serviceLocator := ctx.GetServiceLocator(context)
-		uc := serviceLocator.GetInstance(SchoolBusUseCaseType).(SchoolBusUseCase)
-
-		err := uc.Delete(sb.ID, serviceLocator)
-
-		assert.Equalf(t, web.ErrInternalServerError, err, "Expected error %v, received %d", nil, err)
-	})
-
-	t.Run("not found error updating school bus", func(t *testing.T) {
-		mockSchoolBusRepository := mock_gateway.NewMockSchoolBusRepository(m)
-		mockSchoolBusRepository.EXPECT().Get(gomock.Any()).Return(nil, nil)
-
-		context := getContextSchoolBus(mockSchoolBusRepository)
-		serviceLocator := ctx.GetServiceLocator(context)
-		uc := serviceLocator.GetInstance(SchoolBusUseCaseType).(SchoolBusUseCase)
-
-		err := uc.Delete(sb.ID, serviceLocator)
-
-		assert.Equalf(t, web.ErrNotFound, err, "Expected error %v, received %d", nil, err)
-	})
-
-	t.Run("successful update school bus", func(t *testing.T) {
-		mockSchoolBusRepository := mock_gateway.NewMockSchoolBusRepository(m)
-		mockSchoolBusRepository.EXPECT().Get(gomock.Any()).Return(&sb, nil)
-		mockSchoolBusRepository.EXPECT().Delete(gomock.Any()).Return(nil)
-
-		context := getContextSchoolBus(mockSchoolBusRepository)
-		serviceLocator := ctx.GetServiceLocator(context)
-		uc := serviceLocator.GetInstance(SchoolBusUseCaseType).(SchoolBusUseCase)
-
-		err := uc.Delete(sb.ID, serviceLocator)
-
-		assert.Equalf(t, nil, err, "Expected error %v, received %d", nil, err)
-	})
+			assert.Equalf(t, test.expectedError, err, "Expected error %v, received %d", test.expectedError, err)
+		})
+	}
 }
 
 func getContextSchoolBus(mock *mock_gateway.MockSchoolBusRepository) context.Context {

@@ -62,7 +62,7 @@ func (u userUseCase) Login(login model.Login, locator gateway.ServiceLocator) (m
 	}
 
 	if !strings.EqualFold(user.Password, login.Password) {
-		return nil, web.ErrIncorrectPassword
+		return nil, web.ErrIncorrectUserOrPassword
 	}
 
 	var (
