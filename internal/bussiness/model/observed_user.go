@@ -10,6 +10,11 @@ type ObservedUser struct {
 	ObserverUsers []ObserverUser `json:",omitempty" gorm:"foreignKey:ObservedUsers"`
 }
 
+type AddDriverReq struct {
+	PrivacyKey     string `json:"privacy_key" validate:"required"`
+	ObserverUserID uint64 `json:"observer_user_id" validate:"required"`
+}
+
 func NewObservedUser(observed *ObservedUser) IUser {
 	return observed
 }
@@ -122,4 +127,10 @@ var validateObserved = validator.New()
 
 func (observed *ObservedUser) Validate() error {
 	return validateObserved.Struct(observed)
+}
+
+var validatePrivacyKey = validator.New()
+
+func (pk *AddDriverReq) Validate() error {
+	return validatePrivacyKey.Struct(pk)
 }

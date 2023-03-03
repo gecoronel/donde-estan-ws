@@ -203,3 +203,45 @@ func CreateObserverUser(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(user)
 }
+
+func AddObservedUserInObserverUser(w http.ResponseWriter, r *http.Request) {
+	serviceLocator := context.GetServiceLocator(r.Context())
+	useCase := serviceLocator.GetInstance(usecase.UserUseCaseType).(usecase.UserUseCase)
+
+	var (
+		req model.AddDriverReq
+		err error
+	)
+
+	d := json.NewDecoder(r.Body)
+	d.DisallowUnknownFields()
+	if err = d.Decode(&req); err != nil {
+		log.Error("invalid body for creation of observed user")
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(web.NewError(http.StatusBadRequest, err.Error()))
+		return
+	}
+
+	if err = req.Validate(); err != nil {
+		log.Error("validation failed for add observed user in observer user")
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(web.NewError(http.StatusBadRequest, err.Error()))
+		return
+	}
+
+	err = useCase.AddObservedUserInObserverUser(req.PrivacyKey, req.ObserverUserID, serviceLocator)
+	if err != nil {
+		log.Error("creation observed user in observer user failed: ", err)
+		w.Header().Set("Content-Type", "application/json")
+		httpStatusCode := utils.GetHTTPCodeByError(err)
+		w.WriteHeader(httpStatusCode)
+		_ = json.NewEncoder(w).Encode(web.NewError(httpStatusCode, err.Error()))
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(web.NewError(http.StatusOK, "observed user added"))
+}

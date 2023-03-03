@@ -25,6 +25,7 @@ type (
 		FindByEmail(string, gateway.ServiceLocator) (*model.User, error)
 		CreateObservedUser(model.ObservedUser, gateway.ServiceLocator) (*model.ObservedUser, error)
 		CreateObserverUser(model.ObserverUser, gateway.ServiceLocator) (*model.ObserverUser, error)
+		AddObservedUserInObserverUser(string, uint64, gateway.ServiceLocator) error
 	}
 
 	userUseCase struct{}
@@ -67,18 +68,17 @@ func (u userUseCase) Login(login model.Login, locator gateway.ServiceLocator) (m
 
 	var (
 		iUser model.IUser
-		odu   model.ObservedUser
-		oru   model.ObserverUser
+		odu   *model.ObservedUser
+		oru   *model.ObserverUser
 	)
-
-	odu.User = *user
-	oru.User = *user
 
 	switch user.Type {
 	case observed:
-		iUser, err = repository.GetObservedUser(odu.User.ID)
+		odu, err = repository.GetObservedUser(user.ID)
+		iUser = model.NewObservedUser(odu)
 	case observer:
-		iUser, err = repository.GetObserverUser(oru.User.ID)
+		oru, err = repository.GetObserverUser(user.ID)
+		iUser = model.NewObserverUser(oru)
 	}
 
 	if err != nil {
@@ -136,4 +136,48 @@ func (u userUseCase) FindByEmail(email string, locator gateway.ServiceLocator) (
 	}
 
 	return user, nil
+}
+
+func (u userUseCase) AddObservedUserInObserverUser(
+	privacyKey string,
+	observerUserID uint64,
+	locator gateway.ServiceLocator,
+) error {
+	repository := locator.GetInstance(gateway.UserRepositoryType).(gateway.UserRepository)
+
+	odu, err := repository.FindObservedUserByPrivacyKey(privacyKey)
+	if err != nil {
+		return web.ErrInternalServerError
+	}
+	if odu == nil {
+		return web.ErrNotFound
+	}
+
+	oru, err := repository.GetObserverUser(observerUserID)
+	if err != nil {
+		return web.ErrInternalServerError
+	}
+	if oru == nil {
+		return web.ErrNotFound
+	}
+	if existObservedUserInObserverUser(*oru, odu.User.ID) {
+		return web.ErrConflict
+	}
+
+	err = repository.SaveObservedUserInObserverUser(odu.User.ID, observerUserID)
+	if err != nil {
+		return web.ErrInternalServerError
+	}
+
+	return nil
+}
+
+func existObservedUserInObserverUser(observer model.ObserverUser, observedUserID uint64) bool {
+	for _, odu := range observer.ObservedUsers {
+		if odu.User.ID == observedUserID {
+			return true
+		}
+	}
+
+	return false
 }

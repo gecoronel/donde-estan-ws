@@ -901,3 +901,188 @@ func TestGetObserverUser(t *testing.T) {
 		assert.Equal(t, expectedObserverUser, observerUser)
 	})
 }
+
+func TestFindObservedUserByPrivacyKey(t *testing.T) {
+	db, mock := NewMock()
+	defer db.Close()
+
+	gdb, err := gorm.Open(mysql.New(mysql.Config{Conn: db, SkipInitializeWithVersion: true}), &gorm.Config{})
+	if err != nil {
+		log.Error("error opening database connection")
+	}
+
+	ur := NewUserRepository(gdb, context.Background())
+
+	t.Run("FindObservedUserByPrivacyKey successful", func(t *testing.T) {
+		rows := sqlmock.
+			NewRows(
+				[]string{"id", "name", "last_name", "id_number", "username", "password", "email", "type", "enabled",
+					"privacy_key", "company_name", "school_bus_id", "license_plate", "model", "brand", "license",
+					"created_at", "updated_at"},
+			).
+			AddRow(
+				observed.User.ID, observed.User.Name, observed.User.LastName, observed.User.IDNumber,
+				observed.User.Username, observed.User.Password, observed.User.Email, observed.User.Type,
+				observed.User.Enabled, observed.PrivacyKey, observed.CompanyName, observed.SchoolBus.ID,
+				observed.SchoolBus.LicensePlate, observed.SchoolBus.Model, observed.SchoolBus.Brand,
+				observed.SchoolBus.License, observed.SchoolBus.CreatedAt, observed.SchoolBus.UpdatedAt,
+			)
+		mock.
+			ExpectQuery(regexp.QuoteMeta(queryGetObservedUserByPrivacyKey)).
+			WithArgs(observed.PrivacyKey).
+			WillReturnRows(rows)
+
+		user, err := ur.FindObservedUserByPrivacyKey(observed.PrivacyKey)
+		assert.NotNil(t, user)
+		assert.NoError(t, err)
+		assert.Equal(t, observed.PrivacyKey, user.PrivacyKey)
+	})
+
+	t.Run("FindObservedUserByPrivacyKey scan error", func(t *testing.T) {
+		rows := sqlmock.
+			NewRows(
+				[]string{"id", "name", "last_name"},
+			).
+			AddRow(
+				observed.User.ID, observed.User.Name, observed.User.LastName,
+			)
+		mock.
+			ExpectQuery(regexp.QuoteMeta(queryGetObservedUserByPrivacyKey)).
+			WithArgs(observed.PrivacyKey).
+			WillReturnRows(rows)
+
+		user, err := ur.FindObservedUserByPrivacyKey(observed.PrivacyKey)
+		assert.Nil(t, user)
+		assert.Error(t, err)
+	})
+
+	t.Run("FindObservedUserByPrivacyKey rows error", func(t *testing.T) {
+		mock.
+			ExpectQuery(regexp.QuoteMeta(queryGetObservedUserByPrivacyKey)).
+			WithArgs(observed.PrivacyKey).
+			WillReturnError(web.ErrInternalServerError)
+
+		user, err := ur.FindObservedUserByPrivacyKey(observed.PrivacyKey)
+		assert.Nil(t, user)
+		assert.Error(t, err)
+	})
+
+	t.Run("FindObservedUserByPrivacyKey not found error", func(t *testing.T) {
+		mock.
+			ExpectQuery(regexp.QuoteMeta(queryGetObservedUserByPrivacyKey)).
+			WithArgs(observed.PrivacyKey).
+			WillReturnError(web.ErrNoRows)
+
+		user, err := ur.FindObservedUserByPrivacyKey(observed.PrivacyKey)
+		assert.Nil(t, user)
+		assert.NoError(t, err)
+	})
+
+	t.Run("FindObservedUserByPrivacyKey nil rows error", func(t *testing.T) {
+		rows := sqlmock.
+			NewRows(
+				[]string{"id", "name", "last_name", "id_number", "username", "password", "email", "type", "enabled",
+					"privacy_key", "company_name", "school_bus_id", "license_plate", "model", "brand", "license",
+					"created_at", "updated_at"},
+			).
+			AddRow(
+				observed.User.ID, observed.User.Name, observed.User.LastName, observed.User.IDNumber,
+				observed.User.Username, observed.User.Password, observed.User.Email, observed.User.Type,
+				observed.User.Enabled, "invalid privacy key", observed.CompanyName, observed.SchoolBus.ID,
+				observed.SchoolBus.LicensePlate, observed.SchoolBus.Model, observed.SchoolBus.Brand,
+				observed.SchoolBus.License, observed.SchoolBus.CreatedAt, observed.SchoolBus.UpdatedAt,
+			)
+		mock.
+			ExpectQuery(regexp.QuoteMeta(queryGetObservedUserByPrivacyKey)).
+			WithArgs("not found").
+			WillReturnRows(rows)
+
+		user, err := ur.FindObservedUserByPrivacyKey(observed.PrivacyKey)
+		assert.Nil(t, user)
+		assert.Error(t, err)
+	})
+
+}
+
+func TestSaveObservedUserInObserverUser(t *testing.T) {
+	db, mock := NewMock()
+	defer db.Close()
+
+	gdb, err := gorm.Open(mysql.New(mysql.Config{Conn: db, SkipInitializeWithVersion: true}), &gorm.Config{})
+	if err != nil {
+		log.Error("error opening database connection")
+	}
+
+	ur := NewUserRepository(gdb, context.Background())
+
+	t.Run("save observed user in observer user successful", func(t *testing.T) {
+		mock.ExpectBegin()
+		// note this line is important for unordered expectation matching
+		mock.MatchExpectationsInOrder(false)
+		mock.
+			ExpectExec(regexp.QuoteMeta(querySaveObservedUserInObserverUser)).
+			WithArgs(observed.User.ID, observer.User.ID).
+			WillReturnResult(sqlmock.NewResult(int64(1), 1))
+
+		rows := sqlmock.
+			NewRows([]string{"observed_user_id", "observer_user_id"}).
+			AddRow(observed.User.ID, observer.User.ID)
+		mock.
+			ExpectQuery(
+				regexp.QuoteMeta(
+					`SELECT * FROM ObservedUsersObserverUsers WHERE observed_user_id = ? AND observer_user_id = ?`,
+				),
+			).
+			WithArgs(observed.User.ID, observer.User.ID).
+			WillReturnRows(rows)
+
+		mock.ExpectCommit()
+
+		err := ur.SaveObservedUserInObserverUser(observed.User.ID, observer.User.ID)
+		assert.NoError(t, err)
+	})
+
+	t.Run("save observed user in observer user error saving observed user", func(t *testing.T) {
+		mock.ExpectBegin()
+		// note this line is important for unordered expectation matching
+		mock.MatchExpectationsInOrder(false)
+		mock.
+			ExpectQuery(
+				regexp.QuoteMeta(
+					`SELECT * FROM ObservedUsersObserverUsers WHERE observed_user_id = ? AND observer_user_id = ?`,
+				),
+			).
+			WithArgs(observed.User.ID, observer.User.ID).
+			WillReturnError(errors.New("some error"))
+
+		mock.ExpectCommit()
+
+		err := ur.SaveObservedUserInObserverUser(observed.User.ID, observer.User.ID)
+		assert.NotNil(t, err)
+	})
+
+	t.Run("save observed user in observer user error selecting observed and observer user", func(t *testing.T) {
+		mock.ExpectBegin()
+		// note this line is important for unordered expectation matching
+		mock.MatchExpectationsInOrder(false)
+		mock.
+			ExpectExec(regexp.QuoteMeta(querySaveObservedUserInObserverUser)).
+			WithArgs(observed.User.ID, observer.User.ID).
+			WillReturnResult(sqlmock.NewResult(int64(1), 1))
+
+		mock.
+			ExpectQuery(
+				regexp.QuoteMeta(
+					`SELECT * FROM ObservedUsersObserverUsers WHERE observed_user_id = ? AND observer_user_id = ?`,
+				),
+			).
+			WithArgs(observed.User.ID, observer.User.ID).
+			WillReturnError(errors.New("some error"))
+
+		mock.ExpectCommit()
+
+		err := ur.SaveObservedUserInObserverUser(observed.User.ID, observer.User.ID)
+		assert.NotNil(t, err)
+	})
+
+}

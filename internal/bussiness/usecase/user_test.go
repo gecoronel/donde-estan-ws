@@ -14,6 +14,55 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var (
+	user = model.User{
+		ID:        1,
+		Name:      "Juan",
+		LastName:  "Perez",
+		IDNumber:  "12345678",
+		Username:  "jperez",
+		Password:  "jperez1234",
+		Email:     "jperez@mail.com",
+		Enabled:   true,
+		Type:      observed,
+		CreatedAt: "2022-12-10 17:49:30",
+		UpdatedAt: "2022-12-10 17:49:30",
+	}
+
+	observedUser = model.ObservedUser{
+		User:        user,
+		PrivacyKey:  "juan.perez.12345678",
+		CompanyName: "school bus",
+		SchoolBus: model.SchoolBus{
+			ID:           "1",
+			LicensePlate: "11AAA222",
+			Model:        "Master",
+			Brand:        "Renault",
+			License:      "11222",
+			CreatedAt:    "2022-12-10 17:49:30",
+			UpdatedAt:    "2022-12-10 17:49:30",
+		},
+		ObserverUsers: nil,
+	}
+
+	observerUser = model.ObserverUser{
+		User: model.User{
+			ID:        2,
+			Name:      "Jose",
+			LastName:  "Perez",
+			IDNumber:  "12345678",
+			Username:  "joseperez",
+			Password:  "joseperez1234",
+			Email:     "joseperez@mail.com",
+			Enabled:   true,
+			Type:      observer,
+			CreatedAt: "2022-12-10 17:49:30",
+			UpdatedAt: "2022-12-10 17:49:30",
+		},
+		ObservedUsers: []model.ObservedUser{observedUser},
+	}
+)
+
 func TestUseCaseGet(t *testing.T) {
 	observedUser := model.User{
 		ID:        1,
@@ -105,43 +154,6 @@ func TestUseCaseGet(t *testing.T) {
 }
 
 func TestUseCaseLogin(t *testing.T) {
-	user := model.User{
-		ID:        1,
-		Name:      "Juan",
-		LastName:  "Perez",
-		IDNumber:  "12345678",
-		Username:  "jperez",
-		Password:  "jperez1234",
-		Email:     "jperez@mail.com",
-		Enabled:   true,
-		Type:      observed,
-		CreatedAt: "2022-12-10 17:49:30",
-		UpdatedAt: "2022-12-10 17:49:30",
-	}
-
-	observedUser := model.ObservedUser{
-		User:        user,
-		PrivacyKey:  "juan.perez.12345678",
-		CompanyName: "school bus",
-		SchoolBus: model.SchoolBus{
-			ID:           "1",
-			LicensePlate: "11AAA222",
-			Model:        "Master",
-			Brand:        "Renault",
-			License:      "11222",
-			CreatedAt:    "2022-12-10 17:49:30",
-			UpdatedAt:    "2022-12-10 17:49:30",
-		},
-		ObserverUsers: nil,
-	}
-
-	observerUser := model.ObserverUser{
-		User: user,
-	}
-	observerUser.User.Username = "jp"
-	observerUser.User.Password = "jp1234"
-	observerUser.User.Type = observer
-
 	observedU := model.NewObservedUser(&observedUser)
 	observerU := model.NewObserverUser(&observerUser)
 
@@ -254,33 +266,6 @@ func TestUseCaseLogin(t *testing.T) {
 }
 
 func TestUseCaseCreateObservedUser(t *testing.T) {
-	var observedUser = model.ObservedUser{
-		User: model.User{
-			ID:        1,
-			Name:      "Juan",
-			LastName:  "Perez",
-			IDNumber:  "12345678",
-			Username:  "jperez",
-			Password:  "jperez1234",
-			Email:     "jperez@mail.com",
-			Enabled:   true,
-			Type:      "observed",
-			CreatedAt: "2022-12-10 17:49:30",
-			UpdatedAt: "2022-12-10 17:49:30",
-		},
-		PrivacyKey:  "juan.perez.12345678",
-		CompanyName: "school bus company",
-		SchoolBus: model.SchoolBus{
-			ID:           "1",
-			LicensePlate: "11AAA22",
-			Model:        "Master",
-			Brand:        "Renault",
-			License:      "111",
-			CreatedAt:    "2023-02-18 17:09:33",
-			UpdatedAt:    "2023-02-18 17:09:33",
-		},
-	}
-
 	m := gomock.NewController(t)
 	defer m.Finish()
 
@@ -331,22 +316,6 @@ func TestUseCaseCreateObservedUser(t *testing.T) {
 }
 
 func TestUseCaseCreateObserverUser(t *testing.T) {
-	var observerUser = model.ObserverUser{
-		User: model.User{
-			ID:        1,
-			Name:      "Juan",
-			LastName:  "Perez",
-			IDNumber:  "12345678",
-			Username:  "jperez",
-			Password:  "jperez1234",
-			Email:     "jperez@mail.com",
-			Enabled:   true,
-			Type:      "observed",
-			CreatedAt: "2022-12-10 17:49:30",
-			UpdatedAt: "2022-12-10 17:49:30",
-		},
-	}
-
 	m := gomock.NewController(t)
 	defer m.Finish()
 
@@ -397,20 +366,6 @@ func TestUseCaseCreateObserverUser(t *testing.T) {
 }
 
 func TestUseCaseFindByUsername(t *testing.T) {
-	var user = model.User{
-		ID:        1,
-		Name:      "Juan",
-		LastName:  "Perez",
-		IDNumber:  "12345678",
-		Username:  "jperez",
-		Password:  "jperez1234",
-		Email:     "jperez@mail.com",
-		Enabled:   true,
-		Type:      "observed",
-		CreatedAt: "2022-12-10 17:49:30",
-		UpdatedAt: "2022-12-10 17:49:30",
-	}
-
 	m := gomock.NewController(t)
 	defer m.Finish()
 
@@ -461,20 +416,6 @@ func TestUseCaseFindByUsername(t *testing.T) {
 }
 
 func TestUseCaseFindByEmail(t *testing.T) {
-	var user = model.User{
-		ID:        1,
-		Name:      "Juan",
-		LastName:  "Perez",
-		IDNumber:  "12345678",
-		Username:  "jperez",
-		Password:  "jperez1234",
-		Email:     "jperez@mail.com",
-		Enabled:   true,
-		Type:      "observed",
-		CreatedAt: "2022-12-10 17:49:30",
-		UpdatedAt: "2022-12-10 17:49:30",
-	}
-
 	m := gomock.NewController(t)
 	defer m.Finish()
 
@@ -519,6 +460,119 @@ func TestUseCaseFindByEmail(t *testing.T) {
 			u, err := uc.FindByEmail(test.input, serviceLocator)
 
 			assert.Equalf(t, test.expectedUser, u, "Expected user %v, received %v", test.expectedUser, u)
+			assert.Equalf(t, test.expectedError, err, "Expected error %v, received %d", test.expectedError, err)
+		})
+	}
+}
+
+func TestUseCaseAddObservedUserInObserverUser(t *testing.T) {
+	m := gomock.NewController(t)
+	defer m.Finish()
+
+	tests := []struct {
+		name           string
+		mock           func() *mock_gateway.MockUserRepository
+		privacyKey     string
+		observerUserID uint64
+		expectedError  error
+	}{
+		{
+			name: "error creating observed user in observer user",
+			mock: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				mockUserRepository.EXPECT().FindObservedUserByPrivacyKey(gomock.Any()).Return(nil,
+					web.ErrInternalServerError)
+				return mockUserRepository
+			},
+			privacyKey:     observedUser.PrivacyKey,
+			observerUserID: 2,
+			expectedError:  web.ErrInternalServerError,
+		},
+		{
+			name: "not found error creating observed user in observer user",
+			mock: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				mockUserRepository.EXPECT().FindObservedUserByPrivacyKey(gomock.Any()).Return(nil, nil)
+				return mockUserRepository
+			},
+			privacyKey:     observedUser.PrivacyKey,
+			observerUserID: 2,
+			expectedError:  web.ErrNotFound,
+		},
+		{
+			name: "conflict error creating observed user in observer user",
+			mock: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				mockUserRepository.EXPECT().FindObservedUserByPrivacyKey(gomock.Any()).Return(&observedUser, nil)
+				mockUserRepository.EXPECT().GetObserverUser(gomock.Any()).Return(&observerUser, nil)
+				return mockUserRepository
+			},
+			privacyKey:     observedUser.PrivacyKey,
+			observerUserID: 2,
+			expectedError:  web.ErrConflict,
+		},
+		{
+			name: "error getting observer user",
+			mock: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				mockUserRepository.EXPECT().FindObservedUserByPrivacyKey(gomock.Any()).Return(&observedUser, nil)
+				mockUserRepository.EXPECT().GetObserverUser(gomock.Any()).Return(nil, web.ErrInternalServerError)
+				return mockUserRepository
+			},
+			privacyKey:     observedUser.PrivacyKey,
+			observerUserID: 2,
+			expectedError:  web.ErrInternalServerError,
+		},
+		{
+			name: "not found error getting observer user",
+			mock: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				mockUserRepository.EXPECT().FindObservedUserByPrivacyKey(gomock.Any()).Return(&observedUser, nil)
+				mockUserRepository.EXPECT().GetObserverUser(gomock.Any()).Return(nil, nil)
+				return mockUserRepository
+			},
+			privacyKey:     observedUser.PrivacyKey,
+			observerUserID: 2,
+			expectedError:  web.ErrNotFound,
+		},
+		{
+			name: "unsuccessful create observed user in observer user",
+			mock: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				mockUserRepository.EXPECT().FindObservedUserByPrivacyKey(gomock.Any()).Return(&observedUser, nil)
+				mockUserRepository.EXPECT().GetObserverUser(gomock.Any()).Return(&model.ObserverUser{User: user}, nil)
+				mockUserRepository.EXPECT().SaveObservedUserInObserverUser(gomock.Any(), gomock.Any()).
+					Return(web.ErrInternalServerError)
+				return mockUserRepository
+			},
+			privacyKey:     observedUser.PrivacyKey,
+			observerUserID: 2,
+			expectedError:  web.ErrInternalServerError,
+		},
+		{
+			name: "successful create observed user in observer user",
+			mock: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				mockUserRepository.EXPECT().FindObservedUserByPrivacyKey(gomock.Any()).Return(&observedUser, nil)
+				mockUserRepository.EXPECT().GetObserverUser(gomock.Any()).Return(&model.ObserverUser{User: user}, nil)
+				mockUserRepository.EXPECT().SaveObservedUserInObserverUser(gomock.Any(), gomock.Any()).Return(nil)
+				return mockUserRepository
+			},
+			privacyKey:     observedUser.PrivacyKey,
+			observerUserID: 2,
+			expectedError:  nil,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			mockUserRepository := test.mock()
+
+			context := getContextUser(mockUserRepository)
+			serviceLocator := ctx.GetServiceLocator(context)
+			uc := serviceLocator.GetInstance(UserUseCaseType).(UserUseCase)
+
+			err := uc.AddObservedUserInObserverUser(test.privacyKey, test.observerUserID, serviceLocator)
+
 			assert.Equalf(t, test.expectedError, err, "Expected error %v, received %d", test.expectedError, err)
 		})
 	}
