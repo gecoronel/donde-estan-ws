@@ -34,6 +34,20 @@ func (m *MockUserRepository) EXPECT() *MockUserRepositoryMockRecorder {
 	return m.recorder
 }
 
+// DeleteObservedUserInObserverUser mocks base method.
+func (m *MockUserRepository) DeleteObservedUserInObserverUser(arg0, arg1 uint64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteObservedUserInObserverUser", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteObservedUserInObserverUser indicates an expected call of DeleteObservedUserInObserverUser.
+func (mr *MockUserRepositoryMockRecorder) DeleteObservedUserInObserverUser(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteObservedUserInObserverUser", reflect.TypeOf((*MockUserRepository)(nil).DeleteObservedUserInObserverUser), arg0, arg1)
+}
+
 // FindByEmail mocks base method.
 func (m *MockUserRepository) FindByEmail(arg0 string) (*model.User, error) {
 	m.ctrl.T.Helper()
@@ -64,6 +78,21 @@ func (mr *MockUserRepositoryMockRecorder) FindByUsername(arg0 interface{}) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByUsername", reflect.TypeOf((*MockUserRepository)(nil).FindByUsername), arg0)
 }
 
+// FindObservedUserByPrivacyKey mocks base method.
+func (m *MockUserRepository) FindObservedUserByPrivacyKey(arg0 string) (*model.ObservedUser, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindObservedUserByPrivacyKey", arg0)
+	ret0, _ := ret[0].(*model.ObservedUser)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindObservedUserByPrivacyKey indicates an expected call of FindObservedUserByPrivacyKey.
+func (mr *MockUserRepositoryMockRecorder) FindObservedUserByPrivacyKey(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindObservedUserByPrivacyKey", reflect.TypeOf((*MockUserRepository)(nil).FindObservedUserByPrivacyKey), arg0)
+}
+
 // Get mocks base method.
 func (m *MockUserRepository) Get(arg0 uint64) (*model.User, error) {
 	m.ctrl.T.Helper()
@@ -80,10 +109,10 @@ func (mr *MockUserRepositoryMockRecorder) Get(arg0 interface{}) *gomock.Call {
 }
 
 // GetObservedUser mocks base method.
-func (m *MockUserRepository) GetObservedUser(arg0 uint64) (model.IUser, error) {
+func (m *MockUserRepository) GetObservedUser(arg0 uint64) (*model.ObservedUser, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetObservedUser", arg0)
-	ret0, _ := ret[0].(model.IUser)
+	ret0, _ := ret[0].(*model.ObservedUser)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -95,10 +124,10 @@ func (mr *MockUserRepositoryMockRecorder) GetObservedUser(arg0 interface{}) *gom
 }
 
 // GetObserverUser mocks base method.
-func (m *MockUserRepository) GetObserverUser(arg0 uint64) (model.IUser, error) {
+func (m *MockUserRepository) GetObserverUser(arg0 uint64) (*model.ObserverUser, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetObserverUser", arg0)
-	ret0, _ := ret[0].(model.IUser)
+	ret0, _ := ret[0].(*model.ObserverUser)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -137,6 +166,20 @@ func (m *MockUserRepository) SaveObservedUser(arg0 model.ObservedUser) (*model.O
 func (mr *MockUserRepositoryMockRecorder) SaveObservedUser(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveObservedUser", reflect.TypeOf((*MockUserRepository)(nil).SaveObservedUser), arg0)
+}
+
+// SaveObservedUserInObserverUser mocks base method.
+func (m *MockUserRepository) SaveObservedUserInObserverUser(arg0, arg1 uint64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SaveObservedUserInObserverUser", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SaveObservedUserInObserverUser indicates an expected call of SaveObservedUserInObserverUser.
+func (mr *MockUserRepositoryMockRecorder) SaveObservedUserInObserverUser(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveObservedUserInObserverUser", reflect.TypeOf((*MockUserRepository)(nil).SaveObservedUserInObserverUser), arg0, arg1)
 }
 
 // SaveObserverUser mocks base method.

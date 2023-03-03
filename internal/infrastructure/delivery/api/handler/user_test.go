@@ -14,8 +14,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGet(t *testing.T) {
-	user := model.User{
+var (
+	user = model.User{
 		ID:        1,
 		Name:      "Juan",
 		LastName:  "Perez",
@@ -28,7 +28,51 @@ func TestGet(t *testing.T) {
 		CreatedAt: "2022-12-10 17:49:30",
 		UpdatedAt: "2022-12-10 17:49:30",
 	}
+	observedUser = model.ObservedUser{
+		User: model.User{
+			ID:        1,
+			Name:      "Juan",
+			LastName:  "Perez",
+			IDNumber:  "12345678",
+			Username:  "jperez",
+			Password:  "jperez1234",
+			Email:     "jperez@mail.com",
+			Enabled:   true,
+			Type:      "observed",
+			CreatedAt: "2022-12-10 17:49:30",
+			UpdatedAt: "2022-12-10 17:49:30",
+		},
+		PrivacyKey:  "juan.perez.12345678",
+		CompanyName: "school bus",
+		SchoolBus: model.SchoolBus{
+			ID:           "1",
+			LicensePlate: "11AAA222",
+			Model:        "Master",
+			Brand:        "Renault",
+			License:      "11222",
+			CreatedAt:    "2022-12-10 17:49:30",
+			UpdatedAt:    "2022-12-10 17:49:30",
+		},
+		ObserverUsers: nil,
+	}
+	observerUser = model.ObserverUser{
+		User: model.User{
+			ID:        2,
+			Name:      "Jose",
+			LastName:  "Perez",
+			IDNumber:  "12345678",
+			Username:  "joseperez",
+			Password:  "joseperez1234",
+			Email:     "joseperez@mail.com",
+			Enabled:   true,
+			Type:      "observer",
+			CreatedAt: "2022-12-10 17:49:30",
+			UpdatedAt: "2022-12-10 17:49:30",
+		},
+	}
+)
 
+func TestGet(t *testing.T) {
 	m := gomock.NewController(t)
 	defer m.Finish()
 
@@ -96,50 +140,7 @@ func TestGet(t *testing.T) {
 }
 
 func TestLogin(t *testing.T) {
-	observedUser := model.ObservedUser{
-		User: model.User{
-			ID:        1,
-			Name:      "Juan",
-			LastName:  "Perez",
-			IDNumber:  "12345678",
-			Username:  "jperez",
-			Password:  "jperez1234",
-			Email:     "jperez@mail.com",
-			Enabled:   true,
-			Type:      "observed",
-			CreatedAt: "2022-12-10 17:49:30",
-			UpdatedAt: "2022-12-10 17:49:30",
-		},
-		PrivacyKey:  "juan.perez.12345678",
-		CompanyName: "school bus",
-		SchoolBus: model.SchoolBus{
-			ID:           "1",
-			LicensePlate: "11AAA222",
-			Model:        "Master",
-			Brand:        "Renault",
-			License:      "11222",
-			CreatedAt:    "2022-12-10 17:49:30",
-			UpdatedAt:    "2022-12-10 17:49:30",
-		},
-		ObserverUsers: nil,
-	}
 	odu := model.NewObservedUser(&observedUser)
-
-	observerUser := model.ObserverUser{
-		User: model.User{
-			ID:        2,
-			Name:      "Jose",
-			LastName:  "Perez",
-			IDNumber:  "12345678",
-			Username:  "joseperez",
-			Password:  "joseperez1234",
-			Email:     "joseperez@mail.com",
-			Enabled:   true,
-			Type:      "observer",
-			CreatedAt: "2022-12-10 17:49:30",
-			UpdatedAt: "2022-12-10 17:49:30",
-		},
-	}
 	oru := model.NewObserverUser(&observerUser)
 
 	m := gomock.NewController(t)
@@ -224,34 +225,6 @@ func TestLogin(t *testing.T) {
 }
 
 func TestCreateObservedUser(t *testing.T) {
-	user := model.ObservedUser{
-		User: model.User{
-			ID:        1,
-			Name:      "Juan",
-			LastName:  "Perez",
-			IDNumber:  "12345678",
-			Username:  "jperez",
-			Password:  "jperez1234",
-			Email:     "jperez@mail.com",
-			Enabled:   true,
-			Type:      "observed",
-			CreatedAt: "2022-12-10 17:49:30",
-			UpdatedAt: "2022-12-10 17:49:30",
-		},
-		PrivacyKey:  "juan.perez.12345678",
-		CompanyName: "school bus",
-		SchoolBus: model.SchoolBus{
-			ID:           "1",
-			LicensePlate: "11AAA222",
-			Model:        "Master",
-			Brand:        "Renault",
-			License:      "11222",
-			CreatedAt:    "2022-12-10 17:49:30",
-			UpdatedAt:    "2022-12-10 17:49:30",
-		},
-		ObserverUsers: nil,
-	}
-
 	body := `{
 				"user": {
 					"name": "Juan",
@@ -308,7 +281,7 @@ func TestCreateObservedUser(t *testing.T) {
 			name: "username conflict error",
 			mock: func() *mock_usecase.MockUserUseCase {
 				mockUserUseCase := mock_usecase.NewMockUserUseCase(m)
-				mockUserUseCase.EXPECT().FindByUsername(gomock.Any(), gomock.Any()).Return(&user.User, nil)
+				mockUserUseCase.EXPECT().FindByUsername(gomock.Any(), gomock.Any()).Return(&observedUser.User, nil)
 				return mockUserUseCase
 			},
 			path:         "/where/are/they/users/observed",
@@ -320,7 +293,7 @@ func TestCreateObservedUser(t *testing.T) {
 			mock: func() *mock_usecase.MockUserUseCase {
 				mockUserUseCase := mock_usecase.NewMockUserUseCase(m)
 				mockUserUseCase.EXPECT().FindByUsername(gomock.Any(), gomock.Any()).Return(nil, nil)
-				mockUserUseCase.EXPECT().FindByEmail(gomock.Any(), gomock.Any()).Return(&user.User, nil)
+				mockUserUseCase.EXPECT().FindByEmail(gomock.Any(), gomock.Any()).Return(&observedUser.User, nil)
 				return mockUserUseCase
 			},
 			path:         "/where/are/they/users/observed",
@@ -333,7 +306,7 @@ func TestCreateObservedUser(t *testing.T) {
 				mockUserUseCase := mock_usecase.NewMockUserUseCase(m)
 				mockUserUseCase.EXPECT().FindByUsername(gomock.Any(), gomock.Any()).Return(nil, nil)
 				mockUserUseCase.EXPECT().FindByEmail(gomock.Any(), gomock.Any()).Return(nil, nil)
-				mockUserUseCase.EXPECT().CreateObservedUser(gomock.Any(), gomock.Any()).Return(&user, nil)
+				mockUserUseCase.EXPECT().CreateObservedUser(gomock.Any(), gomock.Any()).Return(&observedUser, nil)
 				return mockUserUseCase
 			},
 			path:         "/where/are/they/users/observed",
@@ -373,22 +346,6 @@ func TestCreateObservedUser(t *testing.T) {
 }
 
 func TestCreateObserverUser(t *testing.T) {
-	user := model.ObserverUser{
-		User: model.User{
-			ID:        2,
-			Name:      "Maria",
-			LastName:  "Dominguez",
-			IDNumber:  "12345678",
-			Username:  "mdominguez",
-			Password:  "mdominguez1234",
-			Email:     "mdominguez@mail.com",
-			Enabled:   true,
-			Type:      "observer",
-			CreatedAt: "2022-12-10 17:49:30",
-			UpdatedAt: "2022-12-10 17:49:30",
-		},
-	}
-
 	body := `{
 				"user": {
 					"name": "Maria",
@@ -413,7 +370,7 @@ func TestCreateObserverUser(t *testing.T) {
 		expectedCode int
 	}{
 		{
-			name: "bad request for handler create observed user",
+			name: "bad request for handler create observer user",
 			mock: func() *mock_usecase.MockUserUseCase {
 				mockUserUseCase := mock_usecase.NewMockUserUseCase(m)
 				return mockUserUseCase
@@ -436,7 +393,7 @@ func TestCreateObserverUser(t *testing.T) {
 			name: "username conflict error",
 			mock: func() *mock_usecase.MockUserUseCase {
 				mockUserUseCase := mock_usecase.NewMockUserUseCase(m)
-				mockUserUseCase.EXPECT().FindByUsername(gomock.Any(), gomock.Any()).Return(&user.User, nil)
+				mockUserUseCase.EXPECT().FindByUsername(gomock.Any(), gomock.Any()).Return(&observerUser.User, nil)
 				return mockUserUseCase
 			},
 			path:         "/where/are/they/users/observer",
@@ -448,7 +405,7 @@ func TestCreateObserverUser(t *testing.T) {
 			mock: func() *mock_usecase.MockUserUseCase {
 				mockUserUseCase := mock_usecase.NewMockUserUseCase(m)
 				mockUserUseCase.EXPECT().FindByUsername(gomock.Any(), gomock.Any()).Return(nil, nil)
-				mockUserUseCase.EXPECT().FindByEmail(gomock.Any(), gomock.Any()).Return(&user.User, nil)
+				mockUserUseCase.EXPECT().FindByEmail(gomock.Any(), gomock.Any()).Return(&observerUser.User, nil)
 				return mockUserUseCase
 			},
 			path:         "/where/are/they/users/observer",
@@ -461,7 +418,7 @@ func TestCreateObserverUser(t *testing.T) {
 				mockUserUseCase := mock_usecase.NewMockUserUseCase(m)
 				mockUserUseCase.EXPECT().FindByUsername(gomock.Any(), gomock.Any()).Return(nil, nil)
 				mockUserUseCase.EXPECT().FindByEmail(gomock.Any(), gomock.Any()).Return(nil, nil)
-				mockUserUseCase.EXPECT().CreateObserverUser(gomock.Any(), gomock.Any()).Return(&user, nil)
+				mockUserUseCase.EXPECT().CreateObserverUser(gomock.Any(), gomock.Any()).Return(&observerUser, nil)
 				return mockUserUseCase
 			},
 			path:         "/where/are/they/users/observer",
@@ -487,6 +444,156 @@ func TestCreateObserverUser(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			w := httptest.NewRecorder()
 			r, err := http.NewRequest(http.MethodPost, test.path, bytes.NewBuffer([]byte(test.body)))
+			if err != nil {
+				t.Fatal(err)
+			}
+			r.Header.Set("Content-Type", "application/json")
+
+			d := mock_middleware.Dependencies{UserUseCase: test.mock()}
+			router := configureRoutes(d)
+			router.ServeHTTP(w, r)
+			assert.Equalf(t, test.expectedCode, w.Code, "Expected code %v, received %v", test.expectedCode, w.Code)
+		})
+	}
+}
+
+func TestAddObservedUserInObserverUserObservedUser(t *testing.T) {
+	body := `{"privacy_key": "juan.perez.1234", "observer_user_id": 2}`
+
+	m := gomock.NewController(t)
+	defer m.Finish()
+
+	tests := []struct {
+		name         string
+		mock         func() *mock_usecase.MockUserUseCase
+		path         string
+		body         string
+		expectedCode int
+	}{
+		{
+			name: "bad request for handler create observed user",
+			mock: func() *mock_usecase.MockUserUseCase {
+				mockUserUseCase := mock_usecase.NewMockUserUseCase(m)
+				return mockUserUseCase
+			},
+			path:         "/where/are/they/users/observer/driver",
+			body:         `invalid`,
+			expectedCode: http.StatusBadRequest,
+		},
+		{
+			name: "bad request in login validation",
+			mock: func() *mock_usecase.MockUserUseCase {
+				mockUserUseCase := mock_usecase.NewMockUserUseCase(m)
+				return mockUserUseCase
+			},
+			path:         "/where/are/they/users/observer/driver",
+			body:         `{"privacy_key": "juan.perez.12345678"}`,
+			expectedCode: http.StatusBadRequest,
+		},
+		{
+			name: "successful creation",
+			mock: func() *mock_usecase.MockUserUseCase {
+				mockUserUseCase := mock_usecase.NewMockUserUseCase(m)
+				mockUserUseCase.EXPECT().AddObservedUserInObserverUser(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(nil)
+				return mockUserUseCase
+			},
+			path:         "/where/are/they/users/observer/driver",
+			body:         body,
+			expectedCode: http.StatusOK,
+		},
+		{
+			name: "unsuccessful creation",
+			mock: func() *mock_usecase.MockUserUseCase {
+				mockUserUseCase := mock_usecase.NewMockUserUseCase(m)
+				mockUserUseCase.EXPECT().AddObservedUserInObserverUser(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(web.ErrInternalServerError)
+				return mockUserUseCase
+			},
+			path:         "/where/are/they/users/observer/driver",
+			body:         body,
+			expectedCode: http.StatusInternalServerError,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			w := httptest.NewRecorder()
+			r, err := http.NewRequest(http.MethodPost, test.path, bytes.NewBuffer([]byte(test.body)))
+			if err != nil {
+				t.Fatal(err)
+			}
+			r.Header.Set("Content-Type", "application/json")
+
+			d := mock_middleware.Dependencies{UserUseCase: test.mock()}
+			router := configureRoutes(d)
+			router.ServeHTTP(w, r)
+			assert.Equalf(t, test.expectedCode, w.Code, "Expected code %v, received %v", test.expectedCode, w.Code)
+		})
+	}
+}
+
+func TestDeleteObservedUserInObserverUserObservedUser(t *testing.T) {
+	m := gomock.NewController(t)
+	defer m.Finish()
+
+	tests := []struct {
+		name         string
+		mock         func() *mock_usecase.MockUserUseCase
+		path         string
+		expectedCode int
+	}{
+		{
+			name: "error deleting observed user in observer user",
+			mock: func() *mock_usecase.MockUserUseCase {
+				mockUserUseCase := mock_usecase.NewMockUserUseCase(m)
+				return mockUserUseCase
+			},
+			path:         "/where/are/they/users/observer/driver/1_2_3",
+			expectedCode: http.StatusBadRequest,
+		},
+		{
+			name: "not found error deleting observed user in observer user",
+			mock: func() *mock_usecase.MockUserUseCase {
+				mockUserUseCase := mock_usecase.NewMockUserUseCase(m)
+				return mockUserUseCase
+			},
+			path:         "/where/are/they/users/observer/driver/1a_2",
+			expectedCode: http.StatusBadRequest,
+		},
+		{
+			name: "bad request error deleting observed user in observer user",
+			mock: func() *mock_usecase.MockUserUseCase {
+				mockUserUseCase := mock_usecase.NewMockUserUseCase(m)
+				return mockUserUseCase
+			},
+			path:         "/where/are/they/users/observer/driver/1_2a",
+			expectedCode: http.StatusBadRequest,
+		},
+		{
+			name: "unsuccessful delete observed user in observer user",
+			mock: func() *mock_usecase.MockUserUseCase {
+				mockUserUseCase := mock_usecase.NewMockUserUseCase(m)
+				mockUserUseCase.EXPECT().DeleteObservedUserInObserverUser(gomock.Any(), gomock.Any(), gomock.Any()).Return(web.ErrInternalServerError)
+				return mockUserUseCase
+			},
+			path:         "/where/are/they/users/observer/driver/1_2",
+			expectedCode: http.StatusInternalServerError,
+		},
+		{
+			name: "successful delete observed user in observer user",
+			mock: func() *mock_usecase.MockUserUseCase {
+				mockUserUseCase := mock_usecase.NewMockUserUseCase(m)
+				mockUserUseCase.EXPECT().DeleteObservedUserInObserverUser(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+				return mockUserUseCase
+			},
+			path:         "/where/are/they/users/observer/driver/1_2",
+			expectedCode: http.StatusOK,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			w := httptest.NewRecorder()
+			r, err := http.NewRequest(http.MethodDelete, test.path, nil)
 			if err != nil {
 				t.Fatal(err)
 			}

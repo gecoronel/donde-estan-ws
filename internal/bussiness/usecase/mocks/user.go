@@ -35,6 +35,20 @@ func (m *MockUserUseCase) EXPECT() *MockUserUseCaseMockRecorder {
 	return m.recorder
 }
 
+// AddObservedUserInObserverUser mocks base method.
+func (m *MockUserUseCase) AddObservedUserInObserverUser(arg0 string, arg1 uint64, arg2 gateway.ServiceLocator) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddObservedUserInObserverUser", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AddObservedUserInObserverUser indicates an expected call of AddObservedUserInObserverUser.
+func (mr *MockUserUseCaseMockRecorder) AddObservedUserInObserverUser(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddObservedUserInObserverUser", reflect.TypeOf((*MockUserUseCase)(nil).AddObservedUserInObserverUser), arg0, arg1, arg2)
+}
+
 // CreateObservedUser mocks base method.
 func (m *MockUserUseCase) CreateObservedUser(arg0 model.ObservedUser, arg1 gateway.ServiceLocator) (*model.ObservedUser, error) {
 	m.ctrl.T.Helper()
@@ -63,6 +77,20 @@ func (m *MockUserUseCase) CreateObserverUser(arg0 model.ObserverUser, arg1 gatew
 func (mr *MockUserUseCaseMockRecorder) CreateObserverUser(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateObserverUser", reflect.TypeOf((*MockUserUseCase)(nil).CreateObserverUser), arg0, arg1)
+}
+
+// DeleteObservedUserInObserverUser mocks base method.
+func (m *MockUserUseCase) DeleteObservedUserInObserverUser(arg0, arg1 uint64, arg2 gateway.ServiceLocator) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteObservedUserInObserverUser", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteObservedUserInObserverUser indicates an expected call of DeleteObservedUserInObserverUser.
+func (mr *MockUserUseCaseMockRecorder) DeleteObservedUserInObserverUser(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteObservedUserInObserverUser", reflect.TypeOf((*MockUserUseCase)(nil).DeleteObservedUserInObserverUser), arg0, arg1, arg2)
 }
 
 // FindByEmail mocks base method.

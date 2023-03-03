@@ -31,7 +31,16 @@ const (
 		FROM ObservedUsers AS ou 
     	INNER JOIN Users AS u ON u.id = ou.user_id 
 		INNER JOIN SchoolBuses AS sb ON sb.id = ou.school_bus_id 
-		WHERE u.id = @user_id;
+		WHERE u.id = ?;
+	`
+	queryGetObservedUserByPrivacyKey = `
+		SELECT u.id, u.name, u.last_name, u.id_number, u.username, u.password, u.email, u.type, u.enabled, 
+		       ou.privacy_key, ou.company_name, sb.id AS school_bus_id, sb.license_plate, sb.model, sb.brand, sb.license, 
+		       sb.created_at, sb.updated_at 
+		FROM ObservedUsers AS ou 
+    	INNER JOIN Users AS u ON u.id = ou.user_id 
+		INNER JOIN SchoolBuses AS sb ON sb.id = ou.school_bus_id 
+		WHERE ou.privacy_key = ?;
 	`
 	querySaveObservedUser = `
 		INSERT INTO ObservedUsers (user_id, privacy_key, company_name, school_bus_id) VALUES (?, ?, ?, ?);
@@ -63,6 +72,18 @@ const (
 			AND odu.school_bus_id = sb.id 
 		WHERE oru.user_id = %d;
 	`
+	querySaveObservedUserInObserverUser = `
+		INSERT INTO ObservedUsersObserverUsers (observed_user_id, observer_user_id)
+		VALUES (1, 3);
+	`
+	queryDeleteObservedUserInObserverUser = `
+		DELETE FROM ObservedUsersObserverUsers
+		WHERE observed_user_id = ? AND observer_user_id = ?;
+	`
+	querySelectObservedUserObserverUser = `
+		SELECT * FROM ObservedUsersObserverUsers 
+		WHERE observed_user_id = ? 
+		  AND observer_user_id = ?;`
 )
 
 func NewUserRepository(db *gorm.DB, ctx context.Context) gateway.UserRepository {
@@ -168,14 +189,11 @@ func (r UserRepository) GetUsers(limit string, offset string) (*[]model.User, er
 }
 
 // GetObservedUser obtains a observedUser using UserRepository by user_id
-func (r UserRepository) GetObservedUser(id uint64) (model.IUser, error) {
+func (r UserRepository) GetObservedUser(id uint64) (*model.ObservedUser, error) {
 	var observed model.ObservedUser
 
 	err := r.DB.
-		Raw(
-			queryGetObservedUser,
-			sql.Named("user_id", id),
-		).
+		Raw(queryGetObservedUser, id).
 		Row().
 		Scan(
 			&observed.User.ID, &observed.User.Name, &observed.User.LastName, &observed.User.IDNumber,
@@ -190,8 +208,7 @@ func (r UserRepository) GetObservedUser(id uint64) (model.IUser, error) {
 		return nil, err
 	}
 
-	u := model.NewObservedUser(&observed)
-	return u, nil
+	return &observed, nil
 }
 
 // SaveObservedUser create a observedUser using UserRepository.
@@ -249,7 +266,7 @@ func (r UserRepository) SaveObservedUser(user model.ObservedUser) (*model.Observ
 }
 
 // GetObserverUser obtains a observerUser using UserRepository by user_id
-func (r UserRepository) GetObserverUser(id uint64) (model.IUser, error) {
+func (r UserRepository) GetObserverUser(id uint64) (*model.ObserverUser, error) {
 	var (
 		errUser               error
 		errChildren           error
@@ -261,8 +278,7 @@ func (r UserRepository) GetObserverUser(id uint64) (model.IUser, error) {
 		child                 model.Child
 		observedUsers         []odUser
 		observedUser          odUser
-		u                     model.IUser
-		ou                    model.ObserverUser
+		observer              model.ObserverUser
 		wg                    = &sync.WaitGroup{}
 	)
 
@@ -273,8 +289,8 @@ func (r UserRepository) GetObserverUser(id uint64) (model.IUser, error) {
 			Raw(statementUser).
 			Row().
 			Scan(
-				&ou.User.ID, &ou.User.Name, &ou.User.LastName, &ou.User.IDNumber, &ou.User.Username, &ou.User.Password,
-				&ou.User.Email, &ou.User.Type, &ou.User.Enabled,
+				&observer.User.ID, &observer.User.Name, &observer.User.LastName, &observer.User.IDNumber, &observer.User.Username, &observer.User.Password,
+				&observer.User.Email, &observer.User.Type, &observer.User.Enabled,
 			)
 	}(wg)
 
@@ -307,10 +323,9 @@ func (r UserRepository) GetObserverUser(id uint64) (model.IUser, error) {
 		return nil, errObservedUser
 	}
 
-	ou.Children = children
-	ou.ObservedUsers = mapToObservedUser(observedUsers)
-	u = model.NewObserverUser(&ou)
-	return u, nil
+	observer.Children = children
+	observer.ObservedUsers = mapToObservedUser(observedUsers)
+	return &observer, nil
 }
 
 // SaveObserverUser create a observerUser using UserRepository
@@ -339,6 +354,75 @@ func (r UserRepository) SaveObserverUser(u model.ObserverUser) (*model.ObserverU
 
 	tx.Commit()
 	return &u, nil
+}
+
+// FindObservedUserByPrivacyKey obtains a observedUser using UserRepository by privacy_key
+func (r UserRepository) FindObservedUserByPrivacyKey(privacyKey string) (*model.ObservedUser, error) {
+	var observed model.ObservedUser
+
+	err := r.DB.
+		Raw(queryGetObservedUserByPrivacyKey, privacyKey).
+		Row().
+		Scan(
+			&observed.User.ID, &observed.User.Name, &observed.User.LastName, &observed.User.IDNumber,
+			&observed.User.Username, &observed.User.Password, &observed.User.Email, &observed.User.Type,
+			&observed.User.Enabled, &observed.PrivacyKey, &observed.CompanyName, &observed.SchoolBus.ID,
+			&observed.SchoolBus.LicensePlate, &observed.SchoolBus.Model, &observed.SchoolBus.Brand,
+			&observed.SchoolBus.License, &observed.SchoolBus.CreatedAt, &observed.SchoolBus.UpdatedAt,
+		)
+
+	if err != nil {
+		if err.Error() == web.ErrNoRows.Error() {
+			log.Error("error row scan not found")
+			return nil, nil
+		}
+		log.Error("error row scan")
+		return nil, err
+	}
+
+	return &observed, nil
+}
+
+// SaveObservedUserInObserverUser add a observedUser into of the drivers list of an observerUser using UserRepository.
+func (r UserRepository) SaveObservedUserInObserverUser(observedUserID uint64, observerUserID uint64) error {
+	tx := r.DB.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			log.Error("recovering for error saving observed user")
+			tx.Rollback()
+		}
+	}()
+
+	err := tx.Exec(querySaveObservedUserInObserverUser, observedUserID, observerUserID).Error
+	if err != nil {
+		log.Error("error creating user")
+		tx.Rollback()
+		return err
+	}
+
+	err = tx.
+		Raw(querySelectObservedUserObserverUser, observedUserID, observerUserID).
+		Row().
+		Scan(&observedUserID, &observerUserID)
+	if err != nil {
+		log.Error("error selecting observed user and observer user")
+		tx.Rollback()
+		return err
+	}
+
+	tx.Commit()
+	return nil
+}
+
+// DeleteObservedUserInObserverUser delete a observedUser into of the drivers list of an observerUser using UserRepository.
+func (r UserRepository) DeleteObservedUserInObserverUser(observedUserID uint64, observerUserID uint64) error {
+	err := r.DB.Exec(queryDeleteObservedUserInObserverUser, observedUserID, observerUserID).Error
+	if err != nil {
+		log.Error("error deleting user")
+		return err
+	}
+
+	return nil
 }
 
 func selectObservedUserByID(tx *gorm.DB, user *model.ObservedUser) error {

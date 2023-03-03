@@ -42,6 +42,8 @@ func configureRoutes(router *chi.Mux) {
 		r.Post("/users/login", handler.Login)
 		r.Post("/users/observed", handler.CreateObservedUser)
 		r.Post("/users/observer", handler.CreateObserverUser)
+		r.Post("/users/observer/driver", handler.AddObservedUserInObserverUser)
+		r.Delete("/users/observer/driver/{id}", handler.DeleteObservedUserInObserverUser)
 
 		r.Get("/school-bus/{id}", handler.GetSchoolBus)
 		r.Post("/school-bus", handler.SaveSchoolBus)
