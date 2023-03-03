@@ -1086,3 +1086,46 @@ func TestSaveObservedUserInObserverUser(t *testing.T) {
 	})
 
 }
+
+func TestDeleteObservedUserInObserverUser(t *testing.T) {
+	db, mock := NewMock()
+	defer db.Close()
+
+	gdb, err := gorm.Open(mysql.New(mysql.Config{Conn: db, SkipInitializeWithVersion: true}), &gorm.Config{})
+	if err != nil {
+		log.Error("error opening database connection")
+	}
+
+	ur := NewUserRepository(gdb, context.Background())
+
+	t.Run("delete observed user in observer user error saving observed user", func(t *testing.T) {
+		// note this line is important for unordered expectation matching
+		mock.MatchExpectationsInOrder(false)
+		mock.
+			ExpectQuery(
+				regexp.QuoteMeta(
+					`DELETE FROM ObservedUsersObserverUsers WHERE observed_user_id = ? AND observer_user_id = ?`,
+				),
+			).
+			WithArgs(observed.User.ID, observer.User.ID).
+			WillReturnError(errors.New("some error"))
+
+		err := ur.DeleteObservedUserInObserverUser(observed.User.ID, observer.User.ID)
+		assert.NotNil(t, err)
+	})
+
+	t.Run("successful delete observed user in observer user", func(t *testing.T) {
+		mock.
+			ExpectExec(
+				regexp.QuoteMeta(
+					`DELETE FROM ObservedUsersObserverUsers WHERE observed_user_id = ? AND observer_user_id = ?`,
+				),
+			).
+			WithArgs(observed.User.ID, observer.User.ID).
+			WillReturnResult(sqlmock.NewResult(int64(1), 1))
+
+		err := ur.DeleteObservedUserInObserverUser(observed.User.ID, observer.User.ID)
+		assert.Nil(t, err)
+	})
+
+}

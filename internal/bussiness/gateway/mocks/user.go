@@ -34,6 +34,20 @@ func (m *MockUserRepository) EXPECT() *MockUserRepositoryMockRecorder {
 	return m.recorder
 }
 
+// DeleteObservedUserInObserverUser mocks base method.
+func (m *MockUserRepository) DeleteObservedUserInObserverUser(arg0, arg1 uint64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteObservedUserInObserverUser", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteObservedUserInObserverUser indicates an expected call of DeleteObservedUserInObserverUser.
+func (mr *MockUserRepositoryMockRecorder) DeleteObservedUserInObserverUser(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteObservedUserInObserverUser", reflect.TypeOf((*MockUserRepository)(nil).DeleteObservedUserInObserverUser), arg0, arg1)
+}
+
 // FindByEmail mocks base method.
 func (m *MockUserRepository) FindByEmail(arg0 string) (*model.User, error) {
 	m.ctrl.T.Helper()

@@ -531,3 +531,78 @@ func TestAddObservedUserInObserverUserObservedUser(t *testing.T) {
 		})
 	}
 }
+
+func TestDeleteObservedUserInObserverUserObservedUser(t *testing.T) {
+	m := gomock.NewController(t)
+	defer m.Finish()
+
+	tests := []struct {
+		name         string
+		mock         func() *mock_usecase.MockUserUseCase
+		path         string
+		expectedCode int
+	}{
+		{
+			name: "error deleting observed user in observer user",
+			mock: func() *mock_usecase.MockUserUseCase {
+				mockUserUseCase := mock_usecase.NewMockUserUseCase(m)
+				return mockUserUseCase
+			},
+			path:         "/where/are/they/users/observer/driver/1_2_3",
+			expectedCode: http.StatusBadRequest,
+		},
+		{
+			name: "not found error deleting observed user in observer user",
+			mock: func() *mock_usecase.MockUserUseCase {
+				mockUserUseCase := mock_usecase.NewMockUserUseCase(m)
+				return mockUserUseCase
+			},
+			path:         "/where/are/they/users/observer/driver/1a_2",
+			expectedCode: http.StatusBadRequest,
+		},
+		{
+			name: "bad request error deleting observed user in observer user",
+			mock: func() *mock_usecase.MockUserUseCase {
+				mockUserUseCase := mock_usecase.NewMockUserUseCase(m)
+				return mockUserUseCase
+			},
+			path:         "/where/are/they/users/observer/driver/1_2a",
+			expectedCode: http.StatusBadRequest,
+		},
+		{
+			name: "unsuccessful delete observed user in observer user",
+			mock: func() *mock_usecase.MockUserUseCase {
+				mockUserUseCase := mock_usecase.NewMockUserUseCase(m)
+				mockUserUseCase.EXPECT().DeleteObservedUserInObserverUser(gomock.Any(), gomock.Any(), gomock.Any()).Return(web.ErrInternalServerError)
+				return mockUserUseCase
+			},
+			path:         "/where/are/they/users/observer/driver/1_2",
+			expectedCode: http.StatusInternalServerError,
+		},
+		{
+			name: "successful delete observed user in observer user",
+			mock: func() *mock_usecase.MockUserUseCase {
+				mockUserUseCase := mock_usecase.NewMockUserUseCase(m)
+				mockUserUseCase.EXPECT().DeleteObservedUserInObserverUser(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+				return mockUserUseCase
+			},
+			path:         "/where/are/they/users/observer/driver/1_2",
+			expectedCode: http.StatusOK,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			w := httptest.NewRecorder()
+			r, err := http.NewRequest(http.MethodDelete, test.path, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+			r.Header.Set("Content-Type", "application/json")
+
+			d := mock_middleware.Dependencies{UserUseCase: test.mock()}
+			router := configureRoutes(d)
+			router.ServeHTTP(w, r)
+			assert.Equalf(t, test.expectedCode, w.Code, "Expected code %v, received %v", test.expectedCode, w.Code)
+		})
+	}
+}

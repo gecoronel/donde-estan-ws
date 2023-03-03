@@ -79,7 +79,7 @@ func TestUseCaseGet(t *testing.T) {
 	}
 
 	observerUser := observedUser
-	observerUser.ID = 2
+	observerUser.ID = 3
 	observerUser.Type = observer
 
 	m := gomock.NewController(t)
@@ -572,6 +572,56 @@ func TestUseCaseAddObservedUserInObserverUser(t *testing.T) {
 			uc := serviceLocator.GetInstance(UserUseCaseType).(UserUseCase)
 
 			err := uc.AddObservedUserInObserverUser(test.privacyKey, test.observerUserID, serviceLocator)
+
+			assert.Equalf(t, test.expectedError, err, "Expected error %v, received %d", test.expectedError, err)
+		})
+	}
+}
+
+func TestUseCaseDeleteObservedUserInObserverUser(t *testing.T) {
+	m := gomock.NewController(t)
+	defer m.Finish()
+
+	tests := []struct {
+		name           string
+		mock           func() *mock_gateway.MockUserRepository
+		observedUserID uint64
+		observerUserID uint64
+		expectedError  error
+	}{
+		{
+			name: "unsuccessful create observed user in observer user",
+			mock: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				mockUserRepository.EXPECT().DeleteObservedUserInObserverUser(gomock.Any(), gomock.Any()).
+					Return(web.ErrInternalServerError)
+				return mockUserRepository
+			},
+			observedUserID: 1,
+			observerUserID: 2,
+			expectedError:  web.ErrInternalServerError,
+		},
+		{
+			name: "successful create observed user in observer user",
+			mock: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				mockUserRepository.EXPECT().DeleteObservedUserInObserverUser(gomock.Any(), gomock.Any()).Return(nil)
+				return mockUserRepository
+			},
+			observedUserID: 1,
+			observerUserID: 2,
+			expectedError:  nil,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			mockUserRepository := test.mock()
+
+			context := getContextUser(mockUserRepository)
+			serviceLocator := ctx.GetServiceLocator(context)
+			uc := serviceLocator.GetInstance(UserUseCaseType).(UserUseCase)
+
+			err := uc.DeleteObservedUserInObserverUser(test.observedUserID, test.observerUserID, serviceLocator)
 
 			assert.Equalf(t, test.expectedError, err, "Expected error %v, received %d", test.expectedError, err)
 		})

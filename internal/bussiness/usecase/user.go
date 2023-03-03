@@ -26,6 +26,7 @@ type (
 		CreateObservedUser(model.ObservedUser, gateway.ServiceLocator) (*model.ObservedUser, error)
 		CreateObserverUser(model.ObserverUser, gateway.ServiceLocator) (*model.ObserverUser, error)
 		AddObservedUserInObserverUser(string, uint64, gateway.ServiceLocator) error
+		DeleteObservedUserInObserverUser(uint64, uint64, gateway.ServiceLocator) error
 	}
 
 	userUseCase struct{}
@@ -165,6 +166,21 @@ func (u userUseCase) AddObservedUserInObserverUser(
 	}
 
 	err = repository.SaveObservedUserInObserverUser(odu.User.ID, observerUserID)
+	if err != nil {
+		return web.ErrInternalServerError
+	}
+
+	return nil
+}
+
+func (u userUseCase) DeleteObservedUserInObserverUser(
+	observedUserID uint64,
+	observerUserID uint64,
+	locator gateway.ServiceLocator,
+) error {
+	repository := locator.GetInstance(gateway.UserRepositoryType).(gateway.UserRepository)
+
+	err := repository.DeleteObservedUserInObserverUser(observedUserID, observerUserID)
 	if err != nil {
 		return web.ErrInternalServerError
 	}

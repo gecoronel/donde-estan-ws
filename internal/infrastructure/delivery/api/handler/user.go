@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gecoronel/donde-estan-ws/internal/bussiness/model"
 	"github.com/gecoronel/donde-estan-ws/internal/bussiness/model/web"
@@ -232,6 +233,51 @@ func AddObservedUserInObserverUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = useCase.AddObservedUserInObserverUser(req.PrivacyKey, req.ObserverUserID, serviceLocator)
+	if err != nil {
+		log.Error("creation observed user in observer user failed: ", err)
+		w.Header().Set("Content-Type", "application/json")
+		httpStatusCode := utils.GetHTTPCodeByError(err)
+		w.WriteHeader(httpStatusCode)
+		_ = json.NewEncoder(w).Encode(web.NewError(httpStatusCode, err.Error()))
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(web.NewError(http.StatusOK, "observed user added"))
+}
+
+func DeleteObservedUserInObserverUser(w http.ResponseWriter, r *http.Request) {
+	serviceLocator := context.GetServiceLocator(r.Context())
+	useCase := serviceLocator.GetInstance(usecase.UserUseCaseType).(usecase.UserUseCase)
+
+	ids := strings.Split(chi.URLParam(r, "id"), "_")
+	if len(ids) != 2 {
+		log.Error("invalid ids for delete of observed user")
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(web.NewError(http.StatusBadRequest, "invalid ids"))
+		return
+	}
+
+	observedUserID, err := strconv.ParseUint(ids[0], 10, 0)
+	if err != nil {
+		log.Error("invalid ids for delete of observed user")
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(web.NewError(http.StatusBadRequest, "invalid ids"))
+		return
+	}
+	observerUserID, err := strconv.ParseUint(ids[1], 10, 0)
+	if err != nil {
+		log.Error("invalid ids for delete of observed user")
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(web.NewError(http.StatusBadRequest, "invalid ids"))
+		return
+	}
+
+	err = useCase.DeleteObservedUserInObserverUser(observedUserID, observerUserID, serviceLocator)
 	if err != nil {
 		log.Error("creation observed user in observer user failed: ", err)
 		w.Header().Set("Content-Type", "application/json")

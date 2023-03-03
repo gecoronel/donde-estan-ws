@@ -23,4 +23,5 @@ type UserRepository interface {
 	SaveObserverUser(model.ObserverUser) (*model.ObserverUser, error)
 	FindObservedUserByPrivacyKey(string) (*model.ObservedUser, error)
 	SaveObservedUserInObserverUser(uint64, uint64) error
+	DeleteObservedUserInObserverUser(uint64, uint64) error
 }

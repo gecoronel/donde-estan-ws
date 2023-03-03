@@ -76,6 +76,10 @@ const (
 		INSERT INTO ObservedUsersObserverUsers (observed_user_id, observer_user_id)
 		VALUES (1, 3);
 	`
+	queryDeleteObservedUserInObserverUser = `
+		DELETE FROM ObservedUsersObserverUsers
+		WHERE observed_user_id = ? AND observer_user_id = ?;
+	`
 	querySelectObservedUserObserverUser = `
 		SELECT * FROM ObservedUsersObserverUsers 
 		WHERE observed_user_id = ? 
@@ -407,6 +411,17 @@ func (r UserRepository) SaveObservedUserInObserverUser(observedUserID uint64, ob
 	}
 
 	tx.Commit()
+	return nil
+}
+
+// DeleteObservedUserInObserverUser delete a observedUser into of the drivers list of an observerUser using UserRepository.
+func (r UserRepository) DeleteObservedUserInObserverUser(observedUserID uint64, observerUserID uint64) error {
+	err := r.DB.Exec(queryDeleteObservedUserInObserverUser, observedUserID, observerUserID).Error
+	if err != nil {
+		log.Error("error deleting user")
+		return err
+	}
+
 	return nil
 }
 
