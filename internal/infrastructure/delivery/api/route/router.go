@@ -49,5 +49,10 @@ func configureRoutes(router *chi.Mux) {
 		r.Post("/school-bus", handler.SaveSchoolBus)
 		r.Put("/school-bus", handler.UpdateSchoolBus)
 		r.Delete("/school-bus/{id}", handler.DeleteSchoolBus)
+
+		r.Get("/address/{id}", handler.GetAddress)
+		r.Post("/address", handler.SaveAddress)
+		r.Put("/address", handler.UpdateAddress)
+		r.Delete("/address/{id}", handler.DeleteAddress)
 	})
 }
