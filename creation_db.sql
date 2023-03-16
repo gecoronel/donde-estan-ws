@@ -102,7 +102,7 @@ CREATE TABLE IF NOT EXISTS `DondeEstanApp`.`Addresses` (
   `street` VARCHAR(45) NOT NULL,
   `number` VARCHAR(45) NOT NULL,
   `floor` VARCHAR(5) NULL DEFAULT NULL,
-  `apartament` VARCHAR(45) NULL DEFAULT NULL,
+  `apartment` VARCHAR(45) NULL DEFAULT NULL,
   `zipCode` VARCHAR(45) NOT NULL,
   `city` VARCHAR(45) NOT NULL,
   `state` VARCHAR(45) NOT NULL,

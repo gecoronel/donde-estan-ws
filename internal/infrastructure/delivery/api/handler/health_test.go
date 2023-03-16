@@ -48,6 +48,11 @@ func configureRoutes(d mock_middleware.Dependencies) *chi.Mux {
 		r.Post("/school-bus", SaveSchoolBus)
 		r.Put("/school-bus", UpdateSchoolBus)
 		r.Delete("/school-bus/{id}", DeleteSchoolBus)
+
+		r.Get("/address/{id}", GetAddress)
+		r.Post("/address", SaveAddress)
+		r.Put("/address", UpdateAddress)
+		r.Delete("/address/{id}", DeleteAddress)
 	})
 
 	return router
