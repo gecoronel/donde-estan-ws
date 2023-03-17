@@ -278,34 +278,9 @@ func TestCreateObservedUser(t *testing.T) {
 			expectedCode: http.StatusBadRequest,
 		},
 		{
-			name: "username conflict error",
-			mock: func() *mock_usecase.MockUserUseCase {
-				mockUserUseCase := mock_usecase.NewMockUserUseCase(m)
-				mockUserUseCase.EXPECT().FindByUsername(gomock.Any(), gomock.Any()).Return(&observedUser.User, nil)
-				return mockUserUseCase
-			},
-			path:         "/where/are/they/users/observed",
-			body:         body,
-			expectedCode: http.StatusConflict,
-		},
-		{
-			name: "email conflict error",
-			mock: func() *mock_usecase.MockUserUseCase {
-				mockUserUseCase := mock_usecase.NewMockUserUseCase(m)
-				mockUserUseCase.EXPECT().FindByUsername(gomock.Any(), gomock.Any()).Return(nil, nil)
-				mockUserUseCase.EXPECT().FindByEmail(gomock.Any(), gomock.Any()).Return(&observedUser.User, nil)
-				return mockUserUseCase
-			},
-			path:         "/where/are/they/users/observed",
-			body:         body,
-			expectedCode: http.StatusConflict,
-		},
-		{
 			name: "successful creation",
 			mock: func() *mock_usecase.MockUserUseCase {
 				mockUserUseCase := mock_usecase.NewMockUserUseCase(m)
-				mockUserUseCase.EXPECT().FindByUsername(gomock.Any(), gomock.Any()).Return(nil, nil)
-				mockUserUseCase.EXPECT().FindByEmail(gomock.Any(), gomock.Any()).Return(nil, nil)
 				mockUserUseCase.EXPECT().CreateObservedUser(gomock.Any(), gomock.Any()).Return(&observedUser, nil)
 				return mockUserUseCase
 			},
@@ -317,8 +292,6 @@ func TestCreateObservedUser(t *testing.T) {
 			name: "unsuccessful creation",
 			mock: func() *mock_usecase.MockUserUseCase {
 				mockUserUseCase := mock_usecase.NewMockUserUseCase(m)
-				mockUserUseCase.EXPECT().FindByUsername(gomock.Any(), gomock.Any()).Return(nil, nil)
-				mockUserUseCase.EXPECT().FindByEmail(gomock.Any(), gomock.Any()).Return(nil, nil)
 				mockUserUseCase.EXPECT().CreateObservedUser(gomock.Any(), gomock.Any()).Return(nil,
 					web.ErrInternalServerError)
 				return mockUserUseCase
@@ -390,34 +363,9 @@ func TestCreateObserverUser(t *testing.T) {
 			expectedCode: http.StatusBadRequest,
 		},
 		{
-			name: "username conflict error",
-			mock: func() *mock_usecase.MockUserUseCase {
-				mockUserUseCase := mock_usecase.NewMockUserUseCase(m)
-				mockUserUseCase.EXPECT().FindByUsername(gomock.Any(), gomock.Any()).Return(&observerUser.User, nil)
-				return mockUserUseCase
-			},
-			path:         "/where/are/they/users/observer",
-			body:         body,
-			expectedCode: http.StatusConflict,
-		},
-		{
-			name: "email conflict error",
-			mock: func() *mock_usecase.MockUserUseCase {
-				mockUserUseCase := mock_usecase.NewMockUserUseCase(m)
-				mockUserUseCase.EXPECT().FindByUsername(gomock.Any(), gomock.Any()).Return(nil, nil)
-				mockUserUseCase.EXPECT().FindByEmail(gomock.Any(), gomock.Any()).Return(&observerUser.User, nil)
-				return mockUserUseCase
-			},
-			path:         "/where/are/they/users/observer",
-			body:         body,
-			expectedCode: http.StatusConflict,
-		},
-		{
 			name: "successful creation",
 			mock: func() *mock_usecase.MockUserUseCase {
 				mockUserUseCase := mock_usecase.NewMockUserUseCase(m)
-				mockUserUseCase.EXPECT().FindByUsername(gomock.Any(), gomock.Any()).Return(nil, nil)
-				mockUserUseCase.EXPECT().FindByEmail(gomock.Any(), gomock.Any()).Return(nil, nil)
 				mockUserUseCase.EXPECT().CreateObserverUser(gomock.Any(), gomock.Any()).Return(&observerUser, nil)
 				return mockUserUseCase
 			},
@@ -429,8 +377,6 @@ func TestCreateObserverUser(t *testing.T) {
 			name: "unsuccessful creation",
 			mock: func() *mock_usecase.MockUserUseCase {
 				mockUserUseCase := mock_usecase.NewMockUserUseCase(m)
-				mockUserUseCase.EXPECT().FindByUsername(gomock.Any(), gomock.Any()).Return(nil, nil)
-				mockUserUseCase.EXPECT().FindByEmail(gomock.Any(), gomock.Any()).Return(nil, nil)
 				mockUserUseCase.EXPECT().CreateObserverUser(gomock.Any(), gomock.Any()).Return(nil,
 					web.ErrInternalServerError)
 				return mockUserUseCase
