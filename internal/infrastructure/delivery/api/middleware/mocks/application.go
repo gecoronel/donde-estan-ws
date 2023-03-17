@@ -15,9 +15,11 @@ type Dependencies struct {
 	UserUseCase         *mock_usecase.MockUserUseCase
 	SchoolBusUseCase    *mock_usecase.MockSchoolBusUseCase
 	AddressUseCase      *mock_usecase.MockAddressUseCase
+	ChildUseCase        *mock_usecase.MockChildUseCase
 	UserRepository      *mock_gateway.MockUserRepository
 	SchoolBusRepository *mock_gateway.MockSchoolBusRepository
 	AddressRepository   *mock_gateway.MockAddressRepository
+	ChildRepository     *mock_gateway.MockChildRepository
 }
 
 func MockIoc(d Dependencies) func(next http.Handler) http.Handler {
@@ -36,12 +38,14 @@ func MockIoc(d Dependencies) func(next http.Handler) http.Handler {
 			iocContext.Bind(gateway.UserRepositoryType).ToInstance(d.UserRepository)
 			iocContext.Bind(gateway.SchoolBusRepositoryType).ToInstance(d.SchoolBusRepository)
 			iocContext.Bind(gateway.AddressRepositoryType).ToInstance(d.AddressRepository)
+			iocContext.Bind(gateway.ChildRepositoryType).ToInstance(d.ChildRepository)
 
 			// Register UseCase
 			//iocContext.Bind(usecase.GetConfigurationsUseCaseType).ToInstance(usecase.NewGetConfigurationsUseCase())
 			iocContext.Bind(usecase.UserUseCaseType).ToInstance(d.UserUseCase)
 			iocContext.Bind(usecase.SchoolBusUseCaseType).ToInstance(d.SchoolBusUseCase)
 			iocContext.Bind(usecase.AddressUseCaseType).ToInstance(d.AddressUseCase)
+			iocContext.Bind(usecase.ChildUseCaseType).ToInstance(d.ChildUseCase)
 
 			// Register Repositories
 			//iocContext.Bind(gateway.MetricCollectorType).ToInstance(metricCollector)

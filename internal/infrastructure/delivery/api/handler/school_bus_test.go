@@ -41,7 +41,7 @@ func TestGetSchoolBus(t *testing.T) {
 				mockSchoolBusUseCase.EXPECT().Get(gomock.Any(), gomock.Any()).Return(nil, web.ErrInternalServerError)
 				return mockSchoolBusUseCase
 			},
-			path:         "/where/are/they/school-bus/1",
+			path:         "/where/are/they/school-buses/1",
 			expectedCode: http.StatusInternalServerError,
 		},
 		{
@@ -51,7 +51,7 @@ func TestGetSchoolBus(t *testing.T) {
 				mockSchoolBusUseCase.EXPECT().Get(gomock.Any(), gomock.Any()).Return(nil, web.ErrNotFound)
 				return mockSchoolBusUseCase
 			},
-			path:         "/where/are/they/school-bus/1",
+			path:         "/where/are/they/school-buses/1",
 			expectedCode: http.StatusNotFound,
 		},
 		{
@@ -61,7 +61,7 @@ func TestGetSchoolBus(t *testing.T) {
 				mockSchoolBusUseCase.EXPECT().Get(gomock.Any(), gomock.Any()).Return(&sb, nil)
 				return mockSchoolBusUseCase
 			},
-			path:         "/where/are/they/school-bus/1",
+			path:         "/where/are/they/school-buses/1",
 			expectedCode: http.StatusOK,
 		},
 	}
@@ -99,7 +99,7 @@ func TestSaveSchoolBus(t *testing.T) {
 				mockSchoolBusUseCase := mock_usecase.NewMockSchoolBusUseCase(m)
 				return mockSchoolBusUseCase
 			},
-			path: "/where/are/they/school-bus",
+			path: "/where/are/they/school-buses",
 			body: `{
 			"id": 12345,
 			"license_plate": "11AAA55",
@@ -116,7 +116,7 @@ func TestSaveSchoolBus(t *testing.T) {
 				mockSchoolBusUseCase := mock_usecase.NewMockSchoolBusUseCase(m)
 				return mockSchoolBusUseCase
 			},
-			path: "/where/are/they/school-bus",
+			path: "/where/are/they/school-buses",
 			body: `{
 			"id": "0000-0000-0005",
 			"model": "Fiat",
@@ -133,7 +133,7 @@ func TestSaveSchoolBus(t *testing.T) {
 				mockSchoolBusUseCase.EXPECT().Save(gomock.Any(), gomock.Any()).Return(nil, web.ErrInternalServerError)
 				return mockSchoolBusUseCase
 			},
-			path: "/where/are/they/school-bus",
+			path: "/where/are/they/school-buses",
 			body: `{
 			"id": "0000-0000-0005",
 			"license_plate": "11AAA55",
@@ -151,7 +151,7 @@ func TestSaveSchoolBus(t *testing.T) {
 				mockSchoolBusUseCase.EXPECT().Save(gomock.Any(), gomock.Any()).Return(&sb, nil)
 				return mockSchoolBusUseCase
 			},
-			path: "/where/are/they/school-bus",
+			path: "/where/are/they/school-buses",
 			body: `{
 			"id": "0000-0000-0005",
 			"license_plate": "11AAA55",
@@ -197,7 +197,7 @@ func TestUpdateSchoolBus(t *testing.T) {
 				mockSchoolBusUseCase := mock_usecase.NewMockSchoolBusUseCase(m)
 				return mockSchoolBusUseCase
 			},
-			path: "/where/are/they/school-bus",
+			path: "/where/are/they/school-buses",
 			body: `{
 			"id": 12345,
 			"license_plate": "11AAA55",
@@ -214,7 +214,7 @@ func TestUpdateSchoolBus(t *testing.T) {
 				mockSchoolBusUseCase := mock_usecase.NewMockSchoolBusUseCase(m)
 				return mockSchoolBusUseCase
 			},
-			path: "/where/are/they/school-bus",
+			path: "/where/are/they/school-buses",
 			body: `{
 			"id": "0000-0000-0005",
 			"model": "Fiat",
@@ -231,7 +231,7 @@ func TestUpdateSchoolBus(t *testing.T) {
 				mockSchoolBusUseCase.EXPECT().Update(gomock.Any(), gomock.Any()).Return(nil, web.ErrInternalServerError)
 				return mockSchoolBusUseCase
 			},
-			path: "/where/are/they/school-bus",
+			path: "/where/are/they/school-buses",
 			body: `{
 			"id": "0000-0000-0005",
 			"license_plate": "11AAA55",
@@ -249,7 +249,7 @@ func TestUpdateSchoolBus(t *testing.T) {
 				mockSchoolBusUseCase.EXPECT().Update(gomock.Any(), gomock.Any()).Return(&sb, nil)
 				return mockSchoolBusUseCase
 			},
-			path: "/where/are/they/school-bus",
+			path: "/where/are/they/school-buses",
 			body: `{
 			"id": "0000-0000-0005",
 			"license_plate": "11AAA55",
@@ -295,7 +295,7 @@ func TestDeleteSchoolBus(t *testing.T) {
 				mockSchoolBusUseCase.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(web.ErrInternalServerError)
 				return mockSchoolBusUseCase
 			},
-			path:         "/where/are/they/school-bus/1",
+			path:         "/where/are/they/school-buses/1",
 			expectedCode: http.StatusInternalServerError,
 		},
 		{
@@ -305,7 +305,7 @@ func TestDeleteSchoolBus(t *testing.T) {
 				mockSchoolBusUseCase.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(web.ErrNotFound)
 				return mockSchoolBusUseCase
 			},
-			path:         "/where/are/they/school-bus/1",
+			path:         "/where/are/they/school-buses/1",
 			expectedCode: http.StatusNotFound,
 		},
 		{
@@ -315,7 +315,7 @@ func TestDeleteSchoolBus(t *testing.T) {
 				mockSchoolBusUseCase.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(nil)
 				return mockSchoolBusUseCase
 			},
-			path:         "/where/are/they/school-bus/1",
+			path:         "/where/are/they/school-buses/1",
 			expectedCode: http.StatusOK,
 		},
 	}

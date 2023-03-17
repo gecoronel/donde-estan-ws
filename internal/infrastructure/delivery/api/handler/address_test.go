@@ -48,7 +48,7 @@ func TestGetAddress(t *testing.T) {
 				mockAddressUseCase := mock_usecase.NewMockAddressUseCase(m)
 				return mockAddressUseCase
 			},
-			path:         "/where/are/they/address/invalid",
+			path:         "/where/are/they/addresses/invalid",
 			expectedCode: http.StatusBadRequest,
 		},
 		{
@@ -58,7 +58,7 @@ func TestGetAddress(t *testing.T) {
 				mockAddressUseCase.EXPECT().Get(gomock.Any(), gomock.Any()).Return(nil, web.ErrInternalServerError)
 				return mockAddressUseCase
 			},
-			path:         "/where/are/they/address/1",
+			path:         "/where/are/they/addresses/1",
 			expectedCode: http.StatusInternalServerError,
 		},
 		{
@@ -68,7 +68,7 @@ func TestGetAddress(t *testing.T) {
 				mockAddressUseCase.EXPECT().Get(gomock.Any(), gomock.Any()).Return(nil, web.ErrNotFound)
 				return mockAddressUseCase
 			},
-			path:         "/where/are/they/address/1",
+			path:         "/where/are/they/addresses/1",
 			expectedCode: http.StatusNotFound,
 		},
 		{
@@ -78,7 +78,7 @@ func TestGetAddress(t *testing.T) {
 				mockAddressUseCase.EXPECT().Get(gomock.Any(), gomock.Any()).Return(&a, nil)
 				return mockAddressUseCase
 			},
-			path:         "/where/are/they/address/1",
+			path:         "/where/are/they/addresses/1",
 			expectedCode: http.StatusOK,
 		},
 	}
@@ -116,7 +116,7 @@ func TestSaveAddress(t *testing.T) {
 				mockAddressUseCase := mock_usecase.NewMockAddressUseCase(m)
 				return mockAddressUseCase
 			},
-			path: "/where/are/they/address",
+			path: "/where/are/they/addresses",
 			body: `{
 			"name": "Casa",
 			"street": "25 de Mayo",
@@ -139,7 +139,7 @@ func TestSaveAddress(t *testing.T) {
 				mockAddressUseCase := mock_usecase.NewMockAddressUseCase(m)
 				return mockAddressUseCase
 			},
-			path: "/where/are/they/address",
+			path: "/where/are/they/addresses",
 			body: `{
 			"name": "Casa",
 			"street": "25 de Mayo",
@@ -157,7 +157,7 @@ func TestSaveAddress(t *testing.T) {
 				mockAddressUseCase.EXPECT().Save(gomock.Any(), gomock.Any()).Return(nil, web.ErrInternalServerError)
 				return mockAddressUseCase
 			},
-			path: "/where/are/they/address",
+			path: "/where/are/they/addresses",
 			body: `{
 			"name": "Casa",
 			"street": "25 de Mayo",
@@ -181,7 +181,7 @@ func TestSaveAddress(t *testing.T) {
 				mockAddressUseCase.EXPECT().Save(gomock.Any(), gomock.Any()).Return(&a, nil)
 				return mockAddressUseCase
 			},
-			path: "/where/are/they/address",
+			path: "/where/are/they/addresses",
 			body: `{
 			"name": "Casa",
 			"street": "25 de Mayo",
@@ -233,7 +233,7 @@ func TestUpdateAddress(t *testing.T) {
 				mockAddressUseCase := mock_usecase.NewMockAddressUseCase(m)
 				return mockAddressUseCase
 			},
-			path: "/where/are/they/address",
+			path: "/where/are/they/addresses",
 			body: `{
 			"name": "Casa",
 			"street": "25 de Mayo",
@@ -257,7 +257,7 @@ func TestUpdateAddress(t *testing.T) {
 				mockAddressUseCase := mock_usecase.NewMockAddressUseCase(m)
 				return mockAddressUseCase
 			},
-			path: "/where/are/they/address",
+			path: "/where/are/they/addresses",
 			body: `{
 			"name": "Casa",
 			"zip_code":   "3000",
@@ -278,7 +278,7 @@ func TestUpdateAddress(t *testing.T) {
 				mockAddressUseCase.EXPECT().Update(gomock.Any(), gomock.Any()).Return(nil, web.ErrInternalServerError)
 				return mockAddressUseCase
 			},
-			path: "/where/are/they/address",
+			path: "/where/are/they/addresses",
 			body: `{
 			"name": "Casa",
 			"street": "25 de Mayo",
@@ -303,7 +303,7 @@ func TestUpdateAddress(t *testing.T) {
 				mockAddressUseCase.EXPECT().Update(gomock.Any(), gomock.Any()).Return(&a, nil)
 				return mockAddressUseCase
 			},
-			path: "/where/are/they/address",
+			path: "/where/are/they/addresses",
 			body: `{
 			"name": "Casa",
 			"street": "25 de Mayo",
@@ -355,7 +355,7 @@ func TestDeleteAddress(t *testing.T) {
 				mockAddressUseCase := mock_usecase.NewMockAddressUseCase(m)
 				return mockAddressUseCase
 			},
-			path:         "/where/are/they/address/invalid",
+			path:         "/where/are/they/addresses/invalid",
 			expectedCode: http.StatusBadRequest,
 		},
 		{
@@ -365,7 +365,7 @@ func TestDeleteAddress(t *testing.T) {
 				mockAddressUseCase.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(web.ErrInternalServerError)
 				return mockAddressUseCase
 			},
-			path:         "/where/are/they/address/1",
+			path:         "/where/are/they/addresses/1",
 			expectedCode: http.StatusInternalServerError,
 		},
 		{
@@ -375,7 +375,7 @@ func TestDeleteAddress(t *testing.T) {
 				mockAddressUseCase.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(web.ErrNotFound)
 				return mockAddressUseCase
 			},
-			path:         "/where/are/they/address/1",
+			path:         "/where/are/they/addresses/1",
 			expectedCode: http.StatusNotFound,
 		},
 		{
@@ -385,7 +385,7 @@ func TestDeleteAddress(t *testing.T) {
 				mockAddressUseCase.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(nil)
 				return mockAddressUseCase
 			},
-			path:         "/where/are/they/address/1",
+			path:         "/where/are/they/addresses/1",
 			expectedCode: http.StatusOK,
 		},
 	}

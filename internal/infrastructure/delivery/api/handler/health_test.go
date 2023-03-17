@@ -44,15 +44,20 @@ func configureRoutes(d mock_middleware.Dependencies) *chi.Mux {
 		r.Post("/users/observer/driver", AddObservedUserInObserverUser)
 		r.Delete("/users/observer/driver/{id}", DeleteObservedUserInObserverUser)
 
-		r.Get("/school-bus/{id}", GetSchoolBus)
-		r.Post("/school-bus", SaveSchoolBus)
-		r.Put("/school-bus", UpdateSchoolBus)
-		r.Delete("/school-bus/{id}", DeleteSchoolBus)
+		r.Get("/school-buses/{id}", GetSchoolBus)
+		r.Post("/school-buses", SaveSchoolBus)
+		r.Put("/school-buses", UpdateSchoolBus)
+		r.Delete("/school-buses/{id}", DeleteSchoolBus)
 
-		r.Get("/address/{id}", GetAddress)
-		r.Post("/address", SaveAddress)
-		r.Put("/address", UpdateAddress)
-		r.Delete("/address/{id}", DeleteAddress)
+		r.Get("/addresses/{id}", GetAddress)
+		r.Post("/addresses", SaveAddress)
+		r.Put("/addresses", UpdateAddress)
+		r.Delete("/addresses/{id}", DeleteAddress)
+
+		r.Get("/children/{id}", GetChild)
+		r.Post("/children", SaveChild)
+		r.Put("/children", UpdateChild)
+		r.Delete("/children/{id}", DeleteChild)
 	})
 
 	return router

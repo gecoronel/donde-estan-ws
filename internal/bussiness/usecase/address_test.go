@@ -43,7 +43,7 @@ func TestUseCaseGetAddress(t *testing.T) {
 		expectedError   error
 	}{
 		{
-			name: "error getting school bus",
+			name: "error getting address",
 			mock: func() *mock_gateway.MockAddressRepository {
 				mockAddressRepository := mock_gateway.NewMockAddressRepository(m)
 				mockAddressRepository.EXPECT().Get(gomock.Any()).Return(nil, web.ErrInternalServerError)
@@ -54,7 +54,7 @@ func TestUseCaseGetAddress(t *testing.T) {
 			expectedError:   web.ErrInternalServerError,
 		},
 		{
-			name: "not found error getting school bus",
+			name: "not found error getting address",
 			mock: func() *mock_gateway.MockAddressRepository {
 				mockAddressRepository := mock_gateway.NewMockAddressRepository(m)
 				mockAddressRepository.EXPECT().Get(gomock.Any()).Return(nil, nil)
@@ -65,7 +65,7 @@ func TestUseCaseGetAddress(t *testing.T) {
 			expectedError:   web.ErrNotFound,
 		},
 		{
-			name: "successful create observed user",
+			name: "successful create address",
 			mock: func() *mock_gateway.MockAddressRepository {
 				mockAddressRepository := mock_gateway.NewMockAddressRepository(m)
 				mockAddressRepository.EXPECT().Get(gomock.Any()).Return(&a, nil)
@@ -104,7 +104,7 @@ func TestUseCaseSaveAddress(t *testing.T) {
 		expectedError   error
 	}{
 		{
-			name: "error saving school bus",
+			name: "error saving address",
 			mock: func() *mock_gateway.MockAddressRepository {
 				mockAddressRepository := mock_gateway.NewMockAddressRepository(m)
 				mockAddressRepository.EXPECT().Save(gomock.Any()).Return(nil, web.ErrInternalServerError)
@@ -115,7 +115,7 @@ func TestUseCaseSaveAddress(t *testing.T) {
 			expectedError:   web.ErrInternalServerError,
 		},
 		{
-			name: "successful save school bus",
+			name: "successful save address",
 			mock: func() *mock_gateway.MockAddressRepository {
 				mockAddressRepository := mock_gateway.NewMockAddressRepository(m)
 				mockAddressRepository.EXPECT().Save(gomock.Any()).Return(&a, nil)
@@ -154,7 +154,7 @@ func TestUseCaseUpdateAddress(t *testing.T) {
 		expectedError   error
 	}{
 		{
-			name: "error updating school bus",
+			name: "error updating address",
 			mock: func() *mock_gateway.MockAddressRepository {
 				mockAddressRepository := mock_gateway.NewMockAddressRepository(m)
 				mockAddressRepository.EXPECT().Get(gomock.Any()).Return(&a, nil)
@@ -166,7 +166,7 @@ func TestUseCaseUpdateAddress(t *testing.T) {
 			expectedError:   web.ErrInternalServerError,
 		},
 		{
-			name: "not found error updating school bus",
+			name: "not found error updating address",
 			mock: func() *mock_gateway.MockAddressRepository {
 				mockAddressRepository := mock_gateway.NewMockAddressRepository(m)
 				mockAddressRepository.EXPECT().Get(gomock.Any()).Return(nil, nil)
@@ -177,7 +177,7 @@ func TestUseCaseUpdateAddress(t *testing.T) {
 			expectedError:   web.ErrNotFound,
 		},
 		{
-			name: "error getting school bus",
+			name: "error getting address",
 			mock: func() *mock_gateway.MockAddressRepository {
 				mockAddressRepository := mock_gateway.NewMockAddressRepository(m)
 				mockAddressRepository.EXPECT().Get(gomock.Any()).Return(nil, web.ErrInternalServerError)
@@ -188,7 +188,7 @@ func TestUseCaseUpdateAddress(t *testing.T) {
 			expectedError:   web.ErrInternalServerError,
 		},
 		{
-			name: "successful update school bus",
+			name: "successful update address",
 			mock: func() *mock_gateway.MockAddressRepository {
 				mockAddressRepository := mock_gateway.NewMockAddressRepository(m)
 				mockAddressRepository.EXPECT().Get(gomock.Any()).Return(&a, nil)
@@ -227,7 +227,7 @@ func TestUseCaseDeleteAddress(t *testing.T) {
 		expectedError error
 	}{
 		{
-			name: "error updating school bus",
+			name: "error updating address",
 			mock: func() *mock_gateway.MockAddressRepository {
 				mockAddressRepository := mock_gateway.NewMockAddressRepository(m)
 				mockAddressRepository.EXPECT().Get(gomock.Any()).Return(&a, nil)
@@ -238,7 +238,7 @@ func TestUseCaseDeleteAddress(t *testing.T) {
 			expectedError: web.ErrInternalServerError,
 		},
 		{
-			name: "not found error updating school bus",
+			name: "not found error updating address",
 			mock: func() *mock_gateway.MockAddressRepository {
 				mockAddressRepository := mock_gateway.NewMockAddressRepository(m)
 				mockAddressRepository.EXPECT().Get(gomock.Any()).Return(nil, nil)
@@ -248,7 +248,7 @@ func TestUseCaseDeleteAddress(t *testing.T) {
 			expectedError: web.ErrNotFound,
 		},
 		{
-			name: "error getting school bus",
+			name: "error getting address",
 			mock: func() *mock_gateway.MockAddressRepository {
 				mockAddressRepository := mock_gateway.NewMockAddressRepository(m)
 				mockAddressRepository.EXPECT().Get(gomock.Any()).Return(nil, web.ErrInternalServerError)
@@ -258,7 +258,7 @@ func TestUseCaseDeleteAddress(t *testing.T) {
 			expectedError: web.ErrInternalServerError,
 		},
 		{
-			name: "successful update school bus",
+			name: "successful update address",
 			mock: func() *mock_gateway.MockAddressRepository {
 				mockAddressRepository := mock_gateway.NewMockAddressRepository(m)
 				mockAddressRepository.EXPECT().Get(gomock.Any()).Return(&a, nil)
