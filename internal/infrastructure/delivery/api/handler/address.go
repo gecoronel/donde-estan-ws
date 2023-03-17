@@ -61,11 +61,13 @@ func SaveAddress(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err = address.Validate(); err != nil {
+	if err = address.Validate(); err != nil || address.ValidateID() {
 		log.Error("validation failed for creation of address")
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
-		_ = json.NewEncoder(w).Encode(web.NewError(http.StatusBadRequest, err.Error()))
+		_ = json.NewEncoder(w).Encode(
+			web.NewError(http.StatusBadRequest, "validation failed for creation of address"),
+		)
 		return
 	}
 
@@ -103,11 +105,13 @@ func UpdateAddress(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err = address.Validate(); err != nil {
+	if err = address.Validate(); err != nil || !address.ValidateID() {
 		log.Error("validation failed for creation of address")
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
-		_ = json.NewEncoder(w).Encode(web.NewError(http.StatusBadRequest, err.Error()))
+		_ = json.NewEncoder(w).Encode(
+			web.NewError(http.StatusBadRequest, "validation failed for creation of address"),
+		)
 		return
 	}
 

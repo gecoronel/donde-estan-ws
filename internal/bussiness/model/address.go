@@ -25,3 +25,7 @@ var addressValidate = validator.New()
 func (a Address) Validate() error {
 	return addressValidate.Struct(a)
 }
+
+func (a Address) ValidateID() bool {
+	return a.ID != 0
+}

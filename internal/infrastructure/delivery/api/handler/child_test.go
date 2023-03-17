@@ -124,6 +124,26 @@ func TestSaveChild(t *testing.T) {
 			expectedCode: http.StatusBadRequest,
 		},
 		{
+			name: "validate error saving child for include id field",
+			mock: func() *mock_usecase.MockChildUseCase {
+				mockChildUseCase := mock_usecase.NewMockChildUseCase(m)
+				return mockChildUseCase
+			},
+			path: "/where/are/they/children",
+			body: `{
+				"id":                1,
+				"name":              "Pilar",
+				"last_name":         "Dominguez",
+				"school_name":       "La Salle",
+				"school_start_time": "8:00",
+				"school_end_time":   "12:00",
+				"created_at":        "2023-02-18 17:09:33",
+				"updated_at":        "2023-02-18 17:09:33",
+				"observer_user_id":  10
+			}`,
+			expectedCode: http.StatusBadRequest,
+		},
+		{
 			name: "validate error saving child",
 			mock: func() *mock_usecase.MockChildUseCase {
 				mockChildUseCase := mock_usecase.NewMockChildUseCase(m)
@@ -167,7 +187,6 @@ func TestSaveChild(t *testing.T) {
 			},
 			path: "/where/are/they/children",
 			body: `{
-				"id":                1,
 				"name":              "Pilar",
 				"last_name":         "Dominguez",
 				"school_name":       "La Salle",
@@ -225,6 +244,25 @@ func TestUpdateChild(t *testing.T) {
 				"created_at":        "2023-02-18 17:09:33",
 				"updated_at":        "2023-02-18 17:09:33",
 				"observer_user_id":  "10"
+			}`,
+			expectedCode: http.StatusBadRequest,
+		},
+		{
+			name: "validate error saving child for not include id field",
+			mock: func() *mock_usecase.MockChildUseCase {
+				mockChildUseCase := mock_usecase.NewMockChildUseCase(m)
+				return mockChildUseCase
+			},
+			path: "/where/are/they/children",
+			body: `{
+				"name":              "Pilar",
+				"last_name":         "Dominguez",
+				"school_name":       "La Salle",
+				"school_start_time": "8:00",
+				"school_end_time":   "12:00",
+				"created_at":        "2023-02-18 17:09:33",
+				"updated_at":        "2023-02-18 17:09:33",
+				"observer_user_id":  10
 			}`,
 			expectedCode: http.StatusBadRequest,
 		},
