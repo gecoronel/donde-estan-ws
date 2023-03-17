@@ -280,7 +280,55 @@ func TestUseCaseCreateObservedUser(t *testing.T) {
 			name: "error create observed user",
 			mock: func() *mock_gateway.MockUserRepository {
 				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				mockUserRepository.EXPECT().FindByUsername(gomock.Any()).Return(nil, nil)
+				mockUserRepository.EXPECT().FindByEmail(gomock.Any()).Return(nil, nil)
 				mockUserRepository.EXPECT().SaveObservedUser(gomock.Any()).Return(nil, web.ErrInternalServerError)
+				return mockUserRepository
+			},
+			input:         observedUser,
+			expectedUser:  nil,
+			expectedError: web.ErrInternalServerError,
+		},
+		{
+			name: "conflict error by username creating observed user",
+			mock: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				mockUserRepository.EXPECT().FindByUsername(gomock.Any()).Return(&observedUser.User, nil)
+				return mockUserRepository
+			},
+			input:         observedUser,
+			expectedUser:  nil,
+			expectedError: web.ErrConflict,
+		},
+		{
+			name: "conflict error by email creating observed user",
+			mock: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				mockUserRepository.EXPECT().FindByUsername(gomock.Any()).Return(nil, nil)
+				mockUserRepository.EXPECT().FindByEmail(gomock.Any()).Return(&observedUser.User, nil)
+				return mockUserRepository
+			},
+			input:         observedUser,
+			expectedUser:  nil,
+			expectedError: web.ErrConflict,
+		},
+		{
+			name: "error in find by username creating observed user",
+			mock: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				mockUserRepository.EXPECT().FindByUsername(gomock.Any()).Return(nil, web.ErrInternalServerError)
+				return mockUserRepository
+			},
+			input:         observedUser,
+			expectedUser:  nil,
+			expectedError: web.ErrInternalServerError,
+		},
+		{
+			name: "error in find by email creating observed user",
+			mock: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				mockUserRepository.EXPECT().FindByUsername(gomock.Any()).Return(nil, nil)
+				mockUserRepository.EXPECT().FindByEmail(gomock.Any()).Return(nil, web.ErrInternalServerError)
 				return mockUserRepository
 			},
 			input:         observedUser,
@@ -291,6 +339,8 @@ func TestUseCaseCreateObservedUser(t *testing.T) {
 			name: "successful create observed user",
 			mock: func() *mock_gateway.MockUserRepository {
 				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				mockUserRepository.EXPECT().FindByUsername(gomock.Any()).Return(nil, nil)
+				mockUserRepository.EXPECT().FindByEmail(gomock.Any()).Return(nil, nil)
 				mockUserRepository.EXPECT().SaveObservedUser(gomock.Any()).Return(&observedUser, nil)
 				return mockUserRepository
 			},
@@ -330,7 +380,55 @@ func TestUseCaseCreateObserverUser(t *testing.T) {
 			name: "error create observed user",
 			mock: func() *mock_gateway.MockUserRepository {
 				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				mockUserRepository.EXPECT().FindByUsername(gomock.Any()).Return(nil, nil)
+				mockUserRepository.EXPECT().FindByEmail(gomock.Any()).Return(nil, nil)
 				mockUserRepository.EXPECT().SaveObserverUser(gomock.Any()).Return(nil, web.ErrInternalServerError)
+				return mockUserRepository
+			},
+			input:         observerUser,
+			expectedUser:  nil,
+			expectedError: web.ErrInternalServerError,
+		},
+		{
+			name: "conflict error by username creating observer user",
+			mock: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				mockUserRepository.EXPECT().FindByUsername(gomock.Any()).Return(&observerUser.User, nil)
+				return mockUserRepository
+			},
+			input:         observerUser,
+			expectedUser:  nil,
+			expectedError: web.ErrConflict,
+		},
+		{
+			name: "conflict error by email creating observer user",
+			mock: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				mockUserRepository.EXPECT().FindByUsername(gomock.Any()).Return(nil, nil)
+				mockUserRepository.EXPECT().FindByEmail(gomock.Any()).Return(&observerUser.User, nil)
+				return mockUserRepository
+			},
+			input:         observerUser,
+			expectedUser:  nil,
+			expectedError: web.ErrConflict,
+		},
+		{
+			name: "error in find by username creating observer user",
+			mock: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				mockUserRepository.EXPECT().FindByUsername(gomock.Any()).Return(nil, web.ErrInternalServerError)
+				return mockUserRepository
+			},
+			input:         observerUser,
+			expectedUser:  nil,
+			expectedError: web.ErrInternalServerError,
+		},
+		{
+			name: "error in find by email creating observer user",
+			mock: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				mockUserRepository.EXPECT().FindByUsername(gomock.Any()).Return(nil, nil)
+				mockUserRepository.EXPECT().FindByEmail(gomock.Any()).Return(nil, web.ErrInternalServerError)
 				return mockUserRepository
 			},
 			input:         observerUser,
@@ -341,6 +439,8 @@ func TestUseCaseCreateObserverUser(t *testing.T) {
 			name: "successful create observed user",
 			mock: func() *mock_gateway.MockUserRepository {
 				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				mockUserRepository.EXPECT().FindByUsername(gomock.Any()).Return(nil, nil)
+				mockUserRepository.EXPECT().FindByEmail(gomock.Any()).Return(nil, nil)
 				mockUserRepository.EXPECT().SaveObserverUser(gomock.Any()).Return(&observerUser, nil)
 				return mockUserRepository
 			},

@@ -87,7 +87,6 @@ func CreateObservedUser(w http.ResponseWriter, r *http.Request) {
 	useCase := serviceLocator.GetInstance(usecase.UserUseCaseType).(usecase.UserUseCase)
 
 	var (
-		u            *model.User
 		observedUser model.ObservedUser
 		err          error
 	)
@@ -107,24 +106,6 @@ func CreateObservedUser(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
 		_ = json.NewEncoder(w).Encode(web.NewError(http.StatusBadRequest, err.Error()))
-		return
-	}
-
-	u, _ = useCase.FindByUsername(observedUser.GetUsername(), serviceLocator)
-	if u != nil {
-		log.Error("creation observed user failed: ", web.ErrConflict)
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusConflict)
-		_ = json.NewEncoder(w).Encode(web.NewError(http.StatusConflict, web.ErrConflict.Error()))
-		return
-	}
-
-	u, _ = useCase.FindByEmail(observedUser.GetEmail(), serviceLocator)
-	if u != nil {
-		log.Error("creation observed user failed: ", web.ErrConflict)
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusConflict)
-		_ = json.NewEncoder(w).Encode(web.NewError(http.StatusConflict, web.ErrConflict.Error()))
 		return
 	}
 
@@ -148,7 +129,6 @@ func CreateObserverUser(w http.ResponseWriter, r *http.Request) {
 	useCase := serviceLocator.GetInstance(usecase.UserUseCaseType).(usecase.UserUseCase)
 
 	var (
-		u            *model.User
 		observerUser model.ObserverUser
 		user         *model.ObserverUser
 		err          error
@@ -169,24 +149,6 @@ func CreateObserverUser(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
 		_ = json.NewEncoder(w).Encode(web.NewError(http.StatusBadRequest, err.Error()))
-		return
-	}
-
-	u, _ = useCase.FindByUsername(observerUser.GetUsername(), serviceLocator)
-	if u != nil {
-		log.Error("creation observed user failed: ", web.ErrConflict)
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusConflict)
-		_ = json.NewEncoder(w).Encode(web.NewError(http.StatusConflict, web.ErrConflict.Error()))
-		return
-	}
-
-	u, _ = useCase.FindByEmail(observerUser.GetEmail(), serviceLocator)
-	if u != nil {
-		log.Error("creation observed user failed: ", web.ErrConflict)
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusConflict)
-		_ = json.NewEncoder(w).Encode(web.NewError(http.StatusConflict, web.ErrConflict.Error()))
 		return
 	}
 

@@ -95,6 +95,22 @@ func (u userUseCase) CreateObservedUser(observed model.ObservedUser, locator gat
 ) {
 	repository := locator.GetInstance(gateway.UserRepositoryType).(gateway.UserRepository)
 
+	odu, err := repository.FindByUsername(observed.User.Username)
+	if err != nil {
+		return nil, err
+	}
+	if odu != nil {
+		return nil, web.ErrConflict
+	}
+
+	odu, err = repository.FindByEmail(observed.User.Email)
+	if err != nil {
+		return nil, err
+	}
+	if odu != nil {
+		return nil, web.ErrConflict
+	}
+
 	user, err := repository.SaveObservedUser(observed)
 	if err != nil {
 		return nil, err
@@ -108,6 +124,22 @@ func (u userUseCase) CreateObserverUser(observer model.ObserverUser, locator gat
 	error,
 ) {
 	repository := locator.GetInstance(gateway.UserRepositoryType).(gateway.UserRepository)
+
+	oru, err := repository.FindByUsername(observer.User.Username)
+	if err != nil {
+		return nil, err
+	}
+	if oru != nil {
+		return nil, web.ErrConflict
+	}
+
+	oru, err = repository.FindByEmail(observer.User.Email)
+	if err != nil {
+		return nil, err
+	}
+	if oru != nil {
+		return nil, web.ErrConflict
+	}
 
 	user, err := repository.SaveObserverUser(observer)
 	if err != nil {
