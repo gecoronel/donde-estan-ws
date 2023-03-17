@@ -242,7 +242,7 @@ func TestDeleteAddress(t *testing.T) {
 	})
 
 	t.Run("error deleting address", func(t *testing.T) {
-		mock.ExpectQuery(regexp.QuoteMeta(querySaveAddress)).
+		mock.ExpectQuery(regexp.QuoteMeta(queryDeleteAddress)).
 			WithArgs(a.ID).
 			WillReturnError(web.ErrInternalServerError)
 

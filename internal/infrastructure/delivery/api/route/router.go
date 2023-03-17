@@ -45,14 +45,19 @@ func configureRoutes(router *chi.Mux) {
 		r.Post("/users/observer/driver", handler.AddObservedUserInObserverUser)
 		r.Delete("/users/observer/driver/{id}", handler.DeleteObservedUserInObserverUser)
 
-		r.Get("/school-bus/{id}", handler.GetSchoolBus)
-		r.Post("/school-bus", handler.SaveSchoolBus)
-		r.Put("/school-bus", handler.UpdateSchoolBus)
-		r.Delete("/school-bus/{id}", handler.DeleteSchoolBus)
+		r.Get("/school-buses/{id}", handler.GetSchoolBus)
+		r.Post("/school-buses", handler.SaveSchoolBus)
+		r.Put("/school-buses", handler.UpdateSchoolBus)
+		r.Delete("/school-buses/{id}", handler.DeleteSchoolBus)
 
-		r.Get("/address/{id}", handler.GetAddress)
-		r.Post("/address", handler.SaveAddress)
-		r.Put("/address", handler.UpdateAddress)
-		r.Delete("/address/{id}", handler.DeleteAddress)
+		r.Get("/addresses/{id}", handler.GetAddress)
+		r.Post("/addresses", handler.SaveAddress)
+		r.Put("/addresses", handler.UpdateAddress)
+		r.Delete("/addresses/{id}", handler.DeleteAddress)
+
+		r.Get("/children/{id}", handler.GetChild)
+		r.Post("/children", handler.SaveChild)
+		r.Put("/children", handler.UpdateChild)
+		r.Delete("/children/{id}", handler.DeleteChild)
 	})
 }
