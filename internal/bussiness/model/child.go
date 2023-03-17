@@ -19,3 +19,7 @@ var childValidate = validator.New()
 func (c Child) Validate() error {
 	return childValidate.Struct(c)
 }
+
+func (c Child) ValidateID() bool {
+	return c.ID != 0
+}
