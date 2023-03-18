@@ -20,9 +20,11 @@ type UserRepository interface {
 	GetObservedUser(uint64) (*model.ObservedUser, error)
 	SaveObservedUser(model.ObservedUser) (*model.ObservedUser, error)
 	UpdateObservedUser(model.ObservedUser) (*model.ObservedUser, error)
+	DeleteObservedUser(uint64) error
 	GetObserverUser(uint64) (*model.ObserverUser, error)
 	SaveObserverUser(model.ObserverUser) (*model.ObserverUser, error)
 	UpdateObserverUser(model.ObserverUser) (*model.ObserverUser, error)
+	DeleteObserverUser(uint64) error
 	FindObservedUserByPrivacyKey(string) (*model.ObservedUser, error)
 	SaveObservedUserInObserverUser(uint64, uint64) error
 	DeleteObservedUserInObserverUser(uint64, uint64) error

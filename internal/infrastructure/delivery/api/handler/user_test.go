@@ -443,6 +443,73 @@ func TestUpdateObservedUser(t *testing.T) {
 	}
 }
 
+func TestDeleteUserObservedUser(t *testing.T) {
+	m := gomock.NewController(t)
+	defer m.Finish()
+
+	tests := []struct {
+		name         string
+		mock         func() *mock_usecase.MockUserUseCase
+		path         string
+		expectedCode int
+	}{
+		{
+			name: "error deleting observed user",
+			mock: func() *mock_usecase.MockUserUseCase {
+				mockUserUseCase := mock_usecase.NewMockUserUseCase(m)
+				return mockUserUseCase
+			},
+			path:         "/where/are/they/users/observed/invalid",
+			expectedCode: http.StatusBadRequest,
+		},
+		{
+			name: "not found error deleting observed user",
+			mock: func() *mock_usecase.MockUserUseCase {
+				mockUserUseCase := mock_usecase.NewMockUserUseCase(m)
+				mockUserUseCase.EXPECT().DeleteObservedUser(gomock.Any(), gomock.Any()).Return(web.ErrNotFound)
+				return mockUserUseCase
+			},
+			path:         "/where/are/they/users/observed/20",
+			expectedCode: http.StatusNotFound,
+		},
+		{
+			name: "unsuccessful delete observed user",
+			mock: func() *mock_usecase.MockUserUseCase {
+				mockUserUseCase := mock_usecase.NewMockUserUseCase(m)
+				mockUserUseCase.EXPECT().DeleteObservedUser(gomock.Any(), gomock.Any()).Return(web.ErrInternalServerError)
+				return mockUserUseCase
+			},
+			path:         "/where/are/they/users/observed/2",
+			expectedCode: http.StatusInternalServerError,
+		},
+		{
+			name: "successful delete observed user",
+			mock: func() *mock_usecase.MockUserUseCase {
+				mockUserUseCase := mock_usecase.NewMockUserUseCase(m)
+				mockUserUseCase.EXPECT().DeleteObservedUser(gomock.Any(), gomock.Any()).Return(nil)
+				return mockUserUseCase
+			},
+			path:         "/where/are/they/users/observed/2",
+			expectedCode: http.StatusOK,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			w := httptest.NewRecorder()
+			r, err := http.NewRequest(http.MethodDelete, test.path, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+			r.Header.Set("Content-Type", "application/json")
+
+			d := mock_middleware.Dependencies{UserUseCase: test.mock()}
+			router := configureRoutes(d)
+			router.ServeHTTP(w, r)
+			assert.Equalf(t, test.expectedCode, w.Code, "Expected code %v, received %v", test.expectedCode, w.Code)
+		})
+	}
+}
+
 func TestCreateObserverUser(t *testing.T) {
 	body := `{
 				"user": {
@@ -622,6 +689,73 @@ func TestUpdateObserverUser(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			w := httptest.NewRecorder()
 			r, err := http.NewRequest(http.MethodPut, test.path, bytes.NewBuffer([]byte(test.body)))
+			if err != nil {
+				t.Fatal(err)
+			}
+			r.Header.Set("Content-Type", "application/json")
+
+			d := mock_middleware.Dependencies{UserUseCase: test.mock()}
+			router := configureRoutes(d)
+			router.ServeHTTP(w, r)
+			assert.Equalf(t, test.expectedCode, w.Code, "Expected code %v, received %v", test.expectedCode, w.Code)
+		})
+	}
+}
+
+func TestDeleteUserObserverUser(t *testing.T) {
+	m := gomock.NewController(t)
+	defer m.Finish()
+
+	tests := []struct {
+		name         string
+		mock         func() *mock_usecase.MockUserUseCase
+		path         string
+		expectedCode int
+	}{
+		{
+			name: "error deleting observer user",
+			mock: func() *mock_usecase.MockUserUseCase {
+				mockUserUseCase := mock_usecase.NewMockUserUseCase(m)
+				return mockUserUseCase
+			},
+			path:         "/where/are/they/users/observer/invalid",
+			expectedCode: http.StatusBadRequest,
+		},
+		{
+			name: "not found error deleting observer user",
+			mock: func() *mock_usecase.MockUserUseCase {
+				mockUserUseCase := mock_usecase.NewMockUserUseCase(m)
+				mockUserUseCase.EXPECT().DeleteObserverUser(gomock.Any(), gomock.Any()).Return(web.ErrNotFound)
+				return mockUserUseCase
+			},
+			path:         "/where/are/they/users/observer/20",
+			expectedCode: http.StatusNotFound,
+		},
+		{
+			name: "unsuccessful delete observer user",
+			mock: func() *mock_usecase.MockUserUseCase {
+				mockUserUseCase := mock_usecase.NewMockUserUseCase(m)
+				mockUserUseCase.EXPECT().DeleteObserverUser(gomock.Any(), gomock.Any()).Return(web.ErrInternalServerError)
+				return mockUserUseCase
+			},
+			path:         "/where/are/they/users/observer/2",
+			expectedCode: http.StatusInternalServerError,
+		},
+		{
+			name: "successful delete observer user",
+			mock: func() *mock_usecase.MockUserUseCase {
+				mockUserUseCase := mock_usecase.NewMockUserUseCase(m)
+				mockUserUseCase.EXPECT().DeleteObserverUser(gomock.Any(), gomock.Any()).Return(nil)
+				return mockUserUseCase
+			},
+			path:         "/where/are/they/users/observer/2",
+			expectedCode: http.StatusOK,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			w := httptest.NewRecorder()
+			r, err := http.NewRequest(http.MethodDelete, test.path, nil)
 			if err != nil {
 				t.Fatal(err)
 			}

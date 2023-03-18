@@ -671,6 +671,73 @@ func TestGetObservedUser(t *testing.T) {
 	})
 }
 
+func TestDeleteObservedUser(t *testing.T) {
+	db, mock := NewMock()
+	defer db.Close()
+
+	gdb, err := gorm.Open(mysql.New(mysql.Config{Conn: db, SkipInitializeWithVersion: true}), &gorm.Config{})
+	if err != nil {
+		log.Error("error opening database connection")
+	}
+
+	ur := NewUserRepository(gdb, context.Background())
+
+	t.Run("delete observed user successful", func(t *testing.T) {
+		mock.ExpectBegin()
+		// note this line is important for unordered expectation matching
+		mock.MatchExpectationsInOrder(false)
+		mock.
+			ExpectExec(regexp.QuoteMeta(queryDeleteObservedUser)).
+			WithArgs(observed.User.ID).
+			WillReturnResult(sqlmock.NewResult(int64(1), 1))
+
+		mock.
+			ExpectExec(regexp.QuoteMeta(queryDeleteUser)).
+			WithArgs(observed.User.ID).
+			WillReturnResult(sqlmock.NewResult(int64(1), 1))
+
+		mock.ExpectCommit()
+
+		err := ur.DeleteObservedUser(observed.User.ID)
+		assert.NoError(t, err)
+	})
+
+	t.Run("delete user error deleting observed user", func(t *testing.T) {
+		mock.ExpectBegin()
+		// note this line is important for unordered expectation matching
+		mock.MatchExpectationsInOrder(false)
+		mock.
+			ExpectExec(regexp.QuoteMeta(queryDeleteObservedUser)).
+			WithArgs(observed.User.ID).
+			WillReturnError(errors.New("some error"))
+
+		mock.ExpectCommit()
+
+		err = ur.DeleteObservedUser(observed.User.ID)
+		assert.NotNil(t, err)
+	})
+
+	t.Run("SaveUser error deleting user", func(t *testing.T) {
+		mock.ExpectBegin()
+		// note this line is important for unordered expectation matching
+		mock.MatchExpectationsInOrder(false)
+		mock.
+			ExpectExec(regexp.QuoteMeta(queryDeleteObservedUser)).
+			WithArgs(observed.User.ID).
+			WillReturnResult(sqlmock.NewResult(int64(1), 1))
+
+		mock.
+			ExpectExec(regexp.QuoteMeta(queryDeleteUser)).
+			WithArgs(observed.User.ID).
+			WillReturnError(errors.New("some error"))
+
+		mock.ExpectCommit()
+
+		err := ur.DeleteObservedUser(observed.User.ID)
+		assert.NotNil(t, err)
+	})
+}
+
 var observer = model.ObserverUser{
 	User: model.User{
 		ID:        2,
@@ -823,6 +890,73 @@ func TestUpdateObserverUser(t *testing.T) {
 
 		user, err := ur.UpdateObserverUser(observer)
 		assert.Nil(t, user)
+		assert.NotNil(t, err)
+	})
+}
+
+func TestDeleteObserverUser(t *testing.T) {
+	db, mock := NewMock()
+	defer db.Close()
+
+	gdb, err := gorm.Open(mysql.New(mysql.Config{Conn: db, SkipInitializeWithVersion: true}), &gorm.Config{})
+	if err != nil {
+		log.Error("error opening database connection")
+	}
+
+	ur := NewUserRepository(gdb, context.Background())
+
+	t.Run("delete observer user successful", func(t *testing.T) {
+		mock.ExpectBegin()
+		// note this line is important for unordered expectation matching
+		mock.MatchExpectationsInOrder(false)
+		mock.
+			ExpectExec(regexp.QuoteMeta(queryDeleteObserverUser)).
+			WithArgs(observer.User.ID).
+			WillReturnResult(sqlmock.NewResult(int64(1), 1))
+
+		mock.
+			ExpectExec(regexp.QuoteMeta(queryDeleteUser)).
+			WithArgs(observer.User.ID).
+			WillReturnResult(sqlmock.NewResult(int64(1), 1))
+
+		mock.ExpectCommit()
+
+		err = ur.DeleteObserverUser(observer.User.ID)
+		assert.NoError(t, err)
+	})
+
+	t.Run("delete user error deleting observer user", func(t *testing.T) {
+		mock.ExpectBegin()
+		// note this line is important for unordered expectation matching
+		mock.MatchExpectationsInOrder(false)
+		mock.
+			ExpectExec(regexp.QuoteMeta(queryDeleteObserverUser)).
+			WithArgs(observer.User.ID).
+			WillReturnError(errors.New("some error"))
+
+		mock.ExpectCommit()
+
+		err = ur.DeleteObserverUser(observer.User.ID)
+		assert.NotNil(t, err)
+	})
+
+	t.Run("delete user error deleting user", func(t *testing.T) {
+		mock.ExpectBegin()
+		// note this line is important for unordered expectation matching
+		mock.MatchExpectationsInOrder(false)
+		mock.
+			ExpectExec(regexp.QuoteMeta(queryDeleteObserverUser)).
+			WithArgs(observer.User.ID).
+			WillReturnResult(sqlmock.NewResult(int64(1), 1))
+
+		mock.
+			ExpectExec(regexp.QuoteMeta(queryDeleteUser)).
+			WithArgs(observer.User.ID).
+			WillReturnError(errors.New("some error"))
+
+		mock.ExpectCommit()
+
+		err = ur.DeleteObserverUser(observer.User.ID)
 		assert.NotNil(t, err)
 	})
 }

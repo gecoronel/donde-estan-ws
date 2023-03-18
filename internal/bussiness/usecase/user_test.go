@@ -439,6 +439,74 @@ func TestUseCaseUpdateObservedUser(t *testing.T) {
 	}
 }
 
+func TestUseCaseDeleteObservedUser(t *testing.T) {
+	m := gomock.NewController(t)
+	defer m.Finish()
+
+	tests := []struct {
+		name          string
+		mock          func() *mock_gateway.MockUserRepository
+		input         uint64
+		expectedError error
+	}{
+		{
+			name: "error deleting observed user",
+			mock: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				mockUserRepository.EXPECT().Get(gomock.Any()).Return(&user, nil)
+				mockUserRepository.EXPECT().DeleteObservedUser(gomock.Any()).Return(web.ErrInternalServerError)
+				return mockUserRepository
+			},
+			input:         user.ID,
+			expectedError: web.ErrInternalServerError,
+		},
+		{
+			name: "not found error deleting observed user",
+			mock: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				mockUserRepository.EXPECT().Get(gomock.Any()).Return(nil, nil)
+				return mockUserRepository
+			},
+			input:         user.ID,
+			expectedError: web.ErrNotFound,
+		},
+		{
+			name: "error getting user",
+			mock: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				mockUserRepository.EXPECT().Get(gomock.Any()).Return(nil, web.ErrInternalServerError)
+				return mockUserRepository
+			},
+			input:         user.ID,
+			expectedError: web.ErrInternalServerError,
+		},
+		{
+			name: "successful delete observed user",
+			mock: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				mockUserRepository.EXPECT().Get(gomock.Any()).Return(&user, nil)
+				mockUserRepository.EXPECT().DeleteObservedUser(gomock.Any()).Return(nil)
+				return mockUserRepository
+			},
+			input:         user.ID,
+			expectedError: nil,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			mockUserRepository := test.mock()
+
+			context := getContextUser(mockUserRepository)
+			serviceLocator := ctx.GetServiceLocator(context)
+			uc := serviceLocator.GetInstance(UserUseCaseType).(UserUseCase)
+
+			err := uc.DeleteObservedUser(test.input, serviceLocator)
+
+			assert.Equalf(t, test.expectedError, err, "Expected error %v, received %d", test.expectedError, err)
+		})
+	}
+}
+
 func TestUseCaseCreateObserverUser(t *testing.T) {
 	m := gomock.NewController(t)
 	defer m.Finish()
@@ -608,6 +676,74 @@ func TestUseCaseUpdateObserverUser(t *testing.T) {
 			u, err := uc.UpdateObserverUser(test.input, serviceLocator)
 
 			assert.Equalf(t, test.expectedUser, u, "Expected user %v, received %v", test.expectedUser, u)
+			assert.Equalf(t, test.expectedError, err, "Expected error %v, received %d", test.expectedError, err)
+		})
+	}
+}
+
+func TestUseCaseDeleteObserverUser(t *testing.T) {
+	m := gomock.NewController(t)
+	defer m.Finish()
+
+	tests := []struct {
+		name          string
+		mock          func() *mock_gateway.MockUserRepository
+		input         uint64
+		expectedError error
+	}{
+		{
+			name: "error deleting observer user",
+			mock: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				mockUserRepository.EXPECT().Get(gomock.Any()).Return(&user, nil)
+				mockUserRepository.EXPECT().DeleteObserverUser(gomock.Any()).Return(web.ErrInternalServerError)
+				return mockUserRepository
+			},
+			input:         user.ID,
+			expectedError: web.ErrInternalServerError,
+		},
+		{
+			name: "not found error deleting observer user",
+			mock: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				mockUserRepository.EXPECT().Get(gomock.Any()).Return(nil, nil)
+				return mockUserRepository
+			},
+			input:         user.ID,
+			expectedError: web.ErrNotFound,
+		},
+		{
+			name: "error getting user",
+			mock: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				mockUserRepository.EXPECT().Get(gomock.Any()).Return(nil, web.ErrInternalServerError)
+				return mockUserRepository
+			},
+			input:         user.ID,
+			expectedError: web.ErrInternalServerError,
+		},
+		{
+			name: "successful delete observer user",
+			mock: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				mockUserRepository.EXPECT().Get(gomock.Any()).Return(&user, nil)
+				mockUserRepository.EXPECT().DeleteObserverUser(gomock.Any()).Return(nil)
+				return mockUserRepository
+			},
+			input:         user.ID,
+			expectedError: nil,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			mockUserRepository := test.mock()
+
+			context := getContextUser(mockUserRepository)
+			serviceLocator := ctx.GetServiceLocator(context)
+			uc := serviceLocator.GetInstance(UserUseCaseType).(UserUseCase)
+
+			err := uc.DeleteObserverUser(test.input, serviceLocator)
+
 			assert.Equalf(t, test.expectedError, err, "Expected error %v, received %d", test.expectedError, err)
 		})
 	}

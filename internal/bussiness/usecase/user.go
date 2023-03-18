@@ -27,6 +27,8 @@ type (
 		CreateObserverUser(model.ObserverUser, gateway.ServiceLocator) (*model.ObserverUser, error)
 		UpdateObservedUser(model.ObservedUser, gateway.ServiceLocator) (*model.ObservedUser, error)
 		UpdateObserverUser(model.ObserverUser, gateway.ServiceLocator) (*model.ObserverUser, error)
+		DeleteObservedUser(uint64, gateway.ServiceLocator) error
+		DeleteObserverUser(uint64, gateway.ServiceLocator) error
 		AddObservedUserInObserverUser(string, uint64, gateway.ServiceLocator) error
 		DeleteObservedUserInObserverUser(uint64, uint64, gateway.ServiceLocator) error
 	}
@@ -141,6 +143,46 @@ func (u userUseCase) UpdateObservedUser(observed model.ObservedUser, locator gat
 	}
 
 	return user, nil
+}
+
+func (u userUseCase) DeleteObservedUser(id uint64, locator gateway.ServiceLocator) error {
+	repository := locator.GetInstance(gateway.UserRepositoryType).(gateway.UserRepository)
+
+	user, err := repository.Get(id)
+	if err != nil {
+		return web.ErrInternalServerError
+	}
+
+	if user == nil {
+		return web.ErrNotFound
+	}
+
+	err = repository.DeleteObservedUser(id)
+	if err != nil {
+		return web.ErrInternalServerError
+	}
+
+	return nil
+}
+
+func (u userUseCase) DeleteObserverUser(id uint64, locator gateway.ServiceLocator) error {
+	repository := locator.GetInstance(gateway.UserRepositoryType).(gateway.UserRepository)
+
+	user, err := repository.Get(id)
+	if err != nil {
+		return web.ErrInternalServerError
+	}
+
+	if user == nil {
+		return web.ErrNotFound
+	}
+
+	err = repository.DeleteObserverUser(id)
+	if err != nil {
+		return web.ErrInternalServerError
+	}
+
+	return nil
 }
 
 func (u userUseCase) CreateObserverUser(observer model.ObserverUser, locator gateway.ServiceLocator) (

@@ -34,6 +34,20 @@ func (m *MockUserRepository) EXPECT() *MockUserRepositoryMockRecorder {
 	return m.recorder
 }
 
+// DeleteObservedUser mocks base method.
+func (m *MockUserRepository) DeleteObservedUser(arg0 uint64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteObservedUser", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteObservedUser indicates an expected call of DeleteObservedUser.
+func (mr *MockUserRepositoryMockRecorder) DeleteObservedUser(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteObservedUser", reflect.TypeOf((*MockUserRepository)(nil).DeleteObservedUser), arg0)
+}
+
 // DeleteObservedUserInObserverUser mocks base method.
 func (m *MockUserRepository) DeleteObservedUserInObserverUser(arg0, arg1 uint64) error {
 	m.ctrl.T.Helper()
@@ -46,6 +60,20 @@ func (m *MockUserRepository) DeleteObservedUserInObserverUser(arg0, arg1 uint64)
 func (mr *MockUserRepositoryMockRecorder) DeleteObservedUserInObserverUser(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteObservedUserInObserverUser", reflect.TypeOf((*MockUserRepository)(nil).DeleteObservedUserInObserverUser), arg0, arg1)
+}
+
+// DeleteObserverUser mocks base method.
+func (m *MockUserRepository) DeleteObserverUser(arg0 uint64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteObserverUser", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteObserverUser indicates an expected call of DeleteObserverUser.
+func (mr *MockUserRepositoryMockRecorder) DeleteObserverUser(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteObserverUser", reflect.TypeOf((*MockUserRepository)(nil).DeleteObserverUser), arg0)
 }
 
 // FindByEmail mocks base method.

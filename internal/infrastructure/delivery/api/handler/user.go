@@ -168,6 +168,34 @@ func UpdateObservedUser(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(user)
 }
 
+func DeleteObservedUser(w http.ResponseWriter, r *http.Request) {
+	serviceLocator := context.GetServiceLocator(r.Context())
+	useCase := serviceLocator.GetInstance(usecase.UserUseCaseType).(usecase.UserUseCase)
+
+	userID, err := strconv.ParseUint(chi.URLParam(r, "id"), 10, 0)
+	if err != nil {
+		log.Error("invalid id for delete of observed user")
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(web.NewError(http.StatusBadRequest, err.Error()))
+		return
+	}
+
+	err = useCase.DeleteObservedUser(userID, serviceLocator)
+	if err != nil {
+		log.Error("delete observed user failed: ", err)
+		w.Header().Set("Content-Type", "application/json")
+		httpStatusCode := utils.GetHTTPCodeByError(err)
+		w.WriteHeader(httpStatusCode)
+		_ = json.NewEncoder(w).Encode(web.NewError(httpStatusCode, err.Error()))
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(web.NewError(http.StatusOK, "observed user added"))
+}
+
 func CreateObserverUser(w http.ResponseWriter, r *http.Request) {
 	serviceLocator := context.GetServiceLocator(r.Context())
 	useCase := serviceLocator.GetInstance(usecase.UserUseCaseType).(usecase.UserUseCase)
@@ -253,6 +281,34 @@ func UpdateObserverUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(user)
+}
+
+func DeleteObserverUser(w http.ResponseWriter, r *http.Request) {
+	serviceLocator := context.GetServiceLocator(r.Context())
+	useCase := serviceLocator.GetInstance(usecase.UserUseCaseType).(usecase.UserUseCase)
+
+	userID, err := strconv.ParseUint(chi.URLParam(r, "id"), 10, 0)
+	if err != nil {
+		log.Error("invalid id for delete of observer user")
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(web.NewError(http.StatusBadRequest, err.Error()))
+		return
+	}
+
+	err = useCase.DeleteObserverUser(userID, serviceLocator)
+	if err != nil {
+		log.Error("delete observer user failed: ", err)
+		w.Header().Set("Content-Type", "application/json")
+		httpStatusCode := utils.GetHTTPCodeByError(err)
+		w.WriteHeader(httpStatusCode)
+		_ = json.NewEncoder(w).Encode(web.NewError(httpStatusCode, err.Error()))
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(web.NewError(http.StatusOK, "observed user added"))
 }
 
 func AddObservedUserInObserverUser(w http.ResponseWriter, r *http.Request) {
