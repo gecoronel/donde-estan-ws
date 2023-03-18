@@ -365,6 +365,80 @@ func TestUseCaseCreateObservedUser(t *testing.T) {
 	}
 }
 
+func TestUseCaseUpdateObservedUser(t *testing.T) {
+	m := gomock.NewController(t)
+	defer m.Finish()
+
+	tests := []struct {
+		name          string
+		mock          func() *mock_gateway.MockUserRepository
+		input         model.ObservedUser
+		expectedUser  *model.ObservedUser
+		expectedError error
+	}{
+		{
+			name: "error update observed user",
+			mock: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				mockUserRepository.EXPECT().Get(gomock.Any()).Return(&observedUser.User, nil)
+				mockUserRepository.EXPECT().UpdateObservedUser(gomock.Any()).Return(nil, web.ErrInternalServerError)
+				return mockUserRepository
+			},
+			input:         observedUser,
+			expectedUser:  nil,
+			expectedError: web.ErrInternalServerError,
+		},
+		{
+			name: "not found error by username updating observed user",
+			mock: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				mockUserRepository.EXPECT().Get(gomock.Any()).Return(nil, nil)
+				return mockUserRepository
+			},
+			input:         observedUser,
+			expectedUser:  nil,
+			expectedError: web.ErrNotFound,
+		},
+		{
+			name: "error in get user updating observed user",
+			mock: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				mockUserRepository.EXPECT().Get(gomock.Any()).Return(nil, web.ErrInternalServerError)
+				return mockUserRepository
+			},
+			input:         observedUser,
+			expectedUser:  nil,
+			expectedError: web.ErrInternalServerError,
+		},
+		{
+			name: "successful updating observed user",
+			mock: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				mockUserRepository.EXPECT().Get(gomock.Any()).Return(&observedUser.User, nil)
+				mockUserRepository.EXPECT().UpdateObservedUser(gomock.Any()).Return(&observedUser, nil)
+				return mockUserRepository
+			},
+			input:         observedUser,
+			expectedUser:  &observedUser,
+			expectedError: nil,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			mockUserRepository := test.mock()
+
+			context := getContextUser(mockUserRepository)
+			serviceLocator := ctx.GetServiceLocator(context)
+			uc := serviceLocator.GetInstance(UserUseCaseType).(UserUseCase)
+
+			u, err := uc.UpdateObservedUser(test.input, serviceLocator)
+
+			assert.Equalf(t, test.expectedUser, u, "Expected user %v, received %v", test.expectedUser, u)
+			assert.Equalf(t, test.expectedError, err, "Expected error %v, received %d", test.expectedError, err)
+		})
+	}
+}
+
 func TestUseCaseCreateObserverUser(t *testing.T) {
 	m := gomock.NewController(t)
 	defer m.Finish()
@@ -458,6 +532,80 @@ func TestUseCaseCreateObserverUser(t *testing.T) {
 			uc := serviceLocator.GetInstance(UserUseCaseType).(UserUseCase)
 
 			u, err := uc.CreateObserverUser(test.input, serviceLocator)
+
+			assert.Equalf(t, test.expectedUser, u, "Expected user %v, received %v", test.expectedUser, u)
+			assert.Equalf(t, test.expectedError, err, "Expected error %v, received %d", test.expectedError, err)
+		})
+	}
+}
+
+func TestUseCaseUpdateObserverUser(t *testing.T) {
+	m := gomock.NewController(t)
+	defer m.Finish()
+
+	tests := []struct {
+		name          string
+		mock          func() *mock_gateway.MockUserRepository
+		input         model.ObserverUser
+		expectedUser  *model.ObserverUser
+		expectedError error
+	}{
+		{
+			name: "error update observer user",
+			mock: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				mockUserRepository.EXPECT().Get(gomock.Any()).Return(&observerUser.User, nil)
+				mockUserRepository.EXPECT().UpdateObserverUser(gomock.Any()).Return(nil, web.ErrInternalServerError)
+				return mockUserRepository
+			},
+			input:         observerUser,
+			expectedUser:  nil,
+			expectedError: web.ErrInternalServerError,
+		},
+		{
+			name: "not found error by username updating observer user",
+			mock: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				mockUserRepository.EXPECT().Get(gomock.Any()).Return(nil, nil)
+				return mockUserRepository
+			},
+			input:         observerUser,
+			expectedUser:  nil,
+			expectedError: web.ErrNotFound,
+		},
+		{
+			name: "error in find by username updating observer user",
+			mock: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				mockUserRepository.EXPECT().Get(gomock.Any()).Return(nil, web.ErrInternalServerError)
+				return mockUserRepository
+			},
+			input:         observerUser,
+			expectedUser:  nil,
+			expectedError: web.ErrInternalServerError,
+		},
+		{
+			name: "successful updating observer user",
+			mock: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				mockUserRepository.EXPECT().Get(gomock.Any()).Return(&observerUser.User, nil)
+				mockUserRepository.EXPECT().UpdateObserverUser(gomock.Any()).Return(&observerUser, nil)
+				return mockUserRepository
+			},
+			input:         observerUser,
+			expectedUser:  &observerUser,
+			expectedError: nil,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			mockUserRepository := test.mock()
+
+			context := getContextUser(mockUserRepository)
+			serviceLocator := ctx.GetServiceLocator(context)
+			uc := serviceLocator.GetInstance(UserUseCaseType).(UserUseCase)
+
+			u, err := uc.UpdateObserverUser(test.input, serviceLocator)
 
 			assert.Equalf(t, test.expectedUser, u, "Expected user %v, received %v", test.expectedUser, u)
 			assert.Equalf(t, test.expectedError, err, "Expected error %v, received %d", test.expectedError, err)

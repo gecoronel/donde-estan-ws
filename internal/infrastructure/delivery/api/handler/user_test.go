@@ -318,6 +318,131 @@ func TestCreateObservedUser(t *testing.T) {
 	}
 }
 
+func TestUpdateObservedUser(t *testing.T) {
+	body := `{
+				"user": {
+					"id": 1,
+					"name": "Juan",
+					"last_name": "Perez",
+					"id_number": "12345678",
+					"username": "jperez",
+					"password": "jperez1234",
+					"email": "jperez@mail.com",
+					"enabled": true,
+					"type": "observed"
+				},
+				"privacy_key": "juan.perez.1234",
+				"company_name": "company school bus",
+				"school_bus": {
+					"id": "0000-0000-0004",
+					"license_plate": "11AAA22",
+					"model": "Master",
+					"brand": "Renault",
+					"license": "111"
+				}
+			}`
+
+	m := gomock.NewController(t)
+	defer m.Finish()
+
+	tests := []struct {
+		name         string
+		mock         func() *mock_usecase.MockUserUseCase
+		path         string
+		body         string
+		expectedCode int
+	}{
+		{
+			name: "bad request for handler update observed user",
+			mock: func() *mock_usecase.MockUserUseCase {
+				mockUserUseCase := mock_usecase.NewMockUserUseCase(m)
+				return mockUserUseCase
+			},
+			path:         "/where/are/they/users/observed",
+			body:         `invalid`,
+			expectedCode: http.StatusBadRequest,
+		},
+		{
+			name: "bad request in update validation",
+			mock: func() *mock_usecase.MockUserUseCase {
+				mockUserUseCase := mock_usecase.NewMockUserUseCase(m)
+				return mockUserUseCase
+			},
+			path:         "/where/are/they/users/observed",
+			body:         `{"user": {"username": "jperez"}}`,
+			expectedCode: http.StatusBadRequest,
+		},
+		{
+			name: "bad request in update validation without id",
+			mock: func() *mock_usecase.MockUserUseCase {
+				mockUserUseCase := mock_usecase.NewMockUserUseCase(m)
+				return mockUserUseCase
+			},
+			path: "/where/are/they/users/observed",
+			body: `{
+				"user": {
+					"name": "Juan",
+					"last_name": "Perez",
+					"id_number": "12345678",
+					"username": "jperez",
+					"password": "jperez1234",
+					"email": "jperez@mail.com",
+					"enabled": true,
+					"type": "observed"
+				},
+				"privacy_key": "juan.perez.1234",
+				"company_name": "company school bus",
+				"school_bus": {
+					"id": "0000-0000-0004",
+					"license_plate": "11AAA22",
+					"model": "Master",
+					"brand": "Renault",
+					"license": "111"
+				}
+			}`,
+			expectedCode: http.StatusBadRequest,
+		},
+		{
+			name: "successful update",
+			mock: func() *mock_usecase.MockUserUseCase {
+				mockUserUseCase := mock_usecase.NewMockUserUseCase(m)
+				mockUserUseCase.EXPECT().UpdateObservedUser(gomock.Any(), gomock.Any()).Return(&observedUser, nil)
+				return mockUserUseCase
+			},
+			path:         "/where/are/they/users/observed",
+			body:         body,
+			expectedCode: http.StatusOK,
+		},
+		{
+			name: "unsuccessful update",
+			mock: func() *mock_usecase.MockUserUseCase {
+				mockUserUseCase := mock_usecase.NewMockUserUseCase(m)
+				mockUserUseCase.EXPECT().UpdateObservedUser(gomock.Any(), gomock.Any()).Return(nil,
+					web.ErrInternalServerError)
+				return mockUserUseCase
+			},
+			path:         "/where/are/they/users/observed",
+			body:         body,
+			expectedCode: http.StatusInternalServerError,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			w := httptest.NewRecorder()
+			r, err := http.NewRequest(http.MethodPut, test.path, bytes.NewBuffer([]byte(test.body)))
+			if err != nil {
+				t.Fatal(err)
+			}
+			r.Header.Set("Content-Type", "application/json")
+
+			d := mock_middleware.Dependencies{UserUseCase: test.mock()}
+			router := configureRoutes(d)
+			router.ServeHTTP(w, r)
+			assert.Equalf(t, test.expectedCode, w.Code, "Expected code %v, received %v", test.expectedCode, w.Code)
+		})
+	}
+}
+
 func TestCreateObserverUser(t *testing.T) {
 	body := `{
 				"user": {
@@ -390,6 +515,113 @@ func TestCreateObserverUser(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			w := httptest.NewRecorder()
 			r, err := http.NewRequest(http.MethodPost, test.path, bytes.NewBuffer([]byte(test.body)))
+			if err != nil {
+				t.Fatal(err)
+			}
+			r.Header.Set("Content-Type", "application/json")
+
+			d := mock_middleware.Dependencies{UserUseCase: test.mock()}
+			router := configureRoutes(d)
+			router.ServeHTTP(w, r)
+			assert.Equalf(t, test.expectedCode, w.Code, "Expected code %v, received %v", test.expectedCode, w.Code)
+		})
+	}
+}
+
+func TestUpdateObserverUser(t *testing.T) {
+	body := `{
+				"user": {
+					"id": 2,
+					"name": "Maria",
+					"last_name": "Dominguez",
+					"id_number": "12345678",
+					"username": "mdominguez",
+					"password": "mdominguez1234",
+					"email": "mdominguez@mail.com",
+					"enabled": true,
+					"type": "observer"
+				}
+			}`
+
+	m := gomock.NewController(t)
+	defer m.Finish()
+
+	tests := []struct {
+		name         string
+		mock         func() *mock_usecase.MockUserUseCase
+		path         string
+		body         string
+		expectedCode int
+	}{
+		{
+			name: "bad request for handler update observer user",
+			mock: func() *mock_usecase.MockUserUseCase {
+				mockUserUseCase := mock_usecase.NewMockUserUseCase(m)
+				return mockUserUseCase
+			},
+			path:         "/where/are/they/users/observer",
+			body:         `invalid`,
+			expectedCode: http.StatusBadRequest,
+		},
+		{
+			name: "bad request in update validation",
+			mock: func() *mock_usecase.MockUserUseCase {
+				mockUserUseCase := mock_usecase.NewMockUserUseCase(m)
+				return mockUserUseCase
+			},
+			path:         "/where/are/they/users/observer",
+			body:         `{"user": {"username": "jperez"}}`,
+			expectedCode: http.StatusBadRequest,
+		},
+		{
+			name: "bad request in update validation without id",
+			mock: func() *mock_usecase.MockUserUseCase {
+				mockUserUseCase := mock_usecase.NewMockUserUseCase(m)
+				return mockUserUseCase
+			},
+			path: "/where/are/they/users/observer",
+			body: `{
+				"user": {
+					"name": "Maria",
+					"last_name": "Dominguez",
+					"id_number": "12345678",
+					"username": "mdominguez",
+					"password": "mdominguez1234",
+					"email": "mdominguez@mail.com",
+					"enabled": true,
+					"type": "observer"
+				}
+			}`,
+			expectedCode: http.StatusBadRequest,
+		},
+		{
+			name: "successful update",
+			mock: func() *mock_usecase.MockUserUseCase {
+				mockUserUseCase := mock_usecase.NewMockUserUseCase(m)
+				mockUserUseCase.EXPECT().UpdateObserverUser(gomock.Any(), gomock.Any()).Return(&observerUser, nil)
+				return mockUserUseCase
+			},
+			path:         "/where/are/they/users/observer",
+			body:         body,
+			expectedCode: http.StatusOK,
+		},
+		{
+			name: "unsuccessful update",
+			mock: func() *mock_usecase.MockUserUseCase {
+				mockUserUseCase := mock_usecase.NewMockUserUseCase(m)
+				mockUserUseCase.EXPECT().UpdateObserverUser(gomock.Any(), gomock.Any()).Return(nil,
+					web.ErrInternalServerError)
+				return mockUserUseCase
+			},
+			path:         "/where/are/they/users/observer",
+			body:         body,
+			expectedCode: http.StatusInternalServerError,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			w := httptest.NewRecorder()
+			r, err := http.NewRequest(http.MethodPut, test.path, bytes.NewBuffer([]byte(test.body)))
 			if err != nil {
 				t.Fatal(err)
 			}

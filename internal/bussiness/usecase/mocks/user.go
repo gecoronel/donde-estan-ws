@@ -152,3 +152,33 @@ func (mr *MockUserUseCaseMockRecorder) Login(arg0, arg1 interface{}) *gomock.Cal
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Login", reflect.TypeOf((*MockUserUseCase)(nil).Login), arg0, arg1)
 }
+
+// UpdateObservedUser mocks base method.
+func (m *MockUserUseCase) UpdateObservedUser(arg0 model.ObservedUser, arg1 gateway.ServiceLocator) (*model.ObservedUser, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateObservedUser", arg0, arg1)
+	ret0, _ := ret[0].(*model.ObservedUser)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateObservedUser indicates an expected call of UpdateObservedUser.
+func (mr *MockUserUseCaseMockRecorder) UpdateObservedUser(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateObservedUser", reflect.TypeOf((*MockUserUseCase)(nil).UpdateObservedUser), arg0, arg1)
+}
+
+// UpdateObserverUser mocks base method.
+func (m *MockUserUseCase) UpdateObserverUser(arg0 model.ObserverUser, arg1 gateway.ServiceLocator) (*model.ObserverUser, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateObserverUser", arg0, arg1)
+	ret0, _ := ret[0].(*model.ObserverUser)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateObserverUser indicates an expected call of UpdateObserverUser.
+func (mr *MockUserUseCaseMockRecorder) UpdateObserverUser(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateObserverUser", reflect.TypeOf((*MockUserUseCase)(nil).UpdateObserverUser), arg0, arg1)
+}

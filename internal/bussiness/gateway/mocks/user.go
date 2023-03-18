@@ -196,3 +196,33 @@ func (mr *MockUserRepositoryMockRecorder) SaveObserverUser(arg0 interface{}) *go
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveObserverUser", reflect.TypeOf((*MockUserRepository)(nil).SaveObserverUser), arg0)
 }
+
+// UpdateObservedUser mocks base method.
+func (m *MockUserRepository) UpdateObservedUser(arg0 model.ObservedUser) (*model.ObservedUser, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateObservedUser", arg0)
+	ret0, _ := ret[0].(*model.ObservedUser)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateObservedUser indicates an expected call of UpdateObservedUser.
+func (mr *MockUserRepositoryMockRecorder) UpdateObservedUser(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateObservedUser", reflect.TypeOf((*MockUserRepository)(nil).UpdateObservedUser), arg0)
+}
+
+// UpdateObserverUser mocks base method.
+func (m *MockUserRepository) UpdateObserverUser(arg0 model.ObserverUser) (*model.ObserverUser, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateObserverUser", arg0)
+	ret0, _ := ret[0].(*model.ObserverUser)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateObserverUser indicates an expected call of UpdateObserverUser.
+func (mr *MockUserRepositoryMockRecorder) UpdateObserverUser(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateObserverUser", reflect.TypeOf((*MockUserRepository)(nil).UpdateObserverUser), arg0)
+}

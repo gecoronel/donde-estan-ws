@@ -124,6 +124,50 @@ func CreateObservedUser(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(user)
 }
 
+func UpdateObservedUser(w http.ResponseWriter, r *http.Request) {
+	serviceLocator := context.GetServiceLocator(r.Context())
+	useCase := serviceLocator.GetInstance(usecase.UserUseCaseType).(usecase.UserUseCase)
+
+	var (
+		observedUser model.ObservedUser
+		err          error
+	)
+
+	d := json.NewDecoder(r.Body)
+	d.DisallowUnknownFields()
+	if err = d.Decode(&observedUser); err != nil {
+		log.Error("invalid body for update of observed user")
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(web.NewError(http.StatusBadRequest, err.Error()))
+		return
+	}
+
+	if err = observedUser.Validate(); err != nil || !observedUser.User.ValidateID() {
+		log.Error("validation failed for update of observed user")
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(
+			web.NewError(http.StatusBadRequest, "validation failed for update of observed user"),
+		)
+		return
+	}
+
+	user, err := useCase.UpdateObservedUser(observedUser, serviceLocator)
+	if err != nil {
+		log.Error("update observed user failed: ", err)
+		w.Header().Set("Content-Type", "application/json")
+		httpStatusCode := utils.GetHTTPCodeByError(err)
+		w.WriteHeader(httpStatusCode)
+		_ = json.NewEncoder(w).Encode(web.NewError(httpStatusCode, err.Error()))
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(user)
+}
+
 func CreateObserverUser(w http.ResponseWriter, r *http.Request) {
 	serviceLocator := context.GetServiceLocator(r.Context())
 	useCase := serviceLocator.GetInstance(usecase.UserUseCaseType).(usecase.UserUseCase)
@@ -155,6 +199,50 @@ func CreateObserverUser(w http.ResponseWriter, r *http.Request) {
 	user, err = useCase.CreateObserverUser(observerUser, serviceLocator)
 	if err != nil {
 		log.Error("creation observer user failed ", err)
+		w.Header().Set("Content-Type", "application/json")
+		httpStatusCode := utils.GetHTTPCodeByError(err)
+		w.WriteHeader(httpStatusCode)
+		_ = json.NewEncoder(w).Encode(web.NewError(httpStatusCode, err.Error()))
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(user)
+}
+
+func UpdateObserverUser(w http.ResponseWriter, r *http.Request) {
+	serviceLocator := context.GetServiceLocator(r.Context())
+	useCase := serviceLocator.GetInstance(usecase.UserUseCaseType).(usecase.UserUseCase)
+
+	var (
+		observerUser model.ObserverUser
+		err          error
+	)
+
+	d := json.NewDecoder(r.Body)
+	d.DisallowUnknownFields()
+	if err = d.Decode(&observerUser); err != nil {
+		log.Error("invalid body for update of observer user")
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(web.NewError(http.StatusBadRequest, err.Error()))
+		return
+	}
+
+	if err = observerUser.Validate(); err != nil || !observerUser.User.ValidateID() {
+		log.Error("validation failed for update of observer user")
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(
+			web.NewError(http.StatusBadRequest, "validation failed for update of observer user"),
+		)
+		return
+	}
+
+	user, err := useCase.UpdateObserverUser(observerUser, serviceLocator)
+	if err != nil {
+		log.Error("update observer user failed: ", err)
 		w.Header().Set("Content-Type", "application/json")
 		httpStatusCode := utils.GetHTTPCodeByError(err)
 		w.WriteHeader(httpStatusCode)
