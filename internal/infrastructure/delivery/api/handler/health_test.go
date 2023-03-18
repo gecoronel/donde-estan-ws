@@ -43,6 +43,8 @@ func configureRoutes(d mock_middleware.Dependencies) *chi.Mux {
 		r.Post("/users/observer", CreateObserverUser)
 		r.Put("/users/observed", UpdateObservedUser)
 		r.Put("/users/observer", UpdateObserverUser)
+		r.Delete("/users/observed/{id}", DeleteObservedUser)
+		r.Delete("/users/observer/{id}", DeleteObserverUser)
 		r.Post("/users/observer/driver", AddObservedUserInObserverUser)
 		r.Delete("/users/observer/driver/{id}", DeleteObservedUserInObserverUser)
 

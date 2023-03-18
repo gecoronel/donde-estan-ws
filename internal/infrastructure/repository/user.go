@@ -28,11 +28,8 @@ const (
 		UPDATE Users SET privacy_key = ?, company_name = ?, school_bus_id = ?
 		WHERE user_id = ?;
 	`
-	querySelectUserIDByID       = `SELECT u.id FROM Users AS u WHERE u.id = @id`
 	querySelectUserIDByUsername = `SELECT id FROM Users WHERE username = ?`
-	querySelectUserIDByEmail    = `SELECT u.id FROM Users AS u WHERE email = @email`
-
-	queryGetObservedUser = `
+	queryGetObservedUser        = `
 		SELECT u.id, u.name, u.last_name, u.id_number, u.username, u.password, u.email, u.type, u.enabled, 
 		       ou.privacy_key, ou.company_name, sb.id, sb.license_plate, sb.model, sb.brand, sb.license, 
 		       sb.created_at, sb.updated_at 
@@ -83,6 +80,18 @@ const (
 	querySaveObservedUserInObserverUser = `
 		INSERT INTO ObservedUsersObserverUsers (observed_user_id, observer_user_id)
 		VALUES (1, 3);
+	`
+	queryDeleteUser = `
+		DELETE FROM Users
+		WHERE id = ?;
+	`
+	queryDeleteObserverUser = `
+		DELETE FROM ObserverUsers
+		WHERE user_id = ?;
+	`
+	queryDeleteObservedUser = `
+		DELETE FROM ObservedUsers
+		WHERE user_id = ?;
 	`
 	queryDeleteObservedUserInObserverUser = `
 		DELETE FROM ObservedUsersObserverUsers
@@ -300,6 +309,34 @@ func (r UserRepository) UpdateObservedUser(u model.ObservedUser) (*model.Observe
 	return &u, nil
 }
 
+// DeleteObservedUser delete a observer user using UserRepository.
+func (r UserRepository) DeleteObservedUser(observedUserID uint64) error {
+	tx := r.DB.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			log.Error("recovering for error in delete observed user")
+			tx.Rollback()
+		}
+	}()
+
+	err := r.DB.Exec(queryDeleteObservedUser, observedUserID).Error
+	if err != nil {
+		log.Error("error deleting observed user")
+		tx.Rollback()
+		return err
+	}
+
+	err = tx.Exec(queryDeleteUser, observedUserID).Error
+	if err != nil {
+		log.Error("error deleting user")
+		tx.Rollback()
+		return err
+	}
+
+	tx.Commit()
+	return nil
+}
+
 // GetObserverUser obtains a observerUser using UserRepository by user_id
 func (r UserRepository) GetObserverUser(id uint64) (*model.ObserverUser, error) {
 	var (
@@ -400,6 +437,34 @@ func (r UserRepository) UpdateObserverUser(u model.ObserverUser) (*model.Observe
 	}
 
 	return &u, nil
+}
+
+// DeleteObserverUser delete a observer user using UserRepository.
+func (r UserRepository) DeleteObserverUser(observerUserID uint64) error {
+	tx := r.DB.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			log.Error("recovering for error in delete observer user")
+			tx.Rollback()
+		}
+	}()
+
+	err := r.DB.Exec(queryDeleteObserverUser, observerUserID).Error
+	if err != nil {
+		log.Error("error deleting observer user")
+		tx.Rollback()
+		return err
+	}
+
+	err = tx.Exec(queryDeleteUser, observerUserID).Error
+	if err != nil {
+		log.Error("error deleting user")
+		tx.Rollback()
+		return err
+	}
+
+	tx.Commit()
+	return nil
 }
 
 // FindObservedUserByPrivacyKey obtains a observedUser using UserRepository by privacy_key
