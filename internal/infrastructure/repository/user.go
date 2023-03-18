@@ -20,6 +20,14 @@ const (
 		INSERT INTO Users (name, last_name, id_number, username, password, email, type) 
 		VALUES (?, ?, ?, ?, ?, ?, ?)
 	`
+	queryUpdateUser = `
+		UPDATE Users SET name = ?, last_name = ?, id_number = ?, username = ?, password = ?, email = ?, type = ? 
+		WHERE id = ?;
+	`
+	queryUpdateObservedUser = `
+		UPDATE Users SET privacy_key = ?, company_name = ?, school_bus_id = ?
+		WHERE user_id = ?;
+	`
 	querySelectUserIDByID       = `SELECT u.id FROM Users AS u WHERE u.id = @id`
 	querySelectUserIDByUsername = `SELECT id FROM Users WHERE username = ?`
 	querySelectUserIDByEmail    = `SELECT u.id FROM Users AS u WHERE email = @email`
@@ -265,6 +273,33 @@ func (r UserRepository) SaveObservedUser(user model.ObservedUser) (*model.Observ
 	return &user, nil
 }
 
+// UpdateObservedUser update a observerUser using UserRepository
+func (r UserRepository) UpdateObservedUser(u model.ObservedUser) (*model.ObservedUser, error) {
+	tx := r.DB.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			log.Error("recovering for error in save observed user")
+			tx.Rollback()
+		}
+	}()
+
+	err := updateUserExec(tx, &u.User)
+	if err != nil {
+		log.Error("error updating user")
+		tx.Rollback()
+		return nil, err
+	}
+
+	err = updateObservedUserExec(tx, &u)
+	if err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	tx.Commit()
+	return &u, nil
+}
+
 // GetObserverUser obtains a observerUser using UserRepository by user_id
 func (r UserRepository) GetObserverUser(id uint64) (*model.ObserverUser, error) {
 	var (
@@ -353,6 +388,17 @@ func (r UserRepository) SaveObserverUser(u model.ObserverUser) (*model.ObserverU
 	}
 
 	tx.Commit()
+	return &u, nil
+}
+
+// UpdateObserverUser update a observerUser using UserRepository
+func (r UserRepository) UpdateObserverUser(u model.ObserverUser) (*model.ObserverUser, error) {
+	err := updateUserExec(r.DB, &u.User)
+	if err != nil {
+		log.Error("error updating user")
+		return nil, err
+	}
+
 	return &u, nil
 }
 
@@ -478,6 +524,30 @@ func saveUserExec(tx *gorm.DB, user *model.User) error {
 		user.Password,
 		user.Email,
 		user.Type,
+	).Error
+}
+
+func updateUserExec(tx *gorm.DB, user *model.User) error {
+	return tx.Exec(
+		queryUpdateUser,
+		user.Name,
+		user.LastName,
+		user.IDNumber,
+		user.Username,
+		user.Password,
+		user.Email,
+		user.Type,
+		user.ID,
+	).Error
+}
+
+func updateObservedUserExec(tx *gorm.DB, u *model.ObservedUser) error {
+	return tx.Exec(
+		queryUpdateObservedUser,
+		u.PrivacyKey,
+		u.CompanyName,
+		u.SchoolBus.ID,
+		u.User.ID,
 	).Error
 }
 

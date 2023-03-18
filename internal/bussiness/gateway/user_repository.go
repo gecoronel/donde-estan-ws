@@ -19,8 +19,10 @@ type UserRepository interface {
 	FindByEmail(string) (*model.User, error)
 	GetObservedUser(uint64) (*model.ObservedUser, error)
 	SaveObservedUser(model.ObservedUser) (*model.ObservedUser, error)
+	UpdateObservedUser(model.ObservedUser) (*model.ObservedUser, error)
 	GetObserverUser(uint64) (*model.ObserverUser, error)
 	SaveObserverUser(model.ObserverUser) (*model.ObserverUser, error)
+	UpdateObserverUser(model.ObserverUser) (*model.ObserverUser, error)
 	FindObservedUserByPrivacyKey(string) (*model.ObservedUser, error)
 	SaveObservedUserInObserverUser(uint64, uint64) error
 	DeleteObservedUserInObserverUser(uint64, uint64) error

@@ -25,6 +25,8 @@ type (
 		FindByEmail(string, gateway.ServiceLocator) (*model.User, error)
 		CreateObservedUser(model.ObservedUser, gateway.ServiceLocator) (*model.ObservedUser, error)
 		CreateObserverUser(model.ObserverUser, gateway.ServiceLocator) (*model.ObserverUser, error)
+		UpdateObservedUser(model.ObservedUser, gateway.ServiceLocator) (*model.ObservedUser, error)
+		UpdateObserverUser(model.ObserverUser, gateway.ServiceLocator) (*model.ObserverUser, error)
 		AddObservedUserInObserverUser(string, uint64, gateway.ServiceLocator) error
 		DeleteObservedUserInObserverUser(uint64, uint64, gateway.ServiceLocator) error
 	}
@@ -119,6 +121,28 @@ func (u userUseCase) CreateObservedUser(observed model.ObservedUser, locator gat
 	return user, nil
 }
 
+func (u userUseCase) UpdateObservedUser(observed model.ObservedUser, locator gateway.ServiceLocator) (
+	*model.ObservedUser,
+	error,
+) {
+	repository := locator.GetInstance(gateway.UserRepositoryType).(gateway.UserRepository)
+
+	odu, err := repository.Get(observed.User.ID)
+	if err != nil {
+		return nil, err
+	}
+	if odu == nil {
+		return nil, web.ErrNotFound
+	}
+
+	user, err := repository.UpdateObservedUser(observed)
+	if err != nil {
+		return nil, web.ErrInternalServerError
+	}
+
+	return user, nil
+}
+
 func (u userUseCase) CreateObserverUser(observer model.ObserverUser, locator gateway.ServiceLocator) (
 	*model.ObserverUser,
 	error,
@@ -142,6 +166,28 @@ func (u userUseCase) CreateObserverUser(observer model.ObserverUser, locator gat
 	}
 
 	user, err := repository.SaveObserverUser(observer)
+	if err != nil {
+		return nil, web.ErrInternalServerError
+	}
+
+	return user, nil
+}
+
+func (u userUseCase) UpdateObserverUser(observer model.ObserverUser, locator gateway.ServiceLocator) (
+	*model.ObserverUser,
+	error,
+) {
+	repository := locator.GetInstance(gateway.UserRepositoryType).(gateway.UserRepository)
+
+	oru, err := repository.Get(observer.User.ID)
+	if err != nil {
+		return nil, err
+	}
+	if oru == nil {
+		return nil, web.ErrNotFound
+	}
+
+	user, err := repository.UpdateObserverUser(observer)
 	if err != nil {
 		return nil, web.ErrInternalServerError
 	}

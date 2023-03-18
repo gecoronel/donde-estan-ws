@@ -437,7 +437,7 @@ func TestSaveObservedUser(t *testing.T) {
 		assert.NotNil(t, err)
 	})
 
-	t.Run("SaveObservedUser error savin observed user", func(t *testing.T) {
+	t.Run("SaveObservedUser error saving observed user", func(t *testing.T) {
 		mock.ExpectBegin()
 		// note this line is important for unordered expectation matching
 		mock.MatchExpectationsInOrder(false)
@@ -523,6 +523,80 @@ func TestSaveObservedUser(t *testing.T) {
 		mock.ExpectCommit()
 
 		user, err := ur.SaveObservedUser(observed)
+		assert.Nil(t, user)
+		assert.NotNil(t, err)
+	})
+}
+
+func TestUpdateObservedUser(t *testing.T) {
+	db, mock := NewMock()
+	defer db.Close()
+
+	gdb, err := gorm.Open(mysql.New(mysql.Config{Conn: db, SkipInitializeWithVersion: true}), &gorm.Config{})
+	if err != nil {
+		log.Error("error opening database connection")
+	}
+
+	ur := NewUserRepository(gdb, context.Background())
+
+	t.Run("UpdateObservedUser successful", func(t *testing.T) {
+		mock.ExpectBegin()
+		// note this line is important for unordered expectation matching
+		mock.MatchExpectationsInOrder(false)
+		mock.
+			ExpectExec(regexp.QuoteMeta(queryUpdateUser)).
+			WithArgs(observed.User.Name, observed.User.LastName, observed.User.IDNumber, observed.User.Username,
+				observed.User.Password, observed.User.Email, observed.User.Type, observed.User.ID).
+			WillReturnResult(sqlmock.NewResult(int64(1), 1))
+
+		mock.
+			ExpectExec(regexp.QuoteMeta(queryUpdateObservedUser)).
+			WithArgs(observed.PrivacyKey, observed.CompanyName, observed.SchoolBus.ID, observed.User.ID).
+			WillReturnResult(sqlmock.NewResult(int64(1), 1))
+
+		mock.ExpectCommit()
+
+		user, err := ur.UpdateObservedUser(observed)
+		assert.NotNil(t, user)
+		assert.NoError(t, err)
+		assert.Equal(t, observed.User.ID, user.User.ID)
+	})
+
+	t.Run("UpdateObservedUser error saving user", func(t *testing.T) {
+		mock.ExpectBegin()
+		// note this line is important for unordered expectation matching
+		mock.MatchExpectationsInOrder(false)
+		mock.
+			ExpectExec(regexp.QuoteMeta(queryUpdateUser)).
+			WithArgs(observed.User.Name, observed.User.LastName, observed.User.IDNumber, observed.User.Username,
+				observed.User.Password, observed.User.Email, observed.User.Type, observed.User.ID).
+			WillReturnError(errors.New("some error"))
+
+		mock.ExpectCommit()
+
+		user, err := ur.UpdateObservedUser(observed)
+		assert.Nil(t, user)
+		assert.NotNil(t, err)
+	})
+
+	t.Run("UpdateObservedUser error updating observed user", func(t *testing.T) {
+		mock.ExpectBegin()
+		// note this line is important for unordered expectation matching
+		mock.MatchExpectationsInOrder(false)
+		mock.
+			ExpectExec(regexp.QuoteMeta(queryUpdateUser)).
+			WithArgs(observed.User.Name, observed.User.LastName, observed.User.IDNumber, observed.User.Username,
+				observed.User.Password, observed.User.Email, observed.User.Type, observed.User.ID).
+			WillReturnResult(sqlmock.NewResult(int64(1), 1))
+
+		mock.
+			ExpectExec(regexp.QuoteMeta(queryUpdateObservedUser)).
+			WithArgs(observed.PrivacyKey, observed.CompanyName, observed.SchoolBus.ID, observed.User.ID).
+			WillReturnError(errors.New("some error"))
+
+		mock.ExpectCommit()
+
+		user, err := ur.UpdateObservedUser(observed)
 		assert.Nil(t, user)
 		assert.NotNil(t, err)
 	})
@@ -712,6 +786,45 @@ func TestSaveObserverUser(t *testing.T) {
 		assert.NotNil(t, err)
 	})
 
+}
+
+func TestUpdateObserverUser(t *testing.T) {
+	db, mock := NewMock()
+	defer db.Close()
+
+	gdb, err := gorm.Open(mysql.New(mysql.Config{Conn: db, SkipInitializeWithVersion: true}), &gorm.Config{})
+	if err != nil {
+		log.Error("error opening database connection")
+	}
+
+	ur := NewUserRepository(gdb, context.Background())
+
+	t.Run("UpdateObserverUser successful", func(t *testing.T) {
+		mock.
+			ExpectExec(regexp.QuoteMeta(queryUpdateUser)).
+			WithArgs(
+				observer.User.Name, observer.User.LastName, observer.User.IDNumber, observer.User.Username,
+				observer.User.Password, observer.User.Email, observer.User.Type, observer.User.ID,
+			).
+			WillReturnResult(sqlmock.NewResult(int64(1), 1))
+
+		user, err := ur.UpdateObserverUser(observer)
+		assert.NotNil(t, user)
+		assert.NoError(t, err)
+		assert.Equal(t, user.User.ID, observer.User.ID)
+	})
+
+	t.Run("UpdateObserverUser error saving observer user", func(t *testing.T) {
+		mock.
+			ExpectExec(regexp.QuoteMeta(querySaveUser)).
+			WithArgs(observer.User.Name, observer.User.LastName, observer.User.IDNumber, observer.User.Username,
+				observer.User.Password, observer.User.Email, observer.User.Type, observer.User.ID).
+			WillReturnError(errors.New("some error"))
+
+		user, err := ur.UpdateObserverUser(observer)
+		assert.Nil(t, user)
+		assert.NotNil(t, err)
+	})
 }
 
 func TestGetObserverUser(t *testing.T) {

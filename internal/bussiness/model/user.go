@@ -81,3 +81,7 @@ func (u *User) SetPassword(password string) {
 func (u *User) GetPassword() string {
 	return u.Password
 }
+
+func (u *User) ValidateID() bool {
+	return u.ID != 0
+}
