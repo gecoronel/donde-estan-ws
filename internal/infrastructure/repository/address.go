@@ -13,7 +13,7 @@ import (
 const (
 	querySelectAddressByID = `
 		SELECT id, name, street, number, floor, apartment, zipCode, city, state, country, latitude, longitude, 
-		       created_at, updated_at, observer_user_id,
+		       created_at, updated_at, observer_user_id
 		FROM Addresses 
 		WHERE id = ?
 	`
@@ -46,15 +46,15 @@ type AddressRepository struct {
 
 // Get obtains an address using AddressRepository by ID
 func (a AddressRepository) Get(id uint64) (*model.Address, error) {
-	var Address model.Address
+	var address model.Address
 
 	err := a.DB.
 		Raw(querySelectAddressByID, id).
 		Row().
 		Scan(
-			&Address.ID, &Address.Name, &Address.Street, &Address.Number, &Address.Floor, &Address.Apartment,
-			&Address.ZipCode, &Address.City, &Address.State, &Address.Country, &Address.Latitude, &Address.Longitude,
-			&Address.CreatedAt, &Address.UpdatedAt,
+			&address.ID, &address.Name, &address.Street, &address.Number, &address.Floor, &address.Apartment,
+			&address.ZipCode, &address.City, &address.State, &address.Country, &address.Latitude, &address.Longitude,
+			&address.CreatedAt, &address.UpdatedAt, &address.ObserverUserID,
 		)
 
 	if err != nil {
@@ -66,11 +66,11 @@ func (a AddressRepository) Get(id uint64) (*model.Address, error) {
 		return nil, err
 	}
 
-	return &Address, nil
+	return &address, nil
 }
 
 // Save persists an address using AddressRepository.
-func (a AddressRepository) Save(Address model.Address) (*model.Address, error) {
+func (a AddressRepository) Save(address model.Address) (*model.Address, error) {
 	tx := a.DB.Begin()
 	defer func() {
 		if r := recover(); r != nil {
@@ -81,36 +81,40 @@ func (a AddressRepository) Save(Address model.Address) (*model.Address, error) {
 
 	err := tx.Exec(
 		querySaveAddress,
-		&Address.Name, &Address.Street, &Address.Number, &Address.Floor, &Address.Apartment,
-		&Address.ZipCode, &Address.City, &Address.State, &Address.Country, &Address.Latitude, &Address.Longitude,
-		&Address.ObserverUserID,
+		&address.Name, &address.Street, &address.Number, &address.Floor, &address.Apartment,
+		&address.ZipCode, &address.City, &address.State, &address.Country, &address.Latitude, &address.Longitude,
+		&address.ObserverUserID,
 	).Error
-
 	if err != nil {
 		log.Error("error row scan saving address")
 		return nil, err
 	}
 
+	err = tx.Raw(`SELECT LAST_INSERT_ID();`).Row().Scan(&address.ID)
+	if err != nil {
+		log.Error("error row scan selecting address")
+		return nil, err
+	}
+
 	err = tx.
-		Raw(querySelectAddressByID, Address.ID).
+		Raw(querySelectAddressByID, address.ID).
 		Row().
 		Scan(
-			&Address.ID, &Address.Name, &Address.Street, &Address.Number, &Address.Floor, &Address.Apartment,
-			&Address.ZipCode, &Address.City, &Address.State, &Address.Country, &Address.Latitude, &Address.Longitude,
-			&Address.CreatedAt, &Address.UpdatedAt, &Address.ObserverUserID,
+			&address.ID, &address.Name, &address.Street, &address.Number, &address.Floor, &address.Apartment,
+			&address.ZipCode, &address.City, &address.State, &address.Country, &address.Latitude, &address.Longitude,
+			&address.CreatedAt, &address.UpdatedAt, &address.ObserverUserID,
 		)
-
 	if err != nil {
 		log.Error("error row scan selecting address")
 		return nil, err
 	}
 
 	tx.Commit()
-	return &Address, nil
+	return &address, nil
 }
 
 // Update an address using AddressRepository by id
-func (a AddressRepository) Update(Address model.Address) (*model.Address, error) {
+func (a AddressRepository) Update(address model.Address) (*model.Address, error) {
 	tx := a.DB.Begin()
 	defer func() {
 		if r := recover(); r != nil {
@@ -121,9 +125,9 @@ func (a AddressRepository) Update(Address model.Address) (*model.Address, error)
 
 	err := tx.Exec(
 		queryUpdateAddress,
-		&Address.Name, &Address.Street, &Address.Number, &Address.Floor, &Address.Apartment, &Address.ZipCode,
-		&Address.City, &Address.State, &Address.Country, &Address.Latitude, &Address.Longitude, &Address.UpdatedAt,
-		&Address.ID,
+		&address.Name, &address.Street, &address.Number, &address.Floor, &address.Apartment, &address.ZipCode,
+		&address.City, &address.State, &address.Country, &address.Latitude, &address.Longitude, &address.UpdatedAt,
+		&address.ID,
 	).Error
 
 	if err != nil {
@@ -132,12 +136,12 @@ func (a AddressRepository) Update(Address model.Address) (*model.Address, error)
 	}
 
 	err = tx.
-		Raw(querySelectAddressByID, Address.ID).
+		Raw(querySelectAddressByID, address.ID).
 		Row().
 		Scan(
-			&Address.ID, &Address.Name, &Address.Street, &Address.Number, &Address.Floor, &Address.Apartment,
-			&Address.ZipCode, &Address.City, &Address.State, &Address.Country, &Address.Latitude, &Address.Longitude,
-			&Address.CreatedAt, &Address.UpdatedAt, &Address.ObserverUserID,
+			&address.ID, &address.Name, &address.Street, &address.Number, &address.Floor, &address.Apartment,
+			&address.ZipCode, &address.City, &address.State, &address.Country, &address.Latitude, &address.Longitude,
+			&address.CreatedAt, &address.UpdatedAt, &address.ObserverUserID,
 		)
 
 	if err != nil {
@@ -146,7 +150,7 @@ func (a AddressRepository) Update(Address model.Address) (*model.Address, error)
 	}
 
 	tx.Commit()
-	return &Address, nil
+	return &address, nil
 }
 
 // Delete an address using AddressRepository by id

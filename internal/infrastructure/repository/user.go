@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"gorm.io/gorm"
-	"net/http"
 	"sync"
 
 	"github.com/gecoronel/donde-estan-ws/internal/bussiness/gateway"
@@ -48,7 +47,7 @@ const (
 		WHERE ou.privacy_key = ?;
 	`
 	querySaveObservedUser = `
-		INSERT INTO ObservedUsers (user_id, privacy_key, company_name, school_bus_id) VALUES (?, ?, ?, ?);
+		INSERT INTO ObservedUsers (user_id, privacy_key, company_name) VALUES (?, ?, ?);
 	`
 	queryGetObservedUserByID = `SELECT user_id, privacy_key, company_name FROM ObservedUsers WHERE user_id = ?`
 
@@ -123,7 +122,7 @@ func (r UserRepository) Get(id uint64) (*model.User, error) {
 
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			return nil, web.NewError(http.StatusNotFound, "user not found")
+			return nil, nil
 		}
 		return nil, result.Error
 	}
@@ -168,6 +167,10 @@ func (r UserRepository) FindByEmail(email string) (*model.User, error) {
 		)
 
 	if err != nil {
+		if err.Error() == web.ErrNoRows.Error() {
+			log.Error("error row scan not found")
+			return nil, nil
+		}
 		log.Error("error row scan")
 		return nil, err
 	}
@@ -549,7 +552,6 @@ func saveObservedUserExec(tx *gorm.DB, user *model.ObservedUser) error {
 		user.User.ID,
 		user.PrivacyKey,
 		user.CompanyName,
-		user.SchoolBus.ID,
 	).Error
 }
 
@@ -682,7 +684,7 @@ type (
 		IDNumber         string `json:"id_number"`
 		PrivacyKey       string `json:"privacy_key"`
 		CompanyName      string `json:"company_name"`
-		SchoolBusID      string `json:"school_bus_id"`
+		SchoolBusID      uint64 `json:"school_bus_id"`
 		LicensePlate     string `json:"license_plate"`
 		Model            string `json:"model"`
 		Brand            string `json:"brand"`

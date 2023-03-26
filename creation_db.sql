@@ -17,7 +17,7 @@ USE `DondeEstanApp` ;
 -- Table `DondeEstanApp`.`Users`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `DondeEstanApp`.`Users` (
-  `id` INT NOT NULL AUTO_INCREMENT,
+  `id` BIGINT NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(45) NOT NULL,
   `last_name` VARCHAR(45) NOT NULL,
   `id_number` LONGBLOB NOT NULL,
@@ -38,14 +38,21 @@ ENGINE = InnoDB;
 -- Table `DondeEstanApp`.`SchoolBuses`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `DondeEstanApp`.`SchoolBuses` (
-  `id` VARCHAR(45) NOT NULL,
+  `id` BIGINT NOT NULL AUTO_INCREMENT,
   `license_plate` VARCHAR(45) NOT NULL,
   `model` VARCHAR(45) NOT NULL,
   `brand` VARCHAR(45) NOT NULL,
   `license` VARCHAR(45) NOT NULL,
+  `observed_user_id` BIGINT NOT NULL,
   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`))
+  PRIMARY KEY (`id`),
+  INDEX `fk_SchoolBuses_ObservedUsers1_idx` (`observed_user_id` ASC) VISIBLE,
+    CONSTRAINT `fk_SchoolBuses_ObservedUsers1`
+    FOREIGN KEY (`observed_user_id`)
+    REFERENCES `DondeEstanApp`.`ObservedUsers` (`user_id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
 
@@ -55,22 +62,15 @@ ENGINE = InnoDB;
 CREATE TABLE IF NOT EXISTS `DondeEstanApp`.`ObservedUsers` (
   `privacy_key` VARCHAR(45) NOT NULL,
   `company_name` VARCHAR(45) NOT NULL,
-  `user_id` INT NOT NULL,
-  `school_bus_id` VARCHAR(45) NOT NULL,
+  `user_id` BIGINT NOT NULL,
   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`user_id`),
   INDEX `fk_ObservedUsers_Users_idx` (`user_id` ASC) VISIBLE,
   UNIQUE INDEX `privacyKey_UNIQUE` (`privacy_key` ASC) VISIBLE,
-  INDEX `fk_ObservedUsers_School_Buses_idx` (`school_bus_id` ASC) VISIBLE,
   CONSTRAINT `fk_ObservedUsers_Users`
     FOREIGN KEY (`user_id`)
     REFERENCES `DondeEstanApp`.`Users` (`id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_ObservedUsers_School_Buses`
-    FOREIGN KEY (`school_bus_id`)
-    REFERENCES `DondeEstanApp`.`SchoolBuses` (`id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
@@ -80,7 +80,7 @@ ENGINE = InnoDB;
 -- Table `DondeEstanApp`.`ObserverUsers`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `DondeEstanApp`.`ObserverUsers` (
-  `user_id` INT NOT NULL,
+  `user_id` BIGINT NOT NULL,
   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`user_id`),
@@ -97,19 +97,19 @@ ENGINE = InnoDB;
 -- Table `DondeEstanApp`.`Addresses`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `DondeEstanApp`.`Addresses` (
-  `id` INT NOT NULL AUTO_INCREMENT,
+  `id` BIGINT NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(45) NOT NULL,
   `street` VARCHAR(45) NOT NULL,
   `number` VARCHAR(45) NOT NULL,
-  `floor` VARCHAR(5) NULL DEFAULT NULL,
-  `apartment` VARCHAR(45) NULL DEFAULT NULL,
+  `floor` VARCHAR(5) NOT NULL DEFAULT '',
+  `apartment` VARCHAR(45) NOT NULL DEFAULT '',
   `zipCode` VARCHAR(45) NOT NULL,
   `city` VARCHAR(45) NOT NULL,
   `state` VARCHAR(45) NOT NULL,
   `country` VARCHAR(45) NOT NULL,
   `latitude` VARCHAR(45) NOT NULL,
   `longitude` VARCHAR(45) NOT NULL,
-  `observer_user_id` INT NOT NULL,
+  `observer_user_id` BIGINT NOT NULL,
   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
@@ -125,8 +125,8 @@ ENGINE = InnoDB;
 -- Table `DondeEstanApp`.`ObservedUsers_ObserverUsers`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `DondeEstanApp`.`ObservedUsersObserverUsers` (
-  `observed_user_id` INT NOT NULL,
-  `observer_user_id` INT NOT NULL,
+  `observed_user_id` BIGINT NOT NULL,
+  `observer_user_id` BIGINT NOT NULL,
   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`observer_user_id`, `observed_user_id`),
@@ -148,13 +148,13 @@ ENGINE = InnoDB;
 -- Table `DondeEstanApp`.`Children`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `DondeEstanApp`.`Children` (
-  `id` INT NOT NULL AUTO_INCREMENT,
+  `id` BIGINT NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(45) NOT NULL,
   `last_name` VARCHAR(45) NOT NULL,
   `school_name` VARCHAR(45) NOT NULL,
   `school_start_time` TIME NOT NULL,
   `school_end_time` TIME NOT NULL,
-  `observer_user_id` INT NOT NULL,
+  `observer_user_id` BIGINT NOT NULL,
   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),

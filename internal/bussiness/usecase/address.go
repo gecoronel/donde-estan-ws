@@ -6,6 +6,7 @@ import (
 	"github.com/gecoronel/donde-estan-ws/internal/bussiness/gateway"
 	"github.com/gecoronel/donde-estan-ws/internal/bussiness/model"
 	"github.com/gecoronel/donde-estan-ws/internal/bussiness/model/web"
+	"time"
 )
 
 const AddressUseCaseType = "AddressUseCase"
@@ -25,22 +26,22 @@ func NewAddressUseCase() AddressUseCase {
 	return &addressUseCase{}
 }
 
-func (b addressUseCase) Get(id uint64, locator gateway.ServiceLocator) (*model.Address, error) {
+func (a addressUseCase) Get(id uint64, locator gateway.ServiceLocator) (*model.Address, error) {
 	repository := locator.GetInstance(gateway.AddressRepositoryType).(gateway.AddressRepository)
 
-	Address, err := repository.Get(id)
+	address, err := repository.Get(id)
 	if err != nil {
 		return nil, web.ErrInternalServerError
 	}
 
-	if Address == nil {
+	if address == nil {
 		return nil, web.ErrNotFound
 	}
 
-	return Address, nil
+	return address, nil
 }
 
-func (b addressUseCase) Save(address model.Address, locator gateway.ServiceLocator) (
+func (a addressUseCase) Save(address model.Address, locator gateway.ServiceLocator) (
 	*model.Address,
 	error,
 ) {
@@ -54,13 +55,13 @@ func (b addressUseCase) Save(address model.Address, locator gateway.ServiceLocat
 	return sb, nil
 }
 
-func (b addressUseCase) Update(Address model.Address, locator gateway.ServiceLocator) (
+func (a addressUseCase) Update(address model.Address, locator gateway.ServiceLocator) (
 	*model.Address,
 	error,
 ) {
 	repository := locator.GetInstance(gateway.AddressRepositoryType).(gateway.AddressRepository)
 
-	sb, err := repository.Get(Address.ID)
+	sb, err := repository.Get(address.ID)
 	if err != nil {
 		return nil, web.ErrInternalServerError
 	}
@@ -69,7 +70,8 @@ func (b addressUseCase) Update(Address model.Address, locator gateway.ServiceLoc
 		return nil, web.ErrNotFound
 	}
 
-	sb, err = repository.Update(Address)
+	address.UpdatedAt = time.Now().Format(time.RFC3339)
+	sb, err = repository.Update(address)
 	if err != nil {
 		return nil, web.ErrInternalServerError
 	}
@@ -77,7 +79,7 @@ func (b addressUseCase) Update(Address model.Address, locator gateway.ServiceLoc
 	return sb, nil
 }
 
-func (b addressUseCase) Delete(id uint64, locator gateway.ServiceLocator) error {
+func (a addressUseCase) Delete(id uint64, locator gateway.ServiceLocator) error {
 	repository := locator.GetInstance(gateway.AddressRepositoryType).(gateway.AddressRepository)
 
 	sb, err := repository.Get(id)

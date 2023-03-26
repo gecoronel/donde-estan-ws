@@ -61,7 +61,7 @@ func SaveChild(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err = child.Validate(); err != nil || child.ValidateID() {
+	if err = child.Validate(); err != nil || child.ValidateID() || !child.ValidateObserverUserID() {
 		log.Error("validation failed for creation of child")
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)

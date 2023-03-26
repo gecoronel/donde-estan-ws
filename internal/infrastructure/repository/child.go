@@ -12,8 +12,7 @@ import (
 
 const (
 	querySelectChildByID = `
-		SELECT id, name, last_name, school_name, school_start_time, school_end_time, observer_user_id, created_at, 
-		       updated_at,
+		SELECT id, name, last_name, school_name, school_start_time, school_end_time, observer_user_id, created_at, updated_at
 		FROM Children 
 		WHERE id = ?
 	`
@@ -23,7 +22,7 @@ const (
 	VALUES (?, ?, ?, ?, ?, ?);
 	`
 	queryUpdateChild = `
-		UPDATE Children SET name = ?, last_name = ?, school_name = ?, school_start_time = ?, school_end_time = ?, observer_user_id = ?, updated_at = ?
+		UPDATE Children SET name = ?, last_name = ?, school_name = ?, school_start_time = ?, school_end_time = ?, updated_at = ?
 		WHERE id = ?;
 	`
 	queryDeleteChild = `
@@ -44,16 +43,16 @@ type ChildRepository struct {
 	context context.Context
 }
 
-// Get obtains an address using ChildRepository by ID
+// Get obtains an child using ChildRepository by ID
 func (a ChildRepository) Get(id uint64) (*model.Child, error) {
-	var Child model.Child
+	var child model.Child
 
 	err := a.DB.
 		Raw(querySelectChildByID, id).
 		Row().
 		Scan(
-			&Child.ID, &Child.Name, &Child.LastName, &Child.SchoolName, &Child.SchoolStartTime, &Child.SchoolEndTime,
-			&Child.ObserverUserID, &Child.CreatedAt, &Child.UpdatedAt,
+			&child.ID, &child.Name, &child.LastName, &child.SchoolName, &child.SchoolStartTime, &child.SchoolEndTime,
+			&child.ObserverUserID, &child.CreatedAt, &child.UpdatedAt,
 		)
 
 	if err != nil {
@@ -65,11 +64,11 @@ func (a ChildRepository) Get(id uint64) (*model.Child, error) {
 		return nil, err
 	}
 
-	return &Child, nil
+	return &child, nil
 }
 
-// Save persists an address using ChildRepository.
-func (a ChildRepository) Save(Child model.Child) (*model.Child, error) {
+// Save persists an child using ChildRepository.
+func (a ChildRepository) Save(child model.Child) (*model.Child, error) {
 	tx := a.DB.Begin()
 	defer func() {
 		if r := recover(); r != nil {
@@ -80,75 +79,80 @@ func (a ChildRepository) Save(Child model.Child) (*model.Child, error) {
 
 	err := tx.Exec(
 		querySaveChild,
-		&Child.Name, &Child.LastName, &Child.SchoolName, &Child.SchoolStartTime, &Child.SchoolEndTime,
-		&Child.ObserverUserID,
+		&child.Name, &child.LastName, &child.SchoolName, &child.SchoolStartTime, &child.SchoolEndTime,
+		&child.ObserverUserID,
 	).Error
 
 	if err != nil {
-		log.Error("error row scan saving address")
+		log.Error("error row scan saving child")
+		return nil, err
+	}
+
+	err = tx.Raw(`SELECT LAST_INSERT_ID();`).Row().Scan(&child.ID)
+	if err != nil {
+		log.Error("error selecting child id")
+		tx.Rollback()
 		return nil, err
 	}
 
 	err = tx.
-		Raw(querySelectChildByID, Child.ID).
+		Raw(querySelectChildByID, child.ID).
 		Row().
 		Scan(
-			&Child.ID, &Child.Name, &Child.LastName, &Child.SchoolName, &Child.SchoolStartTime, &Child.SchoolEndTime,
-			&Child.ObserverUserID, &Child.CreatedAt, &Child.UpdatedAt,
+			&child.ID, &child.Name, &child.LastName, &child.SchoolName, &child.SchoolStartTime, &child.SchoolEndTime,
+			&child.ObserverUserID, &child.CreatedAt, &child.UpdatedAt,
 		)
-
 	if err != nil {
-		log.Error("error row scan selecting address")
+		log.Error("error row scan selecting child")
 		return nil, err
 	}
 
 	tx.Commit()
-	return &Child, nil
+	return &child, nil
 }
 
-// Update an address using ChildRepository by id
-func (a ChildRepository) Update(Child model.Child) (*model.Child, error) {
+// Update an child using ChildRepository by id
+func (a ChildRepository) Update(child model.Child) (*model.Child, error) {
 	tx := a.DB.Begin()
 	defer func() {
 		if r := recover(); r != nil {
-			log.Error("recovering for error in save address")
+			log.Error("recovering for error in save child")
 			tx.Rollback()
 		}
 	}()
 
 	err := tx.Exec(
 		queryUpdateChild,
-		&Child.Name, &Child.LastName, &Child.SchoolName, &Child.SchoolStartTime, &Child.SchoolEndTime,
-		&Child.ObserverUserID, &Child.UpdatedAt, &Child.ID,
+		&child.Name, &child.LastName, &child.SchoolName, &child.SchoolStartTime, child.SchoolEndTime,
+		&child.UpdatedAt, &child.ID,
 	).Error
 
 	if err != nil {
-		log.Error("error row scan saving address")
+		log.Error("error updating child in repository")
 		return nil, err
 	}
 
 	err = tx.
-		Raw(querySelectChildByID, Child.ID).
+		Raw(querySelectChildByID, child.ID).
 		Row().
 		Scan(
-			&Child.ID, &Child.Name, &Child.LastName, &Child.SchoolName, &Child.SchoolStartTime, &Child.SchoolEndTime,
-			&Child.ObserverUserID, &Child.CreatedAt, &Child.UpdatedAt,
+			&child.ID, &child.Name, &child.LastName, &child.SchoolName, &child.SchoolStartTime, &child.SchoolEndTime,
+			&child.ObserverUserID, &child.CreatedAt, &child.UpdatedAt,
 		)
-
 	if err != nil {
-		log.Error("error row scan selecting address")
+		log.Error("error selecting child")
 		return nil, err
 	}
 
 	tx.Commit()
-	return &Child, nil
+	return &child, nil
 }
 
-// Delete an address using ChildRepository by id
+// Delete an child using ChildRepository by id
 func (a ChildRepository) Delete(id uint64) error {
 	err := a.DB.Exec(queryDeleteChild, id).Error
 	if err != nil {
-		log.Error("error row scan saving address")
+		log.Error("error deleting child")
 		return err
 	}
 

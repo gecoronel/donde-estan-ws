@@ -12,10 +12,10 @@ const SchoolBusUseCaseType = "SchoolBusUseCase"
 
 type (
 	SchoolBusUseCase interface {
-		Get(string, gateway.ServiceLocator) (*model.SchoolBus, error)
+		Get(uint64, gateway.ServiceLocator) (*model.SchoolBus, error)
 		Save(model.SchoolBus, gateway.ServiceLocator) (*model.SchoolBus, error)
 		Update(model.SchoolBus, gateway.ServiceLocator) (*model.SchoolBus, error)
-		Delete(string, gateway.ServiceLocator) error
+		Delete(uint64, gateway.ServiceLocator) error
 	}
 
 	schoolBusUseCase struct{}
@@ -25,7 +25,7 @@ func NewSchoolBusUseCase() SchoolBusUseCase {
 	return &schoolBusUseCase{}
 }
 
-func (b schoolBusUseCase) Get(id string, locator gateway.ServiceLocator) (*model.SchoolBus, error) {
+func (b schoolBusUseCase) Get(id uint64, locator gateway.ServiceLocator) (*model.SchoolBus, error) {
 	repository := locator.GetInstance(gateway.SchoolBusRepositoryType).(gateway.SchoolBusRepository)
 
 	schoolBus, err := repository.Get(id)
@@ -46,7 +46,15 @@ func (b schoolBusUseCase) Save(schoolBus model.SchoolBus, locator gateway.Servic
 ) {
 	repository := locator.GetInstance(gateway.SchoolBusRepositoryType).(gateway.SchoolBusRepository)
 
-	sb, err := repository.Save(schoolBus)
+	sb, err := repository.Get(schoolBus.ID)
+	if err != nil {
+		return nil, err
+	}
+	if sb != nil {
+		return nil, web.ErrConflict
+	}
+
+	sb, err = repository.Save(schoolBus)
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +85,7 @@ func (b schoolBusUseCase) Update(schoolBus model.SchoolBus, locator gateway.Serv
 	return sb, nil
 }
 
-func (b schoolBusUseCase) Delete(id string, locator gateway.ServiceLocator) error {
+func (b schoolBusUseCase) Delete(id uint64, locator gateway.ServiceLocator) error {
 	repository := locator.GetInstance(gateway.SchoolBusRepositoryType).(gateway.SchoolBusRepository)
 
 	sb, err := repository.Get(id)

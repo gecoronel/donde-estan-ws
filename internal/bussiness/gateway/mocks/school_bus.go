@@ -35,7 +35,7 @@ func (m *MockSchoolBusRepository) EXPECT() *MockSchoolBusRepositoryMockRecorder 
 }
 
 // Delete mocks base method.
-func (m *MockSchoolBusRepository) Delete(arg0 string) error {
+func (m *MockSchoolBusRepository) Delete(arg0 uint64) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Delete", arg0)
 	ret0, _ := ret[0].(error)
@@ -49,7 +49,7 @@ func (mr *MockSchoolBusRepositoryMockRecorder) Delete(arg0 interface{}) *gomock.
 }
 
 // Get mocks base method.
-func (m *MockSchoolBusRepository) Get(arg0 string) (*model.SchoolBus, error) {
+func (m *MockSchoolBusRepository) Get(arg0 uint64) (*model.SchoolBus, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", arg0)
 	ret0, _ := ret[0].(*model.SchoolBus)

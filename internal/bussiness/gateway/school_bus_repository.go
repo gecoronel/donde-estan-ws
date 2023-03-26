@@ -10,8 +10,8 @@ const SchoolBusRepositoryType = "SchoolBusRepository"
 
 // SchoolBusRepository is an interface that provides the necessary methods for the school bus repository.
 type SchoolBusRepository interface {
-	Get(string) (*model.SchoolBus, error)
+	Get(uint64) (*model.SchoolBus, error)
 	Save(model.SchoolBus) (*model.SchoolBus, error)
 	Update(model.SchoolBus) (*model.SchoolBus, error)
-	Delete(string) error
+	Delete(uint64) error
 }

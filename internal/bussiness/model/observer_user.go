@@ -5,7 +5,7 @@ import "github.com/go-playground/validator/v10"
 type ObserverUser struct {
 	User          User           `json:"user" gorm:"one2one,embedded,foreignKey:id" validate:"required"`
 	Children      []Child        `json:"children,omitempty" gorm:"foreignKey:ObserverUserID;"`
-	ObservedUsers []ObservedUser `json:",omitempty" gorm:"many2many:ObservedUserObserverUser, foreignKey:ObserverUser;"`
+	ObservedUsers []ObservedUser `json:",omitempty" gorm:"many2many:ObservedUserObserverUser, foreignKey:ObserverUser;""`
 	Addresses     []Address      `json:",omitempty" gorm:"foreignKey:ObserverUserID;"`
 }
 

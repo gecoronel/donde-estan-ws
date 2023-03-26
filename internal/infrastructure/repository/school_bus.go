@@ -12,12 +12,12 @@ import (
 
 const (
 	querySelectSchoolBusByID = `
-		SELECT id, license_plate, model, brand, license, created_at, updated_at 
+		SELECT id, license_plate, model, brand, license, observed_user_id, created_at, updated_at 
 		FROM SchoolBuses 
 		WHERE id = ?
 	`
 
-	querySaveSchoolBus   = `INSERT INTO SchoolBuses (id, license_plate, model, brand, license) VALUES (?, ?, ?, ?, ?);`
+	querySaveSchoolBus   = `INSERT INTO SchoolBuses (license_plate, model, brand, license, observed_user_id) VALUES (?, ?, ?, ?, ?);`
 	queryUpdateSchoolBus = `
 		UPDATE SchoolBuses SET id = ?, license_plate = ?, model = ?, brand = ?, license = ?, updated_at = ? 
 		WHERE id = ?;
@@ -41,7 +41,7 @@ type SchoolBusRepository struct {
 }
 
 // Get obtains a user using UserRepository by ID
-func (sb SchoolBusRepository) Get(id string) (*model.SchoolBus, error) {
+func (sb SchoolBusRepository) Get(id uint64) (*model.SchoolBus, error) {
 	var schoolBus model.SchoolBus
 
 	err := sb.DB.
@@ -49,7 +49,7 @@ func (sb SchoolBusRepository) Get(id string) (*model.SchoolBus, error) {
 		Row().
 		Scan(
 			&schoolBus.ID, &schoolBus.Model, &schoolBus.Brand, &schoolBus.LicensePlate, &schoolBus.License,
-			&schoolBus.CreatedAt, &schoolBus.UpdatedAt,
+			&schoolBus.ObservedUserID, &schoolBus.CreatedAt, &schoolBus.UpdatedAt,
 		)
 
 	if err != nil {
@@ -76,15 +76,22 @@ func (sb SchoolBusRepository) Save(schoolBus model.SchoolBus) (*model.SchoolBus,
 
 	err := tx.Exec(
 		querySaveSchoolBus,
-		schoolBus.ID,
 		schoolBus.LicensePlate,
 		schoolBus.Model,
 		schoolBus.Brand,
 		schoolBus.License,
+		schoolBus.ObservedUserID,
 	).Error
-
 	if err != nil {
-		log.Error("error row scan saving school bus")
+		log.Error("error saving school bus")
+		tx.Rollback()
+		return nil, err
+	}
+
+	err = tx.Raw(`SELECT LAST_INSERT_ID();`).Row().Scan(&schoolBus.ID)
+	if err != nil {
+		log.Error("error selecting school bus id")
+		tx.Rollback()
 		return nil, err
 	}
 
@@ -93,11 +100,11 @@ func (sb SchoolBusRepository) Save(schoolBus model.SchoolBus) (*model.SchoolBus,
 		Row().
 		Scan(
 			&schoolBus.ID, &schoolBus.LicensePlate, &schoolBus.Model, &schoolBus.Brand, &schoolBus.License,
-			&schoolBus.CreatedAt, &schoolBus.UpdatedAt,
+			&schoolBus.ObservedUserID, &schoolBus.CreatedAt, &schoolBus.UpdatedAt,
 		)
-
 	if err != nil {
 		log.Error("error row scan selecting school bus")
+		tx.Rollback()
 		return nil, err
 	}
 
@@ -136,7 +143,7 @@ func (sb SchoolBusRepository) Update(schoolBus model.SchoolBus) (*model.SchoolBu
 		Row().
 		Scan(
 			&schoolBus.ID, &schoolBus.LicensePlate, &schoolBus.Model, &schoolBus.Brand, &schoolBus.License,
-			&schoolBus.CreatedAt, &schoolBus.UpdatedAt,
+			&schoolBus.ObservedUserID, &schoolBus.CreatedAt, &schoolBus.UpdatedAt,
 		)
 
 	if err != nil {
@@ -149,7 +156,7 @@ func (sb SchoolBusRepository) Update(schoolBus model.SchoolBus) (*model.SchoolBu
 }
 
 // Delete a school bus using SchoolBusRepository by id
-func (sb SchoolBusRepository) Delete(id string) error {
+func (sb SchoolBusRepository) Delete(id uint64) error {
 	err := sb.DB.Exec(queryDeleteSchoolBus, id).Error
 	if err != nil {
 		log.Error("error row scan saving school bus")
