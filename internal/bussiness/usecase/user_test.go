@@ -34,7 +34,7 @@ var (
 		PrivacyKey:  "juan.perez.12345678",
 		CompanyName: "school bus",
 		SchoolBus: model.SchoolBus{
-			ID:           "1",
+			ID:           1,
 			LicensePlate: "11AAA222",
 			Model:        "Master",
 			Brand:        "Renault",

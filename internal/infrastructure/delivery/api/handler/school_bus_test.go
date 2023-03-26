@@ -15,7 +15,7 @@ import (
 )
 
 var sb = model.SchoolBus{
-	ID:           "1",
+	ID:           1,
 	LicensePlate: "11AAA22",
 	Model:        "Master",
 	Brand:        "Renault",
@@ -34,6 +34,15 @@ func TestGetSchoolBus(t *testing.T) {
 		path         string
 		expectedCode int
 	}{
+		{
+			name: "bad request error getting school bus",
+			mock: func() *mock_usecase.MockSchoolBusUseCase {
+				mockSchoolBusUseCase := mock_usecase.NewMockSchoolBusUseCase(m)
+				return mockSchoolBusUseCase
+			},
+			path:         "/where/are/they/school-buses/invalid",
+			expectedCode: http.StatusBadRequest,
+		},
 		{
 			name: "error getting school bus",
 			mock: func() *mock_usecase.MockSchoolBusUseCase {
@@ -101,12 +110,11 @@ func TestSaveSchoolBus(t *testing.T) {
 			},
 			path: "/where/are/they/school-buses",
 			body: `{
-			"id": 12345,
 			"license_plate": "11AAA55",
 			"model": "Fiat",
 			"brand": "Ducato",
-			"license": "555",
-			"updated_at": "2023-02-22 11:55:14"
+			"license": 555,
+			"observed_user_id": 1
 		}`,
 			expectedCode: http.StatusBadRequest,
 		},
@@ -118,11 +126,10 @@ func TestSaveSchoolBus(t *testing.T) {
 			},
 			path: "/where/are/they/school-buses",
 			body: `{
-			"id": "0000-0000-0005",
 			"model": "Fiat",
 			"brand": "Ducato",
 			"license": "555",
-			"updated_at": "2023-02-22 11:55:14"
+			"observed_user_id": 1
 		}`,
 			expectedCode: http.StatusBadRequest,
 		},
@@ -135,12 +142,11 @@ func TestSaveSchoolBus(t *testing.T) {
 			},
 			path: "/where/are/they/school-buses",
 			body: `{
-			"id": "0000-0000-0005",
 			"license_plate": "11AAA55",
 			"model": "Fiat",
 			"brand": "Ducato",
 			"license": "555",
-			"updated_at": "2023-02-22 11:55:14"
+			"observed_user_id": 1
 		}`,
 			expectedCode: http.StatusInternalServerError,
 		},
@@ -153,12 +159,11 @@ func TestSaveSchoolBus(t *testing.T) {
 			},
 			path: "/where/are/they/school-buses",
 			body: `{
-			"id": "0000-0000-0005",
 			"license_plate": "11AAA55",
 			"model": "Fiat",
 			"brand": "Ducato",
 			"license": "555",
-			"updated_at": "2023-02-22 11:55:14"
+			"observed_user_id": 1
 		}`,
 			expectedCode: http.StatusOK,
 		},
@@ -199,11 +204,11 @@ func TestUpdateSchoolBus(t *testing.T) {
 			},
 			path: "/where/are/they/school-buses",
 			body: `{
-			"id": 12345,
+			"id": "12345",
 			"license_plate": "11AAA55",
 			"model": "Fiat",
 			"brand": "Ducato",
-			"license": "555",
+			"license": 555,
 			"updated_at": "2023-02-22 11:55:14"
 		}`,
 			expectedCode: http.StatusBadRequest,
@@ -216,7 +221,7 @@ func TestUpdateSchoolBus(t *testing.T) {
 			},
 			path: "/where/are/they/school-buses",
 			body: `{
-			"id": "0000-0000-0005",
+			"id": 12345,
 			"model": "Fiat",
 			"brand": "Ducato",
 			"license": "555",
@@ -233,7 +238,7 @@ func TestUpdateSchoolBus(t *testing.T) {
 			},
 			path: "/where/are/they/school-buses",
 			body: `{
-			"id": "0000-0000-0005",
+			"id": 12345,
 			"license_plate": "11AAA55",
 			"model": "Fiat",
 			"brand": "Ducato",
@@ -251,7 +256,7 @@ func TestUpdateSchoolBus(t *testing.T) {
 			},
 			path: "/where/are/they/school-buses",
 			body: `{
-			"id": "0000-0000-0005",
+			"id": 12345,
 			"license_plate": "11AAA55",
 			"model": "Fiat",
 			"brand": "Ducato",
@@ -288,6 +293,15 @@ func TestDeleteSchoolBus(t *testing.T) {
 		path         string
 		expectedCode int
 	}{
+		{
+			name: "bad request error getting school bus",
+			mock: func() *mock_usecase.MockSchoolBusUseCase {
+				mockSchoolBusUseCase := mock_usecase.NewMockSchoolBusUseCase(m)
+				return mockSchoolBusUseCase
+			},
+			path:         "/where/are/they/school-buses/invalid",
+			expectedCode: http.StatusBadRequest,
+		},
 		{
 			name: "error deleting school bus",
 			mock: func() *mock_usecase.MockSchoolBusUseCase {

@@ -45,7 +45,7 @@ var (
 		PrivacyKey:  "juan.perez.12345678",
 		CompanyName: "school bus",
 		SchoolBus: model.SchoolBus{
-			ID:           "1",
+			ID:           1,
 			LicensePlate: "11AAA222",
 			Model:        "Master",
 			Brand:        "Renault",
@@ -239,7 +239,7 @@ func TestCreateObservedUser(t *testing.T) {
 				"privacy_key": "juan.perez.1234",
 				"company_name": "company school bus",
 				"school_bus": {
-					"id": "0000-0000-0004",
+					"id": 4,
 					"license_plate": "11AAA22",
 					"model": "Master",
 					"brand": "Renault",
@@ -334,7 +334,7 @@ func TestUpdateObservedUser(t *testing.T) {
 				"privacy_key": "juan.perez.1234",
 				"company_name": "company school bus",
 				"school_bus": {
-					"id": "0000-0000-0004",
+					"id": 1,
 					"license_plate": "11AAA22",
 					"model": "Master",
 					"brand": "Renault",
@@ -393,7 +393,7 @@ func TestUpdateObservedUser(t *testing.T) {
 				"privacy_key": "juan.perez.1234",
 				"company_name": "company school bus",
 				"school_bus": {
-					"id": "0000-0000-0004",
+					"id": 1,
 					"license_plate": "11AAA22",
 					"model": "Master",
 					"brand": "Renault",

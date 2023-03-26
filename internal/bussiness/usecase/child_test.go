@@ -32,14 +32,19 @@ func TestUseCaseGetChild(t *testing.T) {
 
 	tests := []struct {
 		name          string
-		mock          func() *mock_gateway.MockChildRepository
+		mockChild     func() *mock_gateway.MockChildRepository
+		mockUser      func() *mock_gateway.MockUserRepository
 		input         uint64
 		expectedChild *model.Child
 		expectedError error
 	}{
 		{
 			name: "error getting child",
-			mock: func() *mock_gateway.MockChildRepository {
+			mockUser: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				return mockUserRepository
+			},
+			mockChild: func() *mock_gateway.MockChildRepository {
 				mockChildRepository := mock_gateway.NewMockChildRepository(m)
 				mockChildRepository.EXPECT().Get(gomock.Any()).Return(nil, web.ErrInternalServerError)
 				return mockChildRepository
@@ -50,7 +55,11 @@ func TestUseCaseGetChild(t *testing.T) {
 		},
 		{
 			name: "not found error getting child",
-			mock: func() *mock_gateway.MockChildRepository {
+			mockUser: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				return mockUserRepository
+			},
+			mockChild: func() *mock_gateway.MockChildRepository {
 				mockChildRepository := mock_gateway.NewMockChildRepository(m)
 				mockChildRepository.EXPECT().Get(gomock.Any()).Return(nil, nil)
 				return mockChildRepository
@@ -61,7 +70,11 @@ func TestUseCaseGetChild(t *testing.T) {
 		},
 		{
 			name: "successful create child",
-			mock: func() *mock_gateway.MockChildRepository {
+			mockUser: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				return mockUserRepository
+			},
+			mockChild: func() *mock_gateway.MockChildRepository {
 				mockChildRepository := mock_gateway.NewMockChildRepository(m)
 				mockChildRepository.EXPECT().Get(gomock.Any()).Return(&c, nil)
 				return mockChildRepository
@@ -73,9 +86,10 @@ func TestUseCaseGetChild(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			mockChildRepository := test.mock()
+			mockUserRepository := test.mockUser()
+			mockChildRepository := test.mockChild()
 
-			context := getContextChild(mockChildRepository)
+			context := getContextChild(mockUserRepository, mockChildRepository)
 			serviceLocator := ctx.GetServiceLocator(context)
 			uc := serviceLocator.GetInstance(ChildUseCaseType).(ChildUseCase)
 
@@ -93,14 +107,20 @@ func TestUseCaseSaveChild(t *testing.T) {
 
 	tests := []struct {
 		name          string
-		mock          func() *mock_gateway.MockChildRepository
+		mockUser      func() *mock_gateway.MockUserRepository
+		mockChild     func() *mock_gateway.MockChildRepository
 		input         model.Child
 		expectedChild *model.Child
 		expectedError error
 	}{
 		{
 			name: "error saving child",
-			mock: func() *mock_gateway.MockChildRepository {
+			mockUser: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				mockUserRepository.EXPECT().Get(gomock.Any()).Return(&observerUser.User, nil)
+				return mockUserRepository
+			},
+			mockChild: func() *mock_gateway.MockChildRepository {
 				mockChildRepository := mock_gateway.NewMockChildRepository(m)
 				mockChildRepository.EXPECT().Save(gomock.Any()).Return(nil, web.ErrInternalServerError)
 				return mockChildRepository
@@ -110,8 +130,58 @@ func TestUseCaseSaveChild(t *testing.T) {
 			expectedError: web.ErrInternalServerError,
 		},
 		{
+			name: "error save child for not found observer user",
+			mockUser: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				mockUserRepository.EXPECT().Get(gomock.Any()).Return(nil, nil)
+				return mockUserRepository
+			},
+			mockChild: func() *mock_gateway.MockChildRepository {
+				mockChildRepository := mock_gateway.NewMockChildRepository(m)
+				return mockChildRepository
+			},
+			input:         c,
+			expectedChild: nil,
+			expectedError: web.ErrNotFound,
+		},
+		{
+			name: "error save child for get observer user",
+			mockUser: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				mockUserRepository.EXPECT().Get(gomock.Any()).Return(nil, web.ErrInternalServerError)
+				return mockUserRepository
+			},
+			mockChild: func() *mock_gateway.MockChildRepository {
+				mockChildRepository := mock_gateway.NewMockChildRepository(m)
+				return mockChildRepository
+			},
+			input:         c,
+			expectedChild: nil,
+			expectedError: web.ErrInternalServerError,
+		},
+		{
+			name: "error save child for incorrect type of user",
+			mockUser: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				mockUserRepository.EXPECT().Get(gomock.Any()).Return(&observedUser.User, nil)
+				return mockUserRepository
+			},
+			mockChild: func() *mock_gateway.MockChildRepository {
+				mockChildRepository := mock_gateway.NewMockChildRepository(m)
+				return mockChildRepository
+			},
+			input:         c,
+			expectedChild: nil,
+			expectedError: web.ErrNotFound,
+		},
+		{
 			name: "successful save child",
-			mock: func() *mock_gateway.MockChildRepository {
+			mockUser: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				mockUserRepository.EXPECT().Get(gomock.Any()).Return(&observerUser.User, nil)
+				return mockUserRepository
+			},
+			mockChild: func() *mock_gateway.MockChildRepository {
 				mockChildRepository := mock_gateway.NewMockChildRepository(m)
 				mockChildRepository.EXPECT().Save(gomock.Any()).Return(&c, nil)
 				return mockChildRepository
@@ -123,9 +193,10 @@ func TestUseCaseSaveChild(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			mockChildRepository := test.mock()
+			mockUserRepository := test.mockUser()
+			mockChildRepository := test.mockChild()
 
-			context := getContextChild(mockChildRepository)
+			context := getContextChild(mockUserRepository, mockChildRepository)
 			serviceLocator := ctx.GetServiceLocator(context)
 			uc := serviceLocator.GetInstance(ChildUseCaseType).(ChildUseCase)
 
@@ -143,14 +214,19 @@ func TestUseCaseUpdateChild(t *testing.T) {
 
 	tests := []struct {
 		name          string
-		mock          func() *mock_gateway.MockChildRepository
+		mockUser      func() *mock_gateway.MockUserRepository
+		mockChild     func() *mock_gateway.MockChildRepository
 		input         model.Child
 		expectedChild *model.Child
 		expectedError error
 	}{
 		{
 			name: "error updating child",
-			mock: func() *mock_gateway.MockChildRepository {
+			mockUser: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				return mockUserRepository
+			},
+			mockChild: func() *mock_gateway.MockChildRepository {
 				mockChildRepository := mock_gateway.NewMockChildRepository(m)
 				mockChildRepository.EXPECT().Get(gomock.Any()).Return(&c, nil)
 				mockChildRepository.EXPECT().Update(gomock.Any()).Return(nil, web.ErrInternalServerError)
@@ -162,7 +238,11 @@ func TestUseCaseUpdateChild(t *testing.T) {
 		},
 		{
 			name: "not found error updating child",
-			mock: func() *mock_gateway.MockChildRepository {
+			mockUser: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				return mockUserRepository
+			},
+			mockChild: func() *mock_gateway.MockChildRepository {
 				mockChildRepository := mock_gateway.NewMockChildRepository(m)
 				mockChildRepository.EXPECT().Get(gomock.Any()).Return(nil, nil)
 				return mockChildRepository
@@ -173,7 +253,11 @@ func TestUseCaseUpdateChild(t *testing.T) {
 		},
 		{
 			name: "error getting child",
-			mock: func() *mock_gateway.MockChildRepository {
+			mockUser: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				return mockUserRepository
+			},
+			mockChild: func() *mock_gateway.MockChildRepository {
 				mockChildRepository := mock_gateway.NewMockChildRepository(m)
 				mockChildRepository.EXPECT().Get(gomock.Any()).Return(nil, web.ErrInternalServerError)
 				return mockChildRepository
@@ -184,7 +268,11 @@ func TestUseCaseUpdateChild(t *testing.T) {
 		},
 		{
 			name: "successful update child",
-			mock: func() *mock_gateway.MockChildRepository {
+			mockUser: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				return mockUserRepository
+			},
+			mockChild: func() *mock_gateway.MockChildRepository {
 				mockChildRepository := mock_gateway.NewMockChildRepository(m)
 				mockChildRepository.EXPECT().Get(gomock.Any()).Return(&c, nil)
 				mockChildRepository.EXPECT().Update(gomock.Any()).Return(&c, nil)
@@ -197,9 +285,10 @@ func TestUseCaseUpdateChild(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			mockChildRepository := test.mock()
+			mockUserRepository := test.mockUser()
+			mockChildRepository := test.mockChild()
 
-			context := getContextChild(mockChildRepository)
+			context := getContextChild(mockUserRepository, mockChildRepository)
 			serviceLocator := ctx.GetServiceLocator(context)
 			uc := serviceLocator.GetInstance(ChildUseCaseType).(ChildUseCase)
 
@@ -217,13 +306,18 @@ func TestUseCaseDeleteChild(t *testing.T) {
 
 	tests := []struct {
 		name          string
-		mock          func() *mock_gateway.MockChildRepository
+		mockUser      func() *mock_gateway.MockUserRepository
+		mockChild     func() *mock_gateway.MockChildRepository
 		input         uint64
 		expectedError error
 	}{
 		{
 			name: "error updating child",
-			mock: func() *mock_gateway.MockChildRepository {
+			mockUser: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				return mockUserRepository
+			},
+			mockChild: func() *mock_gateway.MockChildRepository {
 				mockChildRepository := mock_gateway.NewMockChildRepository(m)
 				mockChildRepository.EXPECT().Get(gomock.Any()).Return(&c, nil)
 				mockChildRepository.EXPECT().Delete(gomock.Any()).Return(web.ErrInternalServerError)
@@ -234,7 +328,11 @@ func TestUseCaseDeleteChild(t *testing.T) {
 		},
 		{
 			name: "not found error updating child",
-			mock: func() *mock_gateway.MockChildRepository {
+			mockUser: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				return mockUserRepository
+			},
+			mockChild: func() *mock_gateway.MockChildRepository {
 				mockChildRepository := mock_gateway.NewMockChildRepository(m)
 				mockChildRepository.EXPECT().Get(gomock.Any()).Return(nil, nil)
 				return mockChildRepository
@@ -244,7 +342,11 @@ func TestUseCaseDeleteChild(t *testing.T) {
 		},
 		{
 			name: "error getting child",
-			mock: func() *mock_gateway.MockChildRepository {
+			mockUser: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				return mockUserRepository
+			},
+			mockChild: func() *mock_gateway.MockChildRepository {
 				mockChildRepository := mock_gateway.NewMockChildRepository(m)
 				mockChildRepository.EXPECT().Get(gomock.Any()).Return(nil, web.ErrInternalServerError)
 				return mockChildRepository
@@ -254,7 +356,11 @@ func TestUseCaseDeleteChild(t *testing.T) {
 		},
 		{
 			name: "successful update child",
-			mock: func() *mock_gateway.MockChildRepository {
+			mockUser: func() *mock_gateway.MockUserRepository {
+				mockUserRepository := mock_gateway.NewMockUserRepository(m)
+				return mockUserRepository
+			},
+			mockChild: func() *mock_gateway.MockChildRepository {
 				mockChildRepository := mock_gateway.NewMockChildRepository(m)
 				mockChildRepository.EXPECT().Get(gomock.Any()).Return(&c, nil)
 				mockChildRepository.EXPECT().Delete(gomock.Any()).Return(nil)
@@ -266,9 +372,10 @@ func TestUseCaseDeleteChild(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			mockChildRepository := test.mock()
+			mockUserRepository := test.mockUser()
+			mockChildRepository := test.mockChild()
 
-			context := getContextChild(mockChildRepository)
+			context := getContextChild(mockUserRepository, mockChildRepository)
 			serviceLocator := ctx.GetServiceLocator(context)
 			uc := serviceLocator.GetInstance(ChildUseCaseType).(ChildUseCase)
 
@@ -279,9 +386,11 @@ func TestUseCaseDeleteChild(t *testing.T) {
 	}
 }
 
-func getContextChild(mock *mock_gateway.MockChildRepository) context.Context {
+func getContextChild(mockUser *mock_gateway.MockUserRepository, mockChild *mock_gateway.MockChildRepository) context.Context {
 	iocContext := ioc.NewContext()
-	iocContext.Bind(gateway.ChildRepositoryType).ToInstance(mock)
+	iocContext.Bind(gateway.UserRepositoryType).ToInstance(mockUser)
+	iocContext.Bind(gateway.ChildRepositoryType).ToInstance(mockChild)
+	iocContext.Bind(UserUseCaseType).ToInstance(NewUserUseCase())
 	iocContext.Bind(ChildUseCaseType).ToInstance(NewChildUseCase())
 	injector := ioc.NewInjector(iocContext)
 	ctx := ctx.SetServiceLocator(context.TODO(), injector)

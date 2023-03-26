@@ -45,10 +45,10 @@ func TestGetAddress(t *testing.T) {
 	ar := NewAddressRepository(gdb, context.Background())
 
 	t.Run("successful get address", func(t *testing.T) {
-		rows := sqlmock.NewRows([]string{"id", "name", "street", "number", "floor", "apartament", "zipCode", "city", "state",
-			"country", "latitude", "longitude", "created_at", "updated_at"}).
+		rows := sqlmock.NewRows([]string{"id", "name", "street", "number", "floor", "apartment", "zipCode", "city", "state",
+			"country", "latitude", "longitude", "created_at", "updated_at", "observer_user_id"}).
 			AddRow(a.ID, a.Name, a.Street, a.Number, a.Floor, a.Apartment, a.ZipCode, a.City, a.State, a.Country,
-				a.Latitude, a.Longitude, a.CreatedAt, a.UpdatedAt)
+				a.Latitude, a.Longitude, a.CreatedAt, a.UpdatedAt, a.ObserverUserID)
 		mock.ExpectQuery(regexp.QuoteMeta(querySelectAddressByID)).WithArgs(a.ID).WillReturnRows(rows)
 
 		address, err := ar.Get(a.ID)
@@ -101,7 +101,10 @@ func TestSaveAddress(t *testing.T) {
 				a.Latitude, a.Longitude, a.ObserverUserID).
 			WillReturnResult(sqlmock.NewResult(int64(1), 1))
 
-		rows := sqlmock.NewRows([]string{"id", "name", "street", "number", "floor", "apartament", "zipCode", "city", "state",
+		rows := sqlmock.NewRows([]string{"id"}).AddRow(a.ID)
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT LAST_INSERT_ID();`)).WillReturnRows(rows)
+
+		rows = sqlmock.NewRows([]string{"id", "name", "street", "number", "floor", "apartament", "zipCode", "city", "state",
 			"country", "latitude", "longitude", "created_at", "updated_at", "observer_user_id"}).
 			AddRow(a.ID, a.Name, a.Street, a.Number, a.Floor, a.Apartment, a.ZipCode, a.City, a.State, a.Country,
 				a.Latitude, a.Longitude, a.CreatedAt, a.UpdatedAt, a.ObserverUserID)
@@ -126,6 +129,25 @@ func TestSaveAddress(t *testing.T) {
 		assert.Nil(t, Address)
 	})
 
+	t.Run("error selecting address id", func(t *testing.T) {
+		mock.ExpectBegin()
+		// note this line is important for unordered expectation matching
+		mock.MatchExpectationsInOrder(false)
+
+		mock.ExpectExec(regexp.QuoteMeta(querySaveAddress)).
+			WithArgs(a.Name, a.Street, a.Number, a.Floor, a.Apartment, a.ZipCode, a.City, a.State, a.Country,
+				a.Latitude, a.Longitude, a.ObserverUserID).
+			WillReturnResult(sqlmock.NewResult(int64(1), 1))
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT LAST_INSERT_ID();`)).WillReturnError(web.ErrInternalServerError)
+
+		mock.ExpectCommit()
+
+		address, err := ar.Save(a)
+		assert.Error(t, err)
+		assert.Nil(t, address)
+	})
+
 	t.Run("error selecting address", func(t *testing.T) {
 		mock.ExpectBegin()
 		// note this line is important for unordered expectation matching
@@ -136,15 +158,18 @@ func TestSaveAddress(t *testing.T) {
 				a.Latitude, a.Longitude, a.ObserverUserID).
 			WillReturnResult(sqlmock.NewResult(int64(1), 1))
 
+		rows := sqlmock.NewRows([]string{"id"}).AddRow(a.ID)
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT LAST_INSERT_ID();`)).WillReturnRows(rows)
+
 		mock.ExpectQuery(regexp.QuoteMeta(querySelectAddressByID)).
 			WithArgs(a.ID).
 			WillReturnError(web.ErrInternalServerError)
 
 		mock.ExpectCommit()
 
-		Address, err := ar.Save(a)
+		address, err := ar.Save(a)
 		assert.Error(t, err)
-		assert.Nil(t, Address)
+		assert.Nil(t, address)
 	})
 
 }

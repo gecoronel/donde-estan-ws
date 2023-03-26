@@ -266,7 +266,7 @@ var observed = model.ObservedUser{
 	PrivacyKey:  "juan.perez.12345678",
 	CompanyName: "school bus company",
 	SchoolBus: model.SchoolBus{
-		ID:           "1",
+		ID:           1,
 		LicensePlate: "11AAA22",
 		Model:        "Master",
 		Brand:        "Renault",
@@ -320,7 +320,7 @@ func TestSaveObservedUser(t *testing.T) {
 
 		mock.
 			ExpectExec(regexp.QuoteMeta(querySaveObservedUser)).
-			WithArgs(observed.User.ID, observed.PrivacyKey, observed.CompanyName, observed.SchoolBus.ID).
+			WithArgs(observed.User.ID, observed.PrivacyKey, observed.CompanyName).
 			WillReturnResult(sqlmock.NewResult(int64(1), 1))
 
 		rows = sqlmock.NewRows([]string{"user_id", "privacy_key", "company_name"}).
@@ -470,7 +470,7 @@ func TestSaveObservedUser(t *testing.T) {
 
 		mock.
 			ExpectExec(regexp.QuoteMeta(querySaveObservedUser)).
-			WithArgs(observed.User.ID, observed.PrivacyKey, observed.CompanyName, observed.SchoolBus.ID).
+			WithArgs(observed.User.ID, observed.PrivacyKey, observed.CompanyName).
 			WillReturnError(errors.New("some error"))
 
 		mock.ExpectCommit()
@@ -513,7 +513,7 @@ func TestSaveObservedUser(t *testing.T) {
 
 		mock.
 			ExpectExec(regexp.QuoteMeta(querySaveObservedUser)).
-			WithArgs(observed.User.ID, observed.PrivacyKey, observed.CompanyName, observed.SchoolBus.ID).
+			WithArgs(observed.User.ID, observed.PrivacyKey, observed.CompanyName).
 			WillReturnResult(sqlmock.NewResult(int64(1), 1))
 
 		mock.ExpectQuery(regexp.QuoteMeta(queryGetObservedUserByID)).
@@ -771,7 +771,7 @@ var observer = model.ObserverUser{
 			PrivacyKey:  "juan.perez.12345678",
 			CompanyName: "company school bus",
 			SchoolBus: model.SchoolBus{
-				ID:           "1",
+				ID:           1,
 				LicensePlate: "11AAA222",
 				Model:        "Master",
 				Brand:        "Renault",
@@ -993,7 +993,7 @@ func TestGetObserverUser(t *testing.T) {
 					PrivacyKey:  "juan.perez.12345678",
 					CompanyName: "company school bus",
 					SchoolBus: model.SchoolBus{
-						ID:           "1",
+						ID:           1,
 						LicensePlate: "11AAA222",
 						Model:        "Master",
 						Brand:        "Renault",

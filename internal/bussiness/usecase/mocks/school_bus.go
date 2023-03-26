@@ -36,7 +36,7 @@ func (m *MockSchoolBusUseCase) EXPECT() *MockSchoolBusUseCaseMockRecorder {
 }
 
 // Delete mocks base method.
-func (m *MockSchoolBusUseCase) Delete(arg0 string, arg1 gateway.ServiceLocator) error {
+func (m *MockSchoolBusUseCase) Delete(arg0 uint64, arg1 gateway.ServiceLocator) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Delete", arg0, arg1)
 	ret0, _ := ret[0].(error)
@@ -50,7 +50,7 @@ func (mr *MockSchoolBusUseCaseMockRecorder) Delete(arg0, arg1 interface{}) *gomo
 }
 
 // Get mocks base method.
-func (m *MockSchoolBusUseCase) Get(arg0 string, arg1 gateway.ServiceLocator) (*model.SchoolBus, error) {
+func (m *MockSchoolBusUseCase) Get(arg0 uint64, arg1 gateway.ServiceLocator) (*model.SchoolBus, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", arg0, arg1)
 	ret0, _ := ret[0].(*model.SchoolBus)

@@ -117,14 +117,12 @@ func TestSaveChild(t *testing.T) {
 				"school_name":       "La Salle",
 				"school_start_time": "8:00",
 				"school_end_time":   "12:00",
-				"created_at":        "2023-02-18 17:09:33",
-				"updated_at":        "2023-02-18 17:09:33",
 				"observer_user_id":  "10"
 			}`,
 			expectedCode: http.StatusBadRequest,
 		},
 		{
-			name: "validate error saving child for include id field",
+			name: "validate error saving child for include id",
 			mock: func() *mock_usecase.MockChildUseCase {
 				mockChildUseCase := mock_usecase.NewMockChildUseCase(m)
 				return mockChildUseCase
@@ -137,9 +135,24 @@ func TestSaveChild(t *testing.T) {
 				"school_name":       "La Salle",
 				"school_start_time": "8:00",
 				"school_end_time":   "12:00",
-				"created_at":        "2023-02-18 17:09:33",
-				"updated_at":        "2023-02-18 17:09:33",
 				"observer_user_id":  10
+			}`,
+			expectedCode: http.StatusBadRequest,
+		},
+		{
+			name: "validate error saving child for not include observer user id",
+			mock: func() *mock_usecase.MockChildUseCase {
+				mockChildUseCase := mock_usecase.NewMockChildUseCase(m)
+				return mockChildUseCase
+			},
+			path: "/where/are/they/children",
+			body: `{
+				"id":                1,
+				"name":              "Pilar",
+				"last_name":         "Dominguez",
+				"school_name":       "La Salle",
+				"school_start_time": "8:00",
+				"school_end_time":   "12:00"
 			}`,
 			expectedCode: http.StatusBadRequest,
 		},
@@ -152,8 +165,6 @@ func TestSaveChild(t *testing.T) {
 			path: "/where/are/they/children",
 			body: `{
 				"name":             "Pilar",
-				"created_at":       "2023-02-18 17:09:33",
-				"updated_at":       "2023-02-18 17:09:33",
 				"observer_user_id":  10
 			}`,
 			expectedCode: http.StatusBadRequest,
@@ -172,8 +183,6 @@ func TestSaveChild(t *testing.T) {
 				"school_name":       "La Salle",
 				"school_start_time": "8:00",
 				"school_end_time":   "12:00",
-				"created_at":        "2023-02-18 17:09:33",
-				"updated_at":        "2023-02-18 17:09:33",
 				"observer_user_id":  10
 			}`,
 			expectedCode: http.StatusInternalServerError,
@@ -192,8 +201,6 @@ func TestSaveChild(t *testing.T) {
 				"school_name":       "La Salle",
 				"school_start_time": "8:00",
 				"school_end_time":   "12:00",
-				"created_at":        "2023-02-18 17:09:33",
-				"updated_at":        "2023-02-18 17:09:33",
 				"observer_user_id":  10
 			}`,
 			expectedCode: http.StatusOK,

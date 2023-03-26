@@ -94,7 +94,10 @@ func TestSaveChild(t *testing.T) {
 			WithArgs(c.Name, c.LastName, c.SchoolName, c.SchoolStartTime, c.SchoolEndTime, c.ObserverUserID).
 			WillReturnResult(sqlmock.NewResult(int64(1), 1))
 
-		rows := sqlmock.NewRows([]string{"id", "name", "last_name", "school_name", "school_start_time",
+		rows := sqlmock.NewRows([]string{"id"}).AddRow(c.ID)
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT LAST_INSERT_ID();`)).WillReturnRows(rows)
+
+		rows = sqlmock.NewRows([]string{"id", "name", "last_name", "school_name", "school_start_time",
 			"school_end_time", "observer_user_id", "created_at", "updated_at"}).
 			AddRow(c.ID, c.Name, c.LastName, c.SchoolName, c.SchoolStartTime, c.SchoolEndTime, c.ObserverUserID,
 				c.CreatedAt, c.UpdatedAt)
@@ -113,9 +116,27 @@ func TestSaveChild(t *testing.T) {
 			WithArgs(c.Name, c.LastName, c.SchoolName, c.SchoolStartTime, c.SchoolEndTime, c.ObserverUserID).
 			WillReturnError(web.ErrInternalServerError)
 
-		Child, err := ar.Save(c)
+		child, err := ar.Save(c)
 		assert.Error(t, err)
-		assert.Nil(t, Child)
+		assert.Nil(t, child)
+	})
+
+	t.Run("error selecting child id", func(t *testing.T) {
+		mock.ExpectBegin()
+		// note this line is important for unordered expectation matching
+		mock.MatchExpectationsInOrder(false)
+
+		mock.ExpectExec(regexp.QuoteMeta(querySaveChild)).
+			WithArgs(c.Name, c.LastName, c.SchoolName, c.SchoolStartTime, c.SchoolEndTime, c.ObserverUserID).
+			WillReturnResult(sqlmock.NewResult(int64(1), 1))
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT LAST_INSERT_ID();`)).WillReturnError(web.ErrInternalServerError)
+
+		mock.ExpectCommit()
+
+		child, err := ar.Save(c)
+		assert.Error(t, err)
+		assert.Nil(t, child)
 	})
 
 	t.Run("error selecting child", func(t *testing.T) {
@@ -127,15 +148,18 @@ func TestSaveChild(t *testing.T) {
 			WithArgs(c.Name, c.LastName, c.SchoolName, c.SchoolStartTime, c.SchoolEndTime, c.ObserverUserID).
 			WillReturnResult(sqlmock.NewResult(int64(1), 1))
 
+		rows := sqlmock.NewRows([]string{"id"}).AddRow(c.ID)
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT LAST_INSERT_ID();`)).WillReturnRows(rows)
+
 		mock.ExpectQuery(regexp.QuoteMeta(querySelectChildByID)).
 			WithArgs(c.ID).
 			WillReturnError(web.ErrInternalServerError)
 
 		mock.ExpectCommit()
 
-		Child, err := ar.Save(c)
+		child, err := ar.Save(c)
 		assert.Error(t, err)
-		assert.Nil(t, Child)
+		assert.Nil(t, child)
 	})
 
 }
@@ -158,8 +182,7 @@ func TestUpdateChild(t *testing.T) {
 		mock.MatchExpectationsInOrder(false)
 
 		mock.ExpectExec(regexp.QuoteMeta(queryUpdateChild)).
-			WithArgs(c.Name, c.LastName, c.SchoolName, c.SchoolStartTime, c.SchoolEndTime, c.ObserverUserID,
-				c.UpdatedAt, c.ID).
+			WithArgs(c.Name, c.LastName, c.SchoolName, c.SchoolStartTime, c.SchoolEndTime, c.UpdatedAt, c.ID).
 			WillReturnResult(sqlmock.NewResult(int64(1), 1))
 
 		rows := sqlmock.NewRows([]string{"id", "name", "last_name", "school_name", "school_start_time",
@@ -193,8 +216,7 @@ func TestUpdateChild(t *testing.T) {
 		mock.MatchExpectationsInOrder(false)
 
 		mock.ExpectExec(regexp.QuoteMeta(queryUpdateChild)).
-			WithArgs(c.Name, c.LastName, c.SchoolName, c.SchoolStartTime, c.SchoolEndTime, c.ObserverUserID,
-				c.UpdatedAt, c.ID).
+			WithArgs(c.Name, c.LastName, c.SchoolName, c.SchoolStartTime, c.SchoolEndTime, c.UpdatedAt, c.ID).
 			WillReturnResult(sqlmock.NewResult(int64(1), 1))
 
 		mock.ExpectQuery(regexp.QuoteMeta(querySelectChildByID)).
@@ -203,9 +225,9 @@ func TestUpdateChild(t *testing.T) {
 
 		mock.ExpectCommit()
 
-		Child, err := ar.Update(c)
+		child, err := ar.Update(c)
 		assert.Error(t, err)
-		assert.Nil(t, Child)
+		assert.Nil(t, child)
 	})
 
 }

@@ -6,6 +6,7 @@ import (
 	"github.com/gecoronel/donde-estan-ws/internal/bussiness/gateway"
 	"github.com/gecoronel/donde-estan-ws/internal/bussiness/model"
 	"github.com/gecoronel/donde-estan-ws/internal/bussiness/model/web"
+	log "github.com/sirupsen/logrus"
 )
 
 const ChildUseCaseType = "ChildUseCase"
@@ -25,67 +26,77 @@ func NewChildUseCase() ChildUseCase {
 	return &childUseCase{}
 }
 
-func (b childUseCase) Get(id uint64, locator gateway.ServiceLocator) (*model.Child, error) {
+func (buc childUseCase) Get(id uint64, locator gateway.ServiceLocator) (*model.Child, error) {
 	repository := locator.GetInstance(gateway.ChildRepositoryType).(gateway.ChildRepository)
 
-	Child, err := repository.Get(id)
+	child, err := repository.Get(id)
 	if err != nil {
 		return nil, web.ErrInternalServerError
 	}
 
-	if Child == nil {
+	if child == nil {
 		return nil, web.ErrNotFound
 	}
 
-	return Child, nil
+	return child, nil
 }
 
-func (b childUseCase) Save(child model.Child, locator gateway.ServiceLocator) (
+func (buc childUseCase) Save(child model.Child, locator gateway.ServiceLocator) (
 	*model.Child,
 	error,
 ) {
-	repository := locator.GetInstance(gateway.ChildRepositoryType).(gateway.ChildRepository)
+	userRepository := locator.GetInstance(gateway.UserRepositoryType).(gateway.UserRepository)
+	childRepository := locator.GetInstance(gateway.ChildRepositoryType).(gateway.ChildRepository)
 
-	sb, err := repository.Save(child)
+	u, err := userRepository.Get(child.ObserverUserID)
+	if err != nil {
+		return nil, err
+	}
+	if u == nil || u.Type != observer {
+		log.Error("incorrect observer user for save child")
+		return nil, web.ErrNotFound
+	}
+
+	c, err := childRepository.Save(child)
 	if err != nil {
 		return nil, err
 	}
 
-	return sb, nil
+	return c, nil
 }
 
-func (b childUseCase) Update(Child model.Child, locator gateway.ServiceLocator) (
+func (buc childUseCase) Update(child model.Child, locator gateway.ServiceLocator) (
 	*model.Child,
 	error,
 ) {
 	repository := locator.GetInstance(gateway.ChildRepositoryType).(gateway.ChildRepository)
 
-	sb, err := repository.Get(Child.ID)
+	c, err := repository.Get(child.ID)
 	if err != nil {
 		return nil, web.ErrInternalServerError
 	}
 
-	if sb == nil {
+	if c == nil {
 		return nil, web.ErrNotFound
 	}
 
-	sb, err = repository.Update(Child)
+	c, err = repository.Update(child)
 	if err != nil {
 		return nil, web.ErrInternalServerError
 	}
 
-	return sb, nil
+	return c, nil
 }
 
-func (b childUseCase) Delete(id uint64, locator gateway.ServiceLocator) error {
+func (buc childUseCase) Delete(id uint64, locator gateway.ServiceLocator) error {
 	repository := locator.GetInstance(gateway.ChildRepositoryType).(gateway.ChildRepository)
 
-	sb, err := repository.Get(id)
+	c, err := repository.Get(id)
 	if err != nil {
 		return web.ErrInternalServerError
 	}
 
-	if sb == nil {
+	if c == nil {
 		return web.ErrNotFound
 	}
 

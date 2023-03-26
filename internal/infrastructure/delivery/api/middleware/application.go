@@ -27,12 +27,14 @@ func Ioc(db *gorm.DB) func(next http.Handler) http.Handler {
 			iocContext.Bind(gateway.UserRepositoryType).ToInstance(repository.NewUserRepository(db, r.Context()))
 			iocContext.Bind(gateway.SchoolBusRepositoryType).ToInstance(repository.NewSchoolBusRepository(db, r.Context()))
 			iocContext.Bind(gateway.AddressRepositoryType).ToInstance(repository.NewAddressRepository(db, r.Context()))
+			iocContext.Bind(gateway.ChildRepositoryType).ToInstance(repository.NewChildRepository(db, r.Context()))
 
 			// Register UseCase
 			//iocContext.Bind(usecase.GetConfigurationsUseCaseType).ToInstance(usecase.NewGetConfigurationsUseCase())
 			iocContext.Bind(usecase.UserUseCaseType).ToInstance(usecase.NewUserUseCase())
 			iocContext.Bind(usecase.SchoolBusUseCaseType).ToInstance(usecase.NewSchoolBusUseCase())
 			iocContext.Bind(usecase.AddressUseCaseType).ToInstance(usecase.NewAddressUseCase())
+			iocContext.Bind(usecase.ChildUseCaseType).ToInstance(usecase.NewChildUseCase())
 
 			// Register Repositories
 			//iocContext.Bind(gateway.MetricCollectorType).ToInstance(metricCollector)

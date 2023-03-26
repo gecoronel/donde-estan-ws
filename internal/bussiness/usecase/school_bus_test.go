@@ -15,7 +15,7 @@ import (
 )
 
 var sb = model.SchoolBus{
-	ID:           "1",
+	ID:           1,
 	LicensePlate: "11AAA22",
 	Model:        "Master",
 	Brand:        "Renault",
@@ -31,7 +31,7 @@ func TestUseCaseGetSchoolBus(t *testing.T) {
 	tests := []struct {
 		name              string
 		mock              func() *mock_gateway.MockSchoolBusRepository
-		input             string
+		input             uint64
 		expectedSchoolBus *model.SchoolBus
 		expectedError     error
 	}{
@@ -100,7 +100,30 @@ func TestUseCaseSaveSchoolBus(t *testing.T) {
 			name: "error saving school bus",
 			mock: func() *mock_gateway.MockSchoolBusRepository {
 				mockSchoolBusRepository := mock_gateway.NewMockSchoolBusRepository(m)
+				mockSchoolBusRepository.EXPECT().Get(gomock.Any()).Return(nil, nil)
 				mockSchoolBusRepository.EXPECT().Save(gomock.Any()).Return(nil, web.ErrInternalServerError)
+				return mockSchoolBusRepository
+			},
+			input:             sb,
+			expectedSchoolBus: nil,
+			expectedError:     web.ErrInternalServerError,
+		},
+		{
+			name: "conflict error saving school bus",
+			mock: func() *mock_gateway.MockSchoolBusRepository {
+				mockSchoolBusRepository := mock_gateway.NewMockSchoolBusRepository(m)
+				mockSchoolBusRepository.EXPECT().Get(gomock.Any()).Return(&sb, nil)
+				return mockSchoolBusRepository
+			},
+			input:             sb,
+			expectedSchoolBus: nil,
+			expectedError:     web.ErrConflict,
+		},
+		{
+			name: "error getting school bus",
+			mock: func() *mock_gateway.MockSchoolBusRepository {
+				mockSchoolBusRepository := mock_gateway.NewMockSchoolBusRepository(m)
+				mockSchoolBusRepository.EXPECT().Get(gomock.Any()).Return(nil, web.ErrInternalServerError)
 				return mockSchoolBusRepository
 			},
 			input:             sb,
@@ -111,6 +134,7 @@ func TestUseCaseSaveSchoolBus(t *testing.T) {
 			name: "successful save school bus",
 			mock: func() *mock_gateway.MockSchoolBusRepository {
 				mockSchoolBusRepository := mock_gateway.NewMockSchoolBusRepository(m)
+				mockSchoolBusRepository.EXPECT().Get(gomock.Any()).Return(nil, nil)
 				mockSchoolBusRepository.EXPECT().Save(gomock.Any()).Return(&sb, nil)
 				return mockSchoolBusRepository
 			},
@@ -216,7 +240,7 @@ func TestUseCaseDeleteSchoolBus(t *testing.T) {
 	tests := []struct {
 		name          string
 		mock          func() *mock_gateway.MockSchoolBusRepository
-		input         string
+		input         uint64
 		expectedError error
 	}{
 		{

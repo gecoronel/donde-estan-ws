@@ -15,13 +15,14 @@ import (
 )
 
 var sb = model.SchoolBus{
-	ID:           "1",
-	LicensePlate: "11AAA22",
-	Model:        "Master",
-	Brand:        "Renault",
-	License:      "111",
-	CreatedAt:    "2023-02-18 17:09:33",
-	UpdatedAt:    "2023-02-18 17:09:33",
+	ID:             1,
+	LicensePlate:   "11AAA22",
+	Model:          "Master",
+	Brand:          "Renault",
+	License:        "111",
+	ObservedUserID: 1,
+	CreatedAt:      "2023-02-18 17:09:33",
+	UpdatedAt:      "2023-02-18 17:09:33",
 }
 
 func TestGetSchoolBus(t *testing.T) {
@@ -37,8 +38,9 @@ func TestGetSchoolBus(t *testing.T) {
 	ur := NewSchoolBusRepository(gdb, context.Background())
 
 	t.Run("successful get school bus", func(t *testing.T) {
-		rows := sqlmock.NewRows([]string{"id", "license_plate", "model", "brand", "license", "created_at", "updated_at"}).
-			AddRow(sb.ID, sb.LicensePlate, sb.Model, sb.Brand, sb.License, sb.CreatedAt, sb.UpdatedAt)
+		rows := sqlmock.NewRows([]string{"id", "license_plate", "model", "brand", "license", "observed_user_id",
+			"created_at", "updated_at"}).
+			AddRow(sb.ID, sb.LicensePlate, sb.Model, sb.Brand, sb.License, sb.ObservedUserID, sb.CreatedAt, sb.UpdatedAt)
 		mock.ExpectQuery(regexp.QuoteMeta(querySelectSchoolBusByID)).WithArgs(sb.ID).WillReturnRows(rows)
 
 		schoolBus, err := ur.Get(sb.ID)
@@ -87,11 +89,16 @@ func TestSave(t *testing.T) {
 		mock.MatchExpectationsInOrder(false)
 
 		mock.ExpectExec(regexp.QuoteMeta(querySaveSchoolBus)).
-			WithArgs(sb.ID, sb.LicensePlate, sb.Model, sb.Brand, sb.License).
+			WithArgs(sb.LicensePlate, sb.Model, sb.Brand, sb.License, sb.ObservedUserID).
 			WillReturnResult(sqlmock.NewResult(int64(1), 1))
 
-		rows := sqlmock.NewRows([]string{"id", "license_plate", "model", "brand", "license", "created_at", "updated_at"}).
-			AddRow(sb.ID, sb.LicensePlate, sb.Model, sb.Brand, sb.License, sb.CreatedAt, sb.UpdatedAt)
+		rows := sqlmock.NewRows([]string{"id"}).AddRow(sb.ID)
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT LAST_INSERT_ID();`)).WillReturnRows(rows)
+
+		rows = sqlmock.NewRows(
+			[]string{"id", "license_plate", "model", "brand", "license", "observed_user_id", "created_at", "updated_at"},
+		).
+			AddRow(sb.ID, sb.LicensePlate, sb.Model, sb.Brand, sb.License, sb.ObservedUserID, sb.CreatedAt, sb.UpdatedAt)
 		mock.ExpectQuery(regexp.QuoteMeta(querySelectSchoolBusByID)).WithArgs(sb.ID).WillReturnRows(rows)
 
 		mock.ExpectCommit()
@@ -104,8 +111,26 @@ func TestSave(t *testing.T) {
 
 	t.Run("error saving school bus", func(t *testing.T) {
 		mock.ExpectQuery(regexp.QuoteMeta(querySaveSchoolBus)).
-			WithArgs(sb.ID, sb.LicensePlate, sb.Model, sb.Brand, sb.License).
+			WithArgs(sb.ID, sb.LicensePlate, sb.Model, sb.Brand, sb.License, sb.ObservedUserID).
 			WillReturnError(web.ErrInternalServerError)
+
+		schoolBus, err := ur.Save(sb)
+		assert.Error(t, err)
+		assert.Nil(t, schoolBus)
+	})
+
+	t.Run("error selecting school bus id", func(t *testing.T) {
+		mock.ExpectBegin()
+		// note this line is important for unordered expectation matching
+		mock.MatchExpectationsInOrder(false)
+
+		mock.ExpectExec(regexp.QuoteMeta(querySaveSchoolBus)).
+			WithArgs(sb.LicensePlate, sb.Model, sb.Brand, sb.License, sb.ObservedUserID).
+			WillReturnResult(sqlmock.NewResult(int64(1), 1))
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT LAST_INSERT_ID();`)).WillReturnError(web.ErrInternalServerError)
+
+		mock.ExpectCommit()
 
 		schoolBus, err := ur.Save(sb)
 		assert.Error(t, err)
@@ -118,8 +143,11 @@ func TestSave(t *testing.T) {
 		mock.MatchExpectationsInOrder(false)
 
 		mock.ExpectExec(regexp.QuoteMeta(querySaveSchoolBus)).
-			WithArgs(sb.ID, sb.LicensePlate, sb.Model, sb.Brand, sb.License).
+			WithArgs(sb.LicensePlate, sb.Model, sb.Brand, sb.License, sb.ObservedUserID).
 			WillReturnResult(sqlmock.NewResult(int64(1), 1))
+
+		rows := sqlmock.NewRows([]string{"id"}).AddRow(sb.ID)
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT LAST_INSERT_ID();`)).WillReturnRows(rows)
 
 		mock.ExpectQuery(regexp.QuoteMeta(querySelectSchoolBusByID)).
 			WithArgs(sb.ID).
@@ -155,8 +183,10 @@ func TestUpdate(t *testing.T) {
 			WithArgs(sb.ID, sb.LicensePlate, sb.Model, sb.Brand, sb.License, sb.UpdatedAt, sb.ID).
 			WillReturnResult(sqlmock.NewResult(int64(1), 1))
 
-		rows := sqlmock.NewRows([]string{"id", "license_plate", "model", "brand", "license", "created_at", "updated_at"}).
-			AddRow(sb.ID, sb.LicensePlate, sb.Model, sb.Brand, sb.License, sb.CreatedAt, sb.UpdatedAt)
+		rows := sqlmock.NewRows(
+			[]string{"id", "license_plate", "model", "brand", "license", "observed_user_id", "created_at", "updated_at"},
+		).
+			AddRow(sb.ID, sb.LicensePlate, sb.Model, sb.Brand, sb.License, sb.ObservedUserID, sb.CreatedAt, sb.UpdatedAt)
 		mock.ExpectQuery(regexp.QuoteMeta(querySelectSchoolBusByID)).WithArgs(sb.ID).WillReturnRows(rows)
 
 		mock.ExpectCommit()
